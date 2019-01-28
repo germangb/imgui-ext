@@ -36,6 +36,7 @@ Result:
 * There is no API to find out if a particular input has been triggered yet.
 * Implemented for just a handful of primitive field types (numbers, arrays, and strings mostly).
 * No straight forward way to annotate fields with arbitrary types *yet* (there will be an API for this in the near future).
+* Layout cannot be annotated.
 
 ----
 

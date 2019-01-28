@@ -13,6 +13,9 @@ For documentation on usage and the currently available tags, see this [**example
 ## Usage example
 
 ```rust
+// you need to import the prelude
+use imgui_ext::prelude::*;
+
 #[derive(ImGuiExt)]
 struct Demo {
     #[imgui(slider(min = 0.0, max = 4.0))]

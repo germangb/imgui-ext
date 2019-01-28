@@ -41,14 +41,12 @@ Result:
 * No straight forward way to annotate fields with arbitrary types *yet* (there will be an API for this in the near future).
 * Layout cannot be annotated.
 
-----
-
 ## License
 
 [MIT]
 
 [imgui]: https://github.com/ocornut/imgui
 [**imgui**]: https://github.com/Gekkio/imgui-rs
-[**example**]: example/src/main.rs
+[**example**]: example/src/ui.rs
 [result]: assets/demo.png
 [MIT]: LICENSE.md

@@ -5,14 +5,15 @@ pub struct Demo {
     // by default, all items tagged with `#[imgui(..)]` use the attribute name as the label.
     // You can optionally define a `label = "..."` attribute to override this with a custom label.
 
-    /// Structs can contain fields that are part of the UI.
+    /// To add a checkbox widget with a custom label:
+    #[imgui(label = "Checkbox UI")]
+    checkbox: bool,
+
+    /// structs can also contain fields that *aren't* part of the UI.
     /// Only fields annotated with `#[imgui(...)` will be part of the UI.
     _not_in_ui: Vec<i16>,
     _also_not_in_ui: Option<Box<[u8]>>,
 
-    /// To add a checkbox widget with a custom label:
-    #[imgui(label = "Checkbox UI")]
-    checkbox: bool,
 
     // numeric types `f32` and `i32` and its arrays types of size up to 4 can be annotated with either:
     //   - `#[imgui(slider( ... ))]`

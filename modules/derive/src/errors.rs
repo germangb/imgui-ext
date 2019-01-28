@@ -1,5 +1,5 @@
-use syn::Error;
 use proc_macro2::Span;
+use syn::Error;
 
 pub fn already_defined(span: Span, attr: &str) -> Error {
     Error::new(span, format!("Attribute `{}` is already defined.", attr))

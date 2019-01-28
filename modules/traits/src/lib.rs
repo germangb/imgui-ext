@@ -1,4 +1,7 @@
-use imgui::{DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4, Ui};
+use imgui::{
+    DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2,
+    InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4, Ui,
+};
 
 /// An extension trait for [`Ui`] that adds support for [`ImGuiExt`]
 ///
@@ -32,32 +35,39 @@ pub trait ImGuiExt {
 
 #[doc(hidden)]
 #[derive(Copy, Clone)]
-pub struct SliderParams<'ui> {
-    pub min: f32,
-    pub max: f32,
+pub struct SliderParams<'ui, T> {
+    pub min: T,
+    pub max: T,
     pub label: &'ui ImStr,
     pub display: Option<&'ui ImStr>,
+
+    // ignored for integers
+    pub power: Option<f32>,
 }
 
 #[doc(hidden)]
 #[derive(Copy, Clone)]
-pub struct InputParams<'ui> {
+pub struct InputParams<'ui, T> {
     pub label: &'ui ImStr,
+
+    // ignored for integer inputs
     pub precission: Option<i32>,
 
-    // fields ignored for multidimensional input
-    pub step: Option<f32>,
-    pub step_fast: Option<f32>,
+    // fields ignored in multidimensional inputs
+    pub step: Option<T>,
+    pub step_fast: Option<T>,
 }
 
 #[doc(hidden)]
 #[derive(Copy, Clone)]
-pub struct DragParams<'ui> {
+pub struct DragParams<'ui, T> {
     pub label: &'ui ImStr,
     pub display: Option<&'ui ImStr>,
-    pub min: Option<f32>,
-    pub max: Option<f32>,
+    pub min: Option<T>,
+    pub max: Option<T>,
     pub speed: Option<f32>,
+
+    // ignored for integers
     pub power: Option<f32>,
 }
 
@@ -68,24 +78,20 @@ pub struct SimpleParams<'ui> {
 }
 
 #[doc(hidden)]
-pub trait Slider {
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams);
+pub trait Slider<T> {
+    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>);
 }
 
 #[doc(hidden)]
-pub trait Input {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams);
+pub trait Input<T> {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>);
 }
 
 #[doc(hidden)]
-pub trait Drag {
-    fn build(ui: &Ui, elem: &mut Self, params: DragParams);
+pub trait Drag<T> {
+    fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>);
 }
 
-/// Trait for types that can be tagged with a simple `#[imgui]`
-///
-/// Examples:
-///   - `bool`
 #[doc(hidden)]
 pub trait Simple {
     fn build(ui: &Ui, elem: &mut Self, params: SimpleParams);
@@ -116,10 +122,21 @@ impl<'a> Simple for &'a ImStr {
 }
 
 macro_rules! impl_slider {
-    ( $( $t:ty => $fun:ident , )+ ) => {$(
-        impl Slider for $t {
+    ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
+        impl Slider<f32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams) {
+            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) {
+                let mut s = ui.$fun(params.label, elem, params.min, params.max);
+                if let Some(disp) = params.display { s = s.display_format(disp); }
+                if let Some(power) = params.power { s = s.power(power); }
+                s.build();
+            }
+        })+
+    };
+    ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
+        impl Slider<i32> for $t {
+            #[inline]
+            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) {
                 let mut s = ui.$fun(params.label, elem, params.min, params.max);
                 if let Some(disp) = params.display { s = s.display_format(disp); }
                 s.build();
@@ -129,10 +146,10 @@ macro_rules! impl_slider {
 }
 
 macro_rules! impl_input {
-    ( $( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input for $t {
+    ($( $t:ty => $fun:ident , )+ ) => {$(
+        impl Input<$t> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) {
                 let mut input = $fun::new(ui, params.label, elem);
                 if let Some(value) = params.step { input = input.step(value) }
                 if let Some(value) = params.step_fast { input = input.step_fast(value) }
@@ -143,11 +160,25 @@ macro_rules! impl_input {
     }
 }
 
+macro_rules! impl_input_i32 {
+    ($( $t:ty => $fun:ident , )+ ) => {$(
+        impl Input<$t> for $t {
+            #[inline]
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) {
+                let mut input = $fun::new(ui, params.label, elem);
+                if let Some(value) = params.step { input = input.step(value) }
+                if let Some(value) = params.step_fast { input = input.step_fast(value) }
+                input.build();
+            }
+        })+
+    }
+}
+
 macro_rules! impl_input_d {
     ( $( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input for $t {
+        impl Input<f32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) {
                 let mut input = $fun::new(ui, params.label, elem);
                 if let Some(value) = params.precission { input = input.decimal_precision(value) }
                 input.build();
@@ -156,15 +187,53 @@ macro_rules! impl_input_d {
     }
 }
 
+macro_rules! impl_input_i32_d {
+    ( $( $t:ty => $fun:ident , )+ ) => {$(
+        impl Input<i32> for $t {
+            #[inline]
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) {
+                let mut input = $fun::new(ui, params.label, elem);
+                input.build();
+            }
+        })+
+    }
+}
+
+macro_rules! impl_drag {
+    ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
+        impl Drag<f32> for $t {
+            fn build(ui: &Ui, elem: &mut Self, params: DragParams<f32>) {
+                let mut drag = $fun::new(ui, params.label, elem);
+                if let Some(val) = params.max { drag = drag.max(val); }
+                if let Some(val) = params.min { drag = drag.min(val); }
+                if let Some(val) = params.speed { drag = drag.speed(val); }
+                if let Some(val) = params.power { drag = drag.power(val); }
+                drag.build();
+            }
+        }
+    )+}
+}
+
 impl_slider! {
-    f32 => slider_float,
-    [f32; 2] => slider_float2,
-    [f32; 3] => slider_float3,
-    [f32; 4] => slider_float4,
+    f32 , f32 => slider_float,
+    [f32; 2] , f32 => slider_float2,
+    [f32; 3] , f32 => slider_float3,
+    [f32; 4] , f32 => slider_float4,
+}
+
+impl_slider! {
+    i32 , i32 => slider_int,
+    [i32; 2] , i32 => slider_int2,
+    [i32; 3] , i32 => slider_int3,
+    [i32; 4] , i32 => slider_int4,
 }
 
 impl_input! {
     f32 => InputFloat,
+}
+
+impl_input_i32! {
+    i32 => InputInt,
 }
 
 impl_input_d! {
@@ -173,13 +242,15 @@ impl_input_d! {
     [f32; 4] => InputFloat4,
 }
 
-impl Drag for f32 {
-    fn build(ui: &Ui, elem: &mut Self, params: DragParams) {
-        let mut drag = DragFloat::new(ui, params.label, elem);
-        if let Some(val) = params.max { drag = drag.max(val); }
-        if let Some(val) = params.min { drag = drag.min(val); }
-        if let Some(val) = params.speed { drag = drag.speed(val); }
-        if let Some(val) = params.power { drag = drag.power(val); }
-        drag.build();
-    }
+impl_input_i32_d! {
+    [i32; 2] => InputInt2,
+    [i32; 3] => InputInt3,
+    [i32; 4] => InputInt4,
+}
+
+impl_drag! {
+    f32, f32 => DragFloat,
+    [f32; 2] , f32 => DragFloat2,
+    [f32; 3] , f32 => DragFloat3,
+    [f32; 4] , f32 => DragFloat4,
 }

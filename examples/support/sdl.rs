@@ -2,7 +2,7 @@ use std::error::Error;
 
 use imgui::{ImGui, Ui};
 
-pub fn run<F: FnMut(&Ui) -> bool>(mut user: F) -> Result<(), Box<dyn Error>> {
+pub fn run<F: FnMut(&Ui)>(mut user: F) -> Result<(), Box<dyn Error>> {
     let sdl = sdl2::init()?;
     let video = sdl.video()?;
     let window = video
@@ -43,11 +43,8 @@ pub fn run<F: FnMut(&Ui) -> bool>(mut user: F) -> Result<(), Box<dyn Error>> {
         }
 
         let ui = imgui_sdl2.frame(&window, &mut imgui, &event_pump.mouse_state());
-        if user(&ui) {
-            renderer.render(ui);
-        } else {
-            break;
-        }
+        user(&ui);
+        renderer.render(ui);
 
         window.gl_swap_window();
     }

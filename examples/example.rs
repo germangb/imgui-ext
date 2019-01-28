@@ -18,40 +18,46 @@ struct MacroUi {
     input_2d: [f32; 2],
     #[imgui(input(precission = 3))]
     input_3d: [f32; 3],
-
     #[imgui(input)]
     progress_bar: f32,
 
     // fields without the `#[imgui]` tags aren't part of the Ui
-    not_ui: Vec<u8>,
+    _not_ui: Vec<u8>,
 
     #[imgui(label = "Super Awesome Mode")]
     awesome_mode: bool,
     #[imgui]
     debug_mode: bool,
-
     #[imgui(label = "String literal")]
     literal: &'static str,
-
+    #[imgui]
+    literal_string: String,
     #[imgui(drag)]
     drag: f32,
 }
 
+impl MacroUi {
+    fn default() -> Self {
+        MacroUi {
+            speed: 42.0,
+            position_2d: [0.0, 0.0],
+            progress: 0.5,
+            debug_mode: false,
+            _not_ui: vec![],
+            awesome_mode: true,
+            foo: false,
+            input_2d: [0.0, 0.0],
+            input_3d: [0.0, 0.0, 0.0],
+            progress_bar: 0.5,
+            literal: "hello world",
+            literal_string: "hello world".to_string(),
+            drag: 0.0,
+        }
+    }
+}
+
 fn main() {
-    let mut custom = MacroUi {
-        speed: 42.0,
-        position_2d: [0.0, 0.0],
-        progress: 0.5,
-        debug_mode: false,
-        not_ui: vec![],
-        awesome_mode: true,
-        foo: false,
-        input_2d: [0.0, 0.0],
-        input_3d: [0.0, 0.0, 0.0],
-        progress_bar: 0.5,
-        literal: "hello world",
-        drag: 0.0,
-    };
+    let mut custom = MacroUi::default();
 
     support::run(|ui| {
         ui.window(im_str!("window"))

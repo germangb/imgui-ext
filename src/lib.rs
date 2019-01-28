@@ -3,5 +3,5 @@ use imgui_ext_traits as traits;
 
 pub mod prelude {
     pub use super::derive::ImGuiExt;
-    pub use super::traits::{UiExt, Slider, Input, Simple, Drag};
+    pub use super::traits::{Drag, Input, Simple, Slider, UiExt};
 }

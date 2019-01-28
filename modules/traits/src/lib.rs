@@ -1,4 +1,4 @@
-use imgui::{Ui, ImStr, ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4, DragFloat, DragFloat2, DragFloat3, DragFloat4};
+use imgui::{DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4, Ui};
 
 /// An extension trait for [`Ui`] that adds support for [`ImGuiExt`]
 ///
@@ -100,6 +100,18 @@ impl Simple for bool {
 impl<'a> Simple for &'a str {
     fn build(ui: &Ui, elem: &mut Self, params: SimpleParams) {
         ui.label_text(params.label, &ImString::new(*elem));
+    }
+}
+
+impl Simple for String {
+    fn build(ui: &Ui, elem: &mut Self, params: SimpleParams) {
+        ui.label_text(params.label, &ImString::new(&elem[..]));
+    }
+}
+
+impl<'a> Simple for &'a ImStr {
+    fn build(ui: &Ui, elem: &mut Self, params: SimpleParams) {
+        ui.label_text(params.label, *elem);
     }
 }
 

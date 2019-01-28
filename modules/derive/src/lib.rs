@@ -1,5 +1,7 @@
 extern crate proc_macro;
 
+mod errors;
+
 use std::string::ToString;
 
 use proc_macro2::{Literal, Span, TokenStream};
@@ -9,7 +11,6 @@ use syn::parse::{Error, Parse};
 use syn::punctuated::Pair;
 use syn::spanned::Spanned;
 
-const INVALID_ATTR_FORMAT: &str = "Invalid attribute format";
 const INVALID_IDENT: &str = "Invalid identifier token";
 const UNSUPPORTED_META: &str = "Unsupported metadata";
 
@@ -180,30 +181,30 @@ fn parse_input(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
             NestedMeta::Meta(meta) => match meta {
                 Meta::NameValue(MetaNameValue { ident, lit: Lit::Int(lit), .. }) => match ident.to_string().as_str() {
                     "precission" => {
-                        if precission.is_some() { return Err(Error::new(ident.span(), "`precission` attribute already set.")) }
+                        if precission.is_some() { return Err(errors::already_defined(ident.span(), "precission")) }
                         else { precission = Some(lit.value() as i32) }
                     },
-                    _ => return Err(Error::new(ident.span(), INVALID_IDENT)),
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
                 },
                 Meta::NameValue(MetaNameValue { ident, lit: Lit::Float(lit), .. }) => match ident.to_string().as_str() {
                     "step" => {
-                        if step.is_some() { return Err(Error::new(ident.span(), "`step` attribute already set.")) }
+                        if step.is_some() { return Err(errors::already_defined(ident.span(), "step")) }
                         else { step = Some(lit.value() as f32) }
                     },
                     "step_fast" => {
-                        if step_fast.is_some() { return Err(Error::new(ident.span(), "`step_fast` attribute already set.")) }
+                        if step_fast.is_some() { return Err(errors::already_defined(ident.span(), "step_fast")) }
                         else { step_fast = Some(lit.value() as f32) }
                     },
-                    _ => return Err(Error::new(ident.span(), INVALID_IDENT)),
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
                 },
                 Meta::NameValue(MetaNameValue { ident, lit: Lit::Str(lit), .. }) => match ident.to_string().as_str() {
                     "label" => {
-                        if label.is_some() { return Err(Error::new(ident.span(), "`label` attribute already set.")) }
+                        if label.is_some() { return Err(errors::already_defined(ident.span(), "label")) }
                         else { label = Some(lit.value()) }
                     },
-                    _ => return Err(Error::new(ident.span(), INVALID_IDENT)),
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
                 }
-                _ => return Err(Error::new(meta_list.span(), "Unrecognized attribute 2"))
+                _ => return Err(Error::new(meta_list.span(), "Unrecognized attribute"))
             }
         }
     }
@@ -228,25 +229,25 @@ fn parse_slider(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
             NestedMeta::Meta(meta) => match meta {
                 Meta::NameValue(MetaNameValue { ident, lit: Lit::Float(lit), .. }) => match ident.to_string().as_str() {
                     "min" => {
-                        if min.is_some() { return Err(Error::new(ident.span(), "`min` attribute already set.")) }
+                        if min.is_some() { return Err(errors::already_defined(ident.span(), "min")) }
                         else { min = Some(lit.value() as f32) }
                     },
                     "max" => {
-                        if max.is_some() { return Err(Error::new(ident.span(), "`max` attribute already set.")) }
+                        if max.is_some() { return Err(errors::already_defined(ident.span(), "max")) }
                         else { max = Some(lit.value() as f32) }
                     },
-                    _ => return Err(Error::new(ident.span(), INVALID_IDENT)),
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
                 },
                 Meta::NameValue(MetaNameValue { ident, lit: Lit::Str(lit), .. }) => match ident.to_string().as_str() {
                     "label" => {
-                        if label.is_some() { return Err(Error::new(ident.span(), "`label` attribute already set.")) }
+                        if label.is_some() { return Err(errors::already_defined(ident.span(), "label")) }
                         else { label = Some(lit.value()) }
                     },
                     "display" => {
-                        if display.is_some() { return Err(Error::new(ident.span(), "`display` attribute already set.")) }
+                        if display.is_some() { return Err(errors::already_defined(ident.span(), "display")) }
                         else { display = Some(lit.value()) }
                     },
-                    _ => return Err(Error::new(ident.span(), INVALID_IDENT)),
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
                 }
                 _ => return Err(Error::new(meta_list.span(), "Unrecognized attribute 2"))
             }
@@ -254,10 +255,67 @@ fn parse_slider(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
     }
 
     Ok(ImGuiAttr::Slider {
-        min: min.ok_or(Error::new(meta_list.span(), "Attribute `min` missing."))?,
-        max: max.ok_or(Error::new(meta_list.span(), "Attribute `max` missing."))?,
+        min: min.ok_or(errors::missin_attrib(meta_list.span(), "min"))?,
+        max: max.ok_or(errors::missin_attrib(meta_list.span(), "max"))?,
         label,
         display,
+    })
+}
+
+fn parse_drag(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
+    let mut min: Option<f32> = None;
+    let mut max: Option<f32> = None;
+    let mut speed: Option<f32> = None;
+    let mut power: Option<f32> = None;
+    let mut label = None;
+    let mut display = None;
+
+    for item in meta_list.nested.iter() {
+        match item {
+            NestedMeta::Literal(l) => return Err(Error::new(meta_list.span(), "Unrecognized attribute literal")),
+            NestedMeta::Meta(meta) => match meta {
+                Meta::NameValue(MetaNameValue { ident, lit: Lit::Float(lit), .. }) => match ident.to_string().as_str() {
+                    "min" => {
+                        if min.is_some() { return Err(errors::already_defined(ident.span(), "min")) }
+                        else { min = Some(lit.value() as f32) }
+                    },
+                    "max" => {
+                        if max.is_some() { return Err(errors::already_defined(ident.span(), "max")) }
+                        else { max = Some(lit.value() as f32) }
+                    },
+                    "speed" => {
+                        if speed.is_some() { return Err(errors::already_defined(ident.span(), "speed")) }
+                        else { speed = Some(lit.value() as f32) }
+                    },
+                    "power" => {
+                        if power.is_some() { return Err(errors::already_defined(ident.span(), "power")) }
+                        else { power = Some(lit.value() as f32) }
+                    },
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
+                },
+                Meta::NameValue(MetaNameValue { ident, lit: Lit::Str(lit), .. }) => match ident.to_string().as_str() {
+                    "label" => {
+                        if label.is_some() { return Err(errors::already_defined(ident.span(), "label")) }
+                        else { label = Some(lit.value()) }
+                    },
+                    "display" => {
+                        if display.is_some() { return Err(errors::already_defined(ident.span(), "display")) }
+                        else { display = Some(lit.value()) }
+                    },
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
+                }
+                _ => return Err(Error::new(meta_list.span(), "Unrecognized attribute 2"))
+            }
+        }
+    }
+
+    Ok(ImGuiAttr::Drag {
+        min,
+        max,
+        label,
+        display,
+        speed,
+        power,
     })
 }
 
@@ -270,7 +328,7 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
     // Allow only one level of nested depth
     let nested = &meta.nested;
     if nested.len() != 1 {
-        return Err(Error::new(meta.span(), INVALID_ATTR_FORMAT));
+        return Err(errors::invalid_format(nested.span()));
     }
 
     match nested.first() {
@@ -281,31 +339,23 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
         // or just the first one?
         Some(Pair::End(attr)) | Some(Pair::Punctuated(attr, _)) => {
             match attr {
-                // This is not allowed (literal inside of the annotation)
+                // This is not allowed (having a literal inside of the annotation)
                 //  - `#[imgui("...")]`
-                NestedMeta::Literal(lit) => {
-                    Err(Error::new(meta.span(), INVALID_ATTR_FORMAT))
-                    /*
-                    Ok(ImGuiAttr::Input {
-                        label: None,
-                        precission: None,
-                        step: None,
-                        step_fast: None
-                    })
-                    */
-                },
+                //  - `#[imgui(42)]`
+                NestedMeta::Literal(lit) => Err(errors::invalid_format(meta.span())),
 
                 NestedMeta::Meta(meta) => {
                     match meta {
                         // We should have
                         //  - `#[imgui(label = "...")]`
                         Meta::NameValue(MetaNameValue { ident, lit: Lit::Str(label), .. }) => {
-                            if ident.to_string() == "label" {
+                            let ident = ident.to_string();
+                            if ident == "label" {
                                 Ok(ImGuiAttr::Simple {
                                     label: Some(label.value()),
                                 })
                             } else {
-                                Err(Error::new(ident.span(), INVALID_IDENT))
+                                Err(errors::unrecog_ident(ident.span(), ident))
                             }
                         },
 
@@ -316,13 +366,15 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
                         Meta::List(meta_list) => match meta_list.ident.to_string().as_str() {
                             "input" => parse_input(meta_list),
                             "slider" => parse_slider(meta_list),
-                            "drag" => unimplemented!("drag"),
+                            "drag" => parse_drag(meta_list),
                             _ => Err(Error::new(meta_list.span(), UNSUPPORTED_META)),
                         },
 
                         // Special cases like:
                         //  - `#[input(text)]`
                         //  - `#[input(drag)]`
+                        //
+                        // Everything else should raise a compilation error.
                         Meta::Word(ident) => match ident.to_string().as_str() {
                             "input" => Ok(ImGuiAttr::Input {
                                 label: None,
@@ -338,18 +390,15 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
                                 speed: None,
                                 power: None
                             }),
-                            _ => Err(Error::new(name.span(), INVALID_ATTR_FORMAT)),
+                            _ => Err(errors::invalid_format(name.span())),
                         }
 
-                        _ => Err(Error::new(name.span(), INVALID_ATTR_FORMAT)),
+                        _ => Err(errors::invalid_format(name.span())),
                     }
                 }
             }
         },
-        _ => {
-            // FIXME
-            Err(Error::new(meta.span(), INVALID_ATTR_FORMAT))
-        }
+        _ => Err(errors::invalid_format(meta.span())),
     }
 }
 
@@ -376,9 +425,7 @@ fn parse_meta(name: &Ident, meta: &Meta) -> Result<ImGuiAttr, Error> {
 
         // This type of attribute is not allowed
         //  - #[imgui = "..."]
-        &Meta::NameValue(_) => {
-            Err(Error::new(meta.span(), INVALID_ATTR_FORMAT))
-        },
+        &Meta::NameValue(ref meta) => Err(errors::invalid_format(meta.span())),
     }
 }
 

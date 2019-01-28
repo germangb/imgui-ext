@@ -49,6 +49,6 @@ Result:
 
 [imgui]: https://github.com/ocornut/imgui
 [**imgui**]: https://github.com/Gekkio/imgui-rs
-[**example**]: examples/example.rs
+[**example**]: example/src/main.rs
 [result]: assets/demo.png
 [MIT]: LICENSE.md

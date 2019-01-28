@@ -96,7 +96,7 @@ impl ImGuiAttr {
                 let step_fast = step_fast.map(Literal::f32_suffixed);
                 let mut fields = TokenStream::new();
 
-                fields.extend(quote! { label: im_str!( #label ), });
+                fields.extend(quote! { label: imgui::im_str!( #label ), });
 
                 if let Some(val) = precission {
                     fields.extend(quote! { precission: Some( #val ), })
@@ -134,7 +134,7 @@ impl ImGuiAttr {
 
                 // precission is included because (for now) both i32 and f32 inputs share the
                 // same Params struct.
-                fields.extend(quote! { label: im_str!( #label ), precission: None, });
+                fields.extend(quote! { label: imgui::im_str!( #label ), precission: None, });
 
                 if let Some(val) = step {
                     fields.extend(quote! { step: Some( #val ), })
@@ -168,11 +168,11 @@ impl ImGuiAttr {
                 let mut fields = quote! {
                     min: #minlit,
                     max: #maxlit,
-                    label: im_str!( #label ),
+                    label: imgui::im_str!( #label ),
                 };
 
                 if let Some(disp) = display.map(|s| Literal::string(s.as_str())) {
-                    fields.extend(quote! { display: Some(im_str!(#disp)), });
+                    fields.extend(quote! { display: Some(imgui::im_str!(#disp)), });
                 } else {
                     fields.extend(quote! { display: None, });
                 }
@@ -202,11 +202,11 @@ impl ImGuiAttr {
                 let mut fields = quote! {
                     min: #minlit,
                     max: #maxlit,
-                    label: im_str!( #label ),
+                    label: imgui::im_str!( #label ),
                 };
 
                 if let Some(disp) = display.map(|s| Literal::string(s.as_str())) {
-                    fields.extend(quote! { display: Some(im_str!(#disp)), });
+                    fields.extend(quote! { display: Some(imgui::im_str!(#disp)), });
                 } else {
                     fields.extend(quote! { display: None, });
                 }
@@ -230,10 +230,10 @@ impl ImGuiAttr {
                 speed,
             } => {
                 let label = Literal::string(&label.unwrap_or(ident.to_string()));
-                let mut fields = quote! { label: im_str!(#label), };
+                let mut fields = quote! { label: imgui::im_str!(#label), };
 
                 if let Some(val) = display {
-                    fields.extend(quote! { display: Some(im_str!(#val)), });
+                    fields.extend(quote! { display: Some(imgui::im_str!(#val)), });
                 } else {
                     fields.extend(quote! { display: None, })
                 }

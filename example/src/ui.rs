@@ -1,5 +1,7 @@
 use imgui_ext::prelude::*;
 
+use imgui::ImString;
+
 #[derive(ImGuiExt)]
 pub struct Demo {
     // by default, all items tagged with `#[imgui(..)]` use the attribute name as the label.
@@ -51,11 +53,16 @@ pub struct Demo {
     label_str: &'static str,
     #[imgui(label = "String label")]
     label_string: String,
+
+    /// InputText is only implemented for `imgui-rs`'s own `ImString` type.
+    #[imgui(text(label = "Input text"))]
+    input_text: ImString,
 }
 
 impl Demo {
     pub fn default() -> Self {
         Self {
+            input_text: ImString::new("Hello world"),
             _not_in_ui: vec![],
             _also_not_in_ui: None,
             checkbox: false,

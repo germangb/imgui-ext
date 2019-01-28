@@ -66,6 +66,11 @@ enum ImGuiAttr {
         max: Option<i32>,
         speed: Option<f32>,
     },
+
+    // `#[imgui(text( ... ))]`
+    Test {
+        label: Option<String>,
+    }
 }
 
 impl ImGuiAttr {
@@ -79,7 +84,7 @@ impl ImGuiAttr {
                 let label = Literal::string(&label.unwrap_or(ident.to_string()));
 
                 Ok(quote! {{
-                    imgui_ext_traits::Simple::build(ui, &mut ext.#ident, imgui_ext_traits::SimpleParams {
+                    imgui_ext_traits::Simple::build(ui, &mut ext.#ident, imgui_ext_traits::params::SimpleParams {
                         label: imgui::im_str!( #label ),
                     })
                 }})
@@ -117,7 +122,7 @@ impl ImGuiAttr {
                 }
 
                 Ok(quote! {
-                    imgui_ext_traits::Input::build(ui, &mut ext.#ident, imgui_ext_traits::InputParams {
+                    imgui_ext_traits::Input::build(ui, &mut ext.#ident, imgui_ext_traits::params::InputParams {
                         #fields
                     })
                 })
@@ -149,7 +154,7 @@ impl ImGuiAttr {
                 }
 
                 Ok(quote! {
-                    imgui_ext_traits::Input::build(ui, &mut ext.#ident, imgui_ext_traits::InputParams {
+                    imgui_ext_traits::Input::build(ui, &mut ext.#ident, imgui_ext_traits::params::InputParams {
                         #fields
                     })
                 })
@@ -184,7 +189,7 @@ impl ImGuiAttr {
                 }
 
                 Ok(quote! {
-                    imgui_ext_traits::Slider::build(ui, &mut ext.#ident, imgui_ext_traits::SliderParams {
+                    imgui_ext_traits::Slider::build(ui, &mut ext.#ident, imgui_ext_traits::params::SliderParams {
                         #fields
                     })
                 })
@@ -216,7 +221,7 @@ impl ImGuiAttr {
                 fields.extend(quote! { power: None, });
 
                 Ok(quote! {
-                    imgui_ext_traits::Slider::build(ui, &mut ext.#ident, imgui_ext_traits::SliderParams {
+                    imgui_ext_traits::Slider::build(ui, &mut ext.#ident, imgui_ext_traits::params::SliderParams {
                         #fields
                     })
                 })
@@ -263,11 +268,19 @@ impl ImGuiAttr {
                 }
 
                 Ok(quote! {
-                    imgui_ext_traits::Drag::build(ui, &mut ext.#ident, imgui_ext_traits::DragParams {
+                    imgui_ext_traits::Drag::build(ui, &mut ext.#ident, imgui_ext_traits::params::DragParams {
                         #fields
                     })
                 })
-            }
+            },
+            ImGuiAttr::Test { label } => {
+                let label = Literal::string(&label.unwrap_or(ident.to_string()));
+                Ok(quote! {
+                    imgui_ext_traits::Text::build(ui, &mut ext.#ident, imgui_ext_traits::params::TextParams {
+                        label: imgui::im_str!( #label ),
+                    })
+                })
+            },
             _ => unimplemented!(),
         }
     }
@@ -553,6 +566,39 @@ fn parse_slider(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
     }
 }
 
+fn parse_text_input(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
+    let mut label = None;
+    for item in meta_list.nested.iter() {
+        match item {
+            NestedMeta::Literal(l) => {
+                return Err(Error::new(
+                    meta_list.span(),
+                    "Unrecognized attribute literal",
+                ));
+            }
+            NestedMeta::Meta(meta) => match meta {
+                Meta::NameValue(MetaNameValue {
+                    ident,
+                    lit: Lit::Str(lit),
+                    ..
+                }) => match ident.to_string().as_str() {
+                    "label" => {
+                        if label.is_some() {
+                            return Err(errors::already_defined(ident.span(), "label"));
+                        } else {
+                            label = Some(lit.value())
+                        }
+                    }
+                    id @ _ => return Err(errors::unrecog_ident(ident.span(), id.to_string())),
+                },
+                _ => return Err(Error::new(meta_list.span(), "Unrecognized attribute 2")),
+            },
+        }
+    }
+
+    Ok(ImGuiAttr::Test { label })
+}
+
 fn parse_drag(meta_list: &syn::MetaList) -> Result<ImGuiAttr, Error> {
     // int
     // TODO
@@ -707,6 +753,7 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
                             "input" => parse_input(meta_list),
                             "slider" => parse_slider(meta_list),
                             "drag" => parse_drag(meta_list),
+                            "text" => parse_text_input(meta_list),
                             _ => Err(errors::invalid_format(meta_list.span())),
                         },
 
@@ -729,6 +776,9 @@ fn parse_meta_list(name: &Ident, meta: &syn::MetaList) -> Result<ImGuiAttr, Erro
                                 max: None,
                                 speed: None,
                                 power: None,
+                            }),
+                            "text" => Ok(ImGuiAttr::Test {
+                                label: None,
                             }),
                             _ => Err(errors::invalid_format(name.span())),
                         },

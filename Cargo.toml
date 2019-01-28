@@ -1,0 +1,16 @@
+[package]
+name = "imgui_ext"
+version = "0.1.0"
+authors = ["german gomez <germangb42@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+imgui = "*"
+imgui_ext_derive = { path = "modules/derive" }
+imgui_ext_traits = { path = "modules/traits" }
+
+[dev-dependencies]
+sdl2 = "0.32.1"
+imgui-sdl2 = "0.4.0"
+imgui-opengl-renderer = "0.3.2"
+gl = "0.11.0"

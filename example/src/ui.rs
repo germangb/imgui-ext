@@ -5,6 +5,11 @@ pub struct Demo {
     // by default, all items tagged with `#[imgui(..)]` use the attribute name as the label.
     // You can optionally define a `label = "..."` attribute to override this with a custom label.
 
+    /// Structs can contain fields that are part of the UI.
+    /// Only fields annotated with `#[imgui(...)` will be part of the UI.
+    _not_in_ui: Vec<i16>,
+    _also_not_in_ui: Option<Box<[u8]>>,
+
     /// To add a checkbox widget with a custom label:
     #[imgui(label = "Checkbox UI")]
     checkbox: bool,
@@ -50,6 +55,8 @@ pub struct Demo {
 impl Demo {
     pub fn default() -> Self {
         Self {
+            _not_in_ui: vec![],
+            _also_not_in_ui: None,
             checkbox: false,
             slider_1d: 0.0,
             slider_4d: [0, 1, 2, 3],

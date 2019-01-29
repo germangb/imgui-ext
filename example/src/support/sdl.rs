@@ -2,11 +2,11 @@ use std::error::Error;
 
 use imgui::{ImGui, Ui};
 
-pub fn run<F: FnMut(&Ui)>(mut user: F) -> Result<(), Box<dyn Error>> {
+pub fn run<F: FnMut(&Ui)>(title: &str, (w, h): (u32, u32), mut user: F) -> Result<(), Box<dyn Error>> {
     let sdl = sdl2::init()?;
     let video = sdl.video()?;
     let window = video
-        .window("Window", 800, 600)
+        .window(title, w, h)
         .opengl()
         .position_centered()
         .build()?;

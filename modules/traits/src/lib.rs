@@ -62,6 +62,17 @@ pub trait Text {
     fn build(ui: &Ui, elem: &mut Self, params: TextParams);
 }
 
+#[doc(hidden)]
+pub trait Checkbox {
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams);
+}
+
+impl Checkbox for bool {
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) {
+        ui.checkbox(params.label, elem);
+    }
+}
+
 impl Text for ImString {
     fn build(ui: &Ui, elem: &mut Self, params: TextParams) {
         InputText::new(ui, params.label, elem).build();

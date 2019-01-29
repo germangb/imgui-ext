@@ -53,3 +53,8 @@ pub struct TextParams<'ui> {
     pub label: &'ui ImStr,
 }
 
+#[doc(hidden)]
+#[derive(Copy, Clone)]
+pub struct CheckboxParams<'ui> {
+    pub label: &'ui ImStr,
+}

@@ -96,7 +96,7 @@ struct Slider {
     format: Option<Lit>,
     min: Lit,
     max: Lit,
-    power: Option<f32>,
+    power: Option<Lit>,
 }
 
 impl Slider {
@@ -108,8 +108,8 @@ struct Drag {
     label: Option<Lit>,
     min: Option<Lit>,
     max: Option<Lit>,
-    speed: Option<f32>,
-    power: Option<f32>,
+    speed: Option<Lit>,
+    power: Option<Lit>,
     format: Option<Lit>,
 }
 
@@ -119,13 +119,16 @@ impl Drag {
 
 enum Tag {
     Display(Display),
-    /// `#[imgui(separator())]`
-    Separator,
     Checkbox(Checkbox),
     Input(Input),
     Slider(Slider),
     Drag(Drag),
     Nested,
+
+    /// `#[imgui(separator)]`
+    Separator,
+    /// `#[imgui(new_line)]`
+    NewLine,
 }
 
 impl Tag {
@@ -151,7 +154,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
     }?;
 
     Ok(quote! {
-        impl #impl_generics imgui_ext_traits::ImGuiExt for #name #ty_generics #where_clause {
+        impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
             fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) {
                 #body
             }
@@ -287,6 +290,12 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                 tag = Tag::Separator;
                 state = Parser::Widget;
             }
+            (Parser::Init, NestedMeta::Meta(Meta::Word(ident)))
+                if ident.to_string() == "new_line" =>
+            {
+                tag = Tag::NewLine;
+                state = Parser::Widget;
+            }
             (Parser::Init, NestedMeta::Meta(Meta::Word(ident))) if ident.to_string() == "input" => {
                 tag = Tag::Input(Default::default());
                 state = Parser::Widget;
@@ -323,6 +332,10 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                         validate_fields(params_ident, &[])?;
                         tag = Tag::Separator
                     }
+                    "new_line" => {
+                        validate_fields(params_ident, &[])?;
+                        tag = Tag::NewLine
+                    }
                     "checkbox" => {
                         validate_fields(params_ident, Checkbox::PARAMS)?;
                         let mut check = Checkbox::default();
@@ -334,21 +347,10 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                         let mut drag = Drag::default();
                         drag.min = params.get("min").map(|(_, lit)| lit).map(Clone::clone);
                         drag.max = params.get("max").map(|(_, lit)| lit).map(Clone::clone);
-                        drag.speed = params.get("speed").and_then(|(_, lit)| {
-                            if let Lit::Float(f) = lit {
-                                Some(f.value() as f32)
-                            } else {
-                                None
-                            }
-                        });
-                        drag.power = params.get("power").and_then(|(_, lit)| {
-                            if let Lit::Float(f) = lit {
-                                Some(f.value() as f32)
-                            } else {
-                                None
-                            }
-                        });
+                        drag.speed = params.get("speed").map(|(_, lit)| lit.clone());
+                        drag.power = params.get("power").map(|(_, lit)| lit.clone());
                         drag.label = params.get("label").map(|(_, lit)| lit.clone());
+                        drag.format = params.get("format").map(|(_, lit)| lit.clone());
                         tag = Tag::Drag(drag);
                     }
                     "slider" => {
@@ -369,13 +371,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                             power: None,
                         };
 
-                        slider.power = params.get("power").and_then(|(_, lit)| {
-                            if let Lit::Float(f) = lit {
-                                Some(f.value() as f32)
-                            } else {
-                                None
-                            }
-                        });
+                        slider.power = params.get("power").map(|(_, lit)| lit.clone());
                         slider.label = params.get("label").map(|(_, lit)| lit.clone());
                         tag = Tag::Slider(slider);
                     }
@@ -389,6 +385,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                             .map(Clone::clone);
                         input.flags = params.get("flags").map(|(_, lit)| lit.clone());
                         input.label = params.get("label").map(|(_, lit)| lit.clone());
+                        input.precission = params.get("precission").map(|(_, lit)| lit.clone());
                         tag = Tag::Input(input);
                     }
                     _ => {
@@ -447,6 +444,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
     for (attr, tag) in imgui {
         match tag {
             Tag::Separator => token_stream.extend(quote!({ ui.separator() })),
+            Tag::NewLine => token_stream.extend(quote!({ ui.new_line() })),
             Tag::Input(Input {
                 label,
                 step,
@@ -462,7 +460,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 };
                 let label = Literal::string(&label);
                 let mut params = quote! {
-                    use imgui_ext_traits::params::InputParams as Params;
+                    use imgui_ext::input::InputParams as Params;
                     use imgui::im_str;
                     let mut params = Params {
                         label: im_str!( #label ),
@@ -510,7 +508,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
 
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
-                    use imgui_ext_traits::Input;
+                    use imgui_ext::Input;
                     Input::build(ui, &mut ext.#ident, { #params });
                 }));
             }
@@ -529,7 +527,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 };
                 let label = Literal::string(&label);
                 let mut params = quote! {
-                    use imgui_ext_traits::params::DragParams as Params;
+                    use imgui_ext::drag::DragParams as Params;
                     use imgui::im_str;
                     let mut params = Params {
                         label: im_str!( #label ),
@@ -541,46 +539,52 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     };
                 };
 
-                match (&min, &max) {
-                    (&Some(Lit::Float(ref min)), &Some(Lit::Float(ref max))) => {
+                match (min, max) {
+                    (Some(Lit::Float(min)), Some(Lit::Float(max))) => {
                         params.extend(quote!(params.min = Some(#min);));
                         params.extend(quote!(params.max = Some(#max);));
                     }
-                    (&Some(Lit::Int(ref min)), &Some(Lit::Int(ref max))) => {
+                    (Some(Lit::Int(min)), Some(Lit::Int(max))) => {
                         params.extend(quote!(params.min = Some(#min);));
                         params.extend(quote!(params.max = Some(#max);));
                     }
-                    (&Some(Lit::Float(ref min)), None) => {
+                    (Some(Lit::Float(min)), None) => {
                         params.extend(quote!(params.min = Some(#min);))
                     }
-                    (&Some(Lit::Int(ref min)), None) => {
-                        params.extend(quote!(params.min = Some(#min);))
-                    }
-                    (None, &Some(Lit::Float(ref max))) => {
+                    (Some(Lit::Int(min)), None) => params.extend(quote!(params.min = Some(#min);)),
+                    (None, Some(Lit::Float(max))) => {
                         params.extend(quote!(params.max = Some(#max);))
                     }
-                    (None, &Some(Lit::Int(ref max))) => {
-                        params.extend(quote!(params.max = Some(#max);))
-                    }
+                    (None, Some(Lit::Int(max))) => params.extend(quote!(params.max = Some(#max);)),
                     (None, None) => {}
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
 
-                if let Some(value) = speed.map(Literal::f32_suffixed) {
-                    params.extend(quote!(params.speed = Some(#value);));
+                match speed {
+                    Some(Lit::Float(value)) => {
+                        params.extend(quote! { params.speed = Some(#value); })
+                    }
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
-                if let Some(value) = power.map(Literal::f32_suffixed) {
-                    params.extend(quote!(params.power = Some(#value);));
+                match power {
+                    Some(Lit::Float(value)) => {
+                        params.extend(quote! { params.power = Some(#value); })
+                    }
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
                 match format {
-                    Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
+                    Some(Lit::Str(value)) => {
+                        params.extend(quote!(params.format = Some(im_str!(#value));))
+                    }
                     None => {}
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
 
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
-                    use imgui_ext_traits::Drag;
+                    use imgui_ext::Drag;
                     Drag::build(ui, &mut ext.#ident, { #params });
                 }));
             }
@@ -603,7 +607,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 };
                 let mut params = quote! {
-                    use imgui_ext_traits::params::SliderParams as Params;
+                    use imgui_ext::slider::SliderParams as Params;
                     use imgui::im_str;
                     let mut params = Params {
                         label: im_str!( #label ),
@@ -617,9 +621,14 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     None => {}
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
+                match power {
+                    Some(Lit::Float(value)) => params.extend(quote!(params.power = Some(#value);)),
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                }
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
-                    use imgui_ext_traits::Slider;
+                    use imgui_ext::Slider;
                     Slider::build(ui, &mut ext.#ident, { #params });
                 }));
             }
@@ -631,15 +640,15 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 };
                 let label = Literal::string(&label);
                 token_stream.extend(quote!({
-                    use imgui_ext_traits::Checkbox;
-                    use imgui_ext_traits::params::CheckboxParams as Params;
+                    use imgui_ext::Checkbox;
+                    use imgui_ext::checkbox::CheckboxParams as Params;
                     use imgui::im_str;
                     Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
                 }));
             }
             Tag::Nested => {
                 token_stream.extend(quote! {{
-                    use imgui_ext_traits::ImGuiExt;
+                    use imgui_ext::ImGuiExt;
                     ImGuiExt::imgui_ext(ui, &mut ext.#ident);
                 }});
             }

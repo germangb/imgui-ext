@@ -19,6 +19,20 @@ pub fn run<F: FnMut(&Ui)>(
     window.gl_make_current(&glctx)?;
 
     let mut imgui = ImGui::init();
+    /*
+    // Fix incorrect colors with sRGB framebuffer
+    fn imgui_gamma_to_linear(col: imgui::ImVec4) -> imgui::ImVec4 {
+        let x = col.x.powf(1.5);
+        let y = col.y.powf(1.5);
+        let z = col.z.powf(1.5);
+        let w = 1.0 - (1.0 - col.w).powf(1.5);
+        imgui::ImVec4::new(x, y, z, w)
+    }
+    let style = imgui.style_mut();
+    for col in 0..style.colors.len() {
+        style.colors[col] = imgui_gamma_to_linear(style.colors[col]);
+    }
+    */
     let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui);
 
     let renderer =

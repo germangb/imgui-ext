@@ -5,9 +5,8 @@ authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["modules/derive", "modules/traits", "example"]
+members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "*"
-imgui_ext_derive = { path = "modules/derive" }
-imgui_ext_traits = { path = "modules/traits" }
+imgui_ext_derive = { path = "imgui_derive" }

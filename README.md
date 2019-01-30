@@ -8,12 +8,10 @@ To try it, point directly to this repo in your `Cargo.toml`:
 imgui_ext = { git = "https://github.com/germangb/imgui-ext" }
 ```
 
-For documentation on usage and the currently available tags, see this [**example**].
-
 ## Usage example
 
 ```rust
-// you need to import the prelude
+// You need to import the prelude
 use imgui_ext::prelude::*;
 
 #[derive(ImGuiExt)]
@@ -24,7 +22,7 @@ struct Demo {
     y: i32,
     #[imgui(drag(label = "Drag 2D"))]
     drag_2d: [f32; 2],
-    #[imgui(label = "Turbo mode")]
+    #[imgui(checkbox(label = "Turbo mode"))]
     turbo: bool,
 }
 ```
@@ -35,11 +33,9 @@ Result:
 
 ## Limitations
 
-* `#[derive(ImGuiExt)]` is only available for `struct`s, at the moment.
+* `#[derive(ImGuiExt)]` is only available for `struct`s at the moment.
 * There is no API to find out if a particular input has been triggered yet.
-* Implemented for just a handful of primitive field types (numbers, arrays, and strings mostly).
-* No straight forward way to annotate fields with arbitrary types *yet* (there will be an API for this in the near future).
-* Layout cannot be annotated.
+* Limited layout options.
 
 ## License
 

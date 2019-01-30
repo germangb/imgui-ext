@@ -1,10 +1,10 @@
-use params::*;
-
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImStr,
     ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3,
     InputInt4, InputText, Ui,
 };
+
+use params::*;
 
 pub mod params;
 

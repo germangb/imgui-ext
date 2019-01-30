@@ -36,7 +36,7 @@ struct Demo {
     #[imgui(drag(label = "Alt"))]
     x: [f32; 2],
     #[imgui(slider(min = 0.0, max = 8.0))]
-    #[imgui(input(label = "Alt y", step = 2.0, step_fast = 10.0))]
+    #[imgui(input(label = "Alt y", step = 2.0, step_fast = 10.0, precission = 4))]
     y: f32,
     #[imgui(checkbox)]
     #[imgui(label = "Is turbo enabled?")]

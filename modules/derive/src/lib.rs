@@ -3,16 +3,16 @@ extern crate proc_macro;
 use std::collections::HashMap;
 use std::string::ToString;
 
-use proc_macro2::{Literal, Span, TokenStream};
-use quote::{quote, ToTokens};
-use syn::parse::{Error, Parse};
-use syn::punctuated::Pair;
+use proc_macro2::{Literal, TokenStream};
+use quote::quote;
+use syn::parse::Error;
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, Attribute, Data, DeriveInput, Field, Fields, Ident, Lit, Meta, MetaList,
-    MetaNameValue, NestedMeta, Token,
+    parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident, Lit, Meta, MetaList,
+    MetaNameValue, NestedMeta,
 };
 
+// TODO Richer error messages
 const INVALID_FORMAT: &str = "Invalid annotation format.";
 
 /// Allowed tags:
@@ -54,19 +54,22 @@ impl DisplayParam {
 ///                                          ^---,
 ///                                      idents & literals
 struct Display {
-    label: Option<String>,
-    display: Option<String>,
+    label: Option<Lit>,
+    display: Option<Lit>,
     params: Vec<DisplayParam>,
 }
 
+/*
+//Never used
 impl Display {
     const PARAMS: &'static [&'static str] = &["label", "display"];
 }
+*/
 
 /// `#[imgui(checkbox(label = "..."))]`
 #[derive(Default)]
 struct Checkbox {
-    label: Option<String>,
+    label: Option<Lit>,
 }
 
 impl Checkbox {
@@ -76,11 +79,11 @@ impl Checkbox {
 /// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0, precision = 3))]`
 #[derive(Default)]
 struct Input {
-    label: Option<String>,
-    flags: Option<String>,
+    label: Option<Lit>,
+    flags: Option<Lit>,
     step: Option<Lit>,
     step_fast: Option<Lit>,
-    precission: Option<u32>,
+    precission: Option<Lit>,
 }
 
 impl Input {
@@ -89,8 +92,8 @@ impl Input {
 
 /// `#[imgui(slider(label = "...", min = 0.0, max = 4.0, format = "..."))]`
 struct Slider {
-    label: Option<String>,
-    format: Option<String>,
+    label: Option<Lit>,
+    format: Option<Lit>,
     min: Lit,
     max: Lit,
     power: Option<f32>,
@@ -102,12 +105,12 @@ impl Slider {
 
 #[derive(Default)]
 struct Drag {
-    label: Option<String>,
+    label: Option<Lit>,
     min: Option<Lit>,
     max: Option<Lit>,
     speed: Option<f32>,
     power: Option<f32>,
-    format: Option<String>,
+    format: Option<Lit>,
 }
 
 impl Drag {
@@ -130,7 +133,7 @@ impl Tag {
         if let &mut Tag::Display(ref mut disp) = self {
             disp
         } else {
-            panic!()
+            panic!("Unexpected state")
         }
     }
 }
@@ -200,7 +203,7 @@ fn struct_body(fields: Fields) -> Result<TokenStream, Error> {
 fn parse_meta(meta: Meta) -> Result<Tag, Error> {
     match meta {
         // simple #[imgui]
-        Meta::Word(id) => Ok(Tag::Display(Display {
+        Meta::Word(_) => Ok(Tag::Display(Display {
             label: None,
             display: None,
             params: vec![],
@@ -242,7 +245,8 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                     ..
                 })),
             ) if ident.to_string() == "label" => {
-                tag.display().label = Some(value.value());
+                tag.display().label =
+                    Some(Lit::Str(syn::LitStr::new(&value.value(), value.span())));
                 state = Parser::Label;
             }
             (
@@ -255,7 +259,9 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
             ) if ident.to_string() == "display" && prev == Parser::Init
                 || prev == Parser::Label =>
             {
-                tag.display().display = Some(value.value());
+                //tag.display().display = Some(value.value());
+                tag.display().display =
+                    Some(Lit::Str(syn::LitStr::new(&value.value(), value.span())));
                 state = Parser::Display;
             }
 
@@ -320,13 +326,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                     "checkbox" => {
                         validate_fields(params_ident, Checkbox::PARAMS)?;
                         let mut check = Checkbox::default();
-                        check.label = params.get("label").and_then(|(_, lit)| {
-                            if let Lit::Str(str) = lit {
-                                Some(str.value())
-                            } else {
-                                None
-                            }
-                        });
+                        check.label = params.get("label").map(|(_, lit)| lit.clone());
                         tag = Tag::Checkbox(check);
                     }
                     "drag" => {
@@ -348,13 +348,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                                 None
                             }
                         });
-                        drag.label = params.get("label").and_then(|(_, lit)| {
-                            if let Lit::Str(str) = lit {
-                                Some(str.value())
-                            } else {
-                                None
-                            }
-                        });
+                        drag.label = params.get("label").map(|(_, lit)| lit.clone());
                         tag = Tag::Drag(drag);
                     }
                     "slider" => {
@@ -382,13 +376,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                                 None
                             }
                         });
-                        slider.label = params.get("label").and_then(|(_, lit)| {
-                            if let Lit::Str(str) = lit {
-                                Some(str.value())
-                            } else {
-                                None
-                            }
-                        });
+                        slider.label = params.get("label").map(|(_, lit)| lit.clone());
                         tag = Tag::Slider(slider);
                     }
                     "input" => {
@@ -399,20 +387,8 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                             .get("step_fast")
                             .map(|(_, lit)| lit)
                             .map(Clone::clone);
-                        input.flags = params.get("flags").and_then(|(_, lit)| {
-                            if let Lit::Str(str) = lit {
-                                Some(str.value())
-                            } else {
-                                None
-                            }
-                        });
-                        input.label = params.get("label").and_then(|(_, lit)| {
-                            if let Lit::Str(str) = lit {
-                                Some(str.value())
-                            } else {
-                                None
-                            }
-                        });
+                        input.flags = params.get("flags").map(|(_, lit)| lit.clone());
+                        input.label = params.get("label").map(|(_, lit)| lit.clone());
                         tag = Tag::Input(input);
                     }
                     _ => {
@@ -478,7 +454,13 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 precission,
                 flags,
             }) => {
-                let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
+                let label = match label {
+                    Some(Lit::Str(stri)) => stri.value(),
+                    None => ident.to_string(),
+                    // TODO proper error span
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                let label = Literal::string(&label);
                 let mut params = quote! {
                     use imgui_ext_traits::params::InputParams as Params;
                     use imgui::im_str;
@@ -509,17 +491,23 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
 
-                if let Some(value) = precission.map(Literal::u32_suffixed) {
-                    params.extend(quote! { params.precission = Some(#value); });
+                match precission {
+                    Some(Lit::Int(value)) => {
+                        params.extend(quote! { params.precission = Some(#value); })
+                    }
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
 
-                if let Some(value) = flags {
-                    // TODO get correct span
-                    let fn_ident = Ident::new(value.as_str(), ident.span());
-                    params.extend(quote! {
-                        params.flags = Some( #fn_ident() );
-                    });
+                match flags {
+                    Some(Lit::Str(flags)) => {
+                        let fn_ident = Ident::new(&flags.value(), ident.span());
+                        params.extend(quote! { params.flags = Some( #fn_ident() ); });
+                    }
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
+
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
                     use imgui_ext_traits::Input;
@@ -534,7 +522,12 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 power,
                 format,
             }) => {
-                let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
+                let label = match label {
+                    Some(Lit::Str(stri)) => stri.value(),
+                    None => ident.to_string(),
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                let label = Literal::string(&label);
                 let mut params = quote! {
                     use imgui_ext_traits::params::DragParams as Params;
                     use imgui::im_str;
@@ -547,27 +540,44 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                         format: None,
                     };
                 };
-                if let &Some(Lit::Float(ref value)) = &min {
-                    params.extend(quote!(params.min = Some(#value);));
+
+                match (&min, &max) {
+                    (&Some(Lit::Float(ref min)), &Some(Lit::Float(ref max))) => {
+                        params.extend(quote!(params.min = Some(#min);));
+                        params.extend(quote!(params.max = Some(#max);));
+                    }
+                    (&Some(Lit::Int(ref min)), &Some(Lit::Int(ref max))) => {
+                        params.extend(quote!(params.min = Some(#min);));
+                        params.extend(quote!(params.max = Some(#max);));
+                    }
+                    (&Some(Lit::Float(ref min)), None) => {
+                        params.extend(quote!(params.min = Some(#min);))
+                    }
+                    (&Some(Lit::Int(ref min)), None) => {
+                        params.extend(quote!(params.min = Some(#min);))
+                    }
+                    (None, &Some(Lit::Float(ref max))) => {
+                        params.extend(quote!(params.max = Some(#max);))
+                    }
+                    (None, &Some(Lit::Int(ref max))) => {
+                        params.extend(quote!(params.max = Some(#max);))
+                    }
+                    (None, None) => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
-                if let &Some(Lit::Int(ref value)) = &min {
-                    params.extend(quote!(params.min = Some(#value);));
-                }
-                if let &Some(Lit::Float(ref value)) = &max {
-                    params.extend(quote!(params.max = Some(#value);));
-                }
-                if let &Some(Lit::Int(ref value)) = &max {
-                    params.extend(quote!(params.max = Some(#value);));
-                }
+
                 if let Some(value) = speed.map(Literal::f32_suffixed) {
                     params.extend(quote!(params.speed = Some(#value);));
                 }
                 if let Some(value) = power.map(Literal::f32_suffixed) {
                     params.extend(quote!(params.power = Some(#value);));
                 }
-                if let Some(value) = format.map(|s| Literal::string(s.as_str())) {
-                    params.extend(quote!(params.format = Some(#value);));
+                match format {
+                    Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
+
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
                     use imgui_ext_traits::Drag;
@@ -581,7 +591,12 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 format,
                 power,
             }) => {
-                let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
+                let label = match label {
+                    Some(Lit::Str(stri)) => stri.value(),
+                    None => ident.to_string(),
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                let label = Literal::string(&label);
                 let min_max = match (min, max) {
                     (Lit::Int(min), Lit::Int(max)) => quote! { min: #min, max: #max },
                     (Lit::Float(min), Lit::Float(max)) => quote! { min: #min, max: #max },
@@ -597,8 +612,10 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                         power: None,
                     };
                 };
-                if let Some(value) = format.map(|s| Literal::string(s.as_str())) {
-                    params.extend(quote!(params.format = Some(#value);));
+                match format {
+                    Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
+                    None => {}
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
@@ -607,7 +624,12 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 }));
             }
             Tag::Checkbox(Checkbox { label }) => {
-                let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
+                let label = match label {
+                    Some(Lit::Str(lab)) => lab.value(),
+                    None => ident.to_string(),
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                let label = Literal::string(&label);
                 token_stream.extend(quote!({
                     use imgui_ext_traits::Checkbox;
                     use imgui_ext_traits::params::CheckboxParams as Params;
@@ -626,7 +648,19 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 display,
                 params,
             }) => {
-                let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
+                let label = match label {
+                    Some(Lit::Str(lab)) => lab.value(),
+                    None => ident.to_string(),
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                let label = Literal::string(&label);
+
+                let display = match display {
+                    Some(Lit::Str(disp)) => Some(disp.value()),
+                    None => None,
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+
                 let display = if let Some(display) = display {
                     let literal = Literal::string(display.as_str());
                     let params: Vec<_> = params
@@ -647,9 +681,6 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     ui.label_text(im_str!(#label), im_str!(#display));
                 }));
             }
-
-            // TODO use proper span
-            _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
         }
     }
 

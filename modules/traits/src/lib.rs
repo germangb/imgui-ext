@@ -73,9 +73,13 @@ impl Checkbox for bool {
     }
 }
 
-impl Text for ImString {
-    fn build(ui: &Ui, elem: &mut Self, params: TextParams) {
-        InputText::new(ui, params.label, elem).build();
+impl Input<f32> for ImString {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) {
+        let mut text = InputText::new(ui, params.label, elem);
+        if let Some(flags) = params.flags {
+            text = text.flags(flags);
+        }
+        text.build();
     }
 }
 
@@ -136,6 +140,7 @@ macro_rules! impl_input {
                 if let Some(value) = params.step { input = input.step(value) }
                 if let Some(value) = params.step_fast { input = input.step_fast(value) }
                 if let Some(value) = params.precission { input = input.decimal_precision(value) }
+                if let Some(value) = params.flags { input = input.flags(value) }
                 input.build();
             }
         })+

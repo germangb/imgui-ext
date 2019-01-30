@@ -20,7 +20,6 @@ enum Parser {
     Init,
     Label,
     Display,
-    DisplayIdent,
     Widget,
 }
 
@@ -78,6 +77,7 @@ struct Checkbox {
 #[derive(Default)]
 struct Input {
     label: Option<String>,
+    flags: Option<String>,
     step: Option<f32>,
     step_fast: Option<f32>,
     precission: Option<u32>,
@@ -110,6 +110,7 @@ enum Tag {
     Input(Input),
     Slider(Slider),
     Drag(Drag),
+    Nested,
 }
 
 impl Tag {
@@ -243,6 +244,10 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                 tag = Tag::Drag(Default::default());
                 state = Parser::Widget;
             },
+            (Parser::Init, NestedMeta::Meta(Meta::Word(ident))) if ident.to_string() == "nested" => {
+                tag = Tag::Nested;
+                state = Parser::Widget;
+            },
 
             // Parse widget function
             //  - #[imgui(input(...))]
@@ -250,6 +255,8 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
             (Parser::Init, NestedMeta::Meta(Meta::List(meta_list))) => {
                 let params = parse_params(meta_list)?;
                 match meta_list.ident.to_string().as_str() {
+                    "nested" => tag = Tag::Nested,
+                    "separator" => tag = Tag::Separator,
                     "drag" => {
                         let mut drag = Drag::default();
                         drag.min = params.get("min").and_then(|lit| if let Lit::Float(f) = lit { Some(f.value() as f32) } else { None });
@@ -271,8 +278,17 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                         };
 
                         slider.power = params.get("power").and_then(|lit| if let Lit::Float(f) = lit { Some(f.value() as f32) } else { None });
+                        slider.label = params.get("label").and_then(|lit| if let Lit::Str(str) = lit { Some(str.value()) } else { None });
                         tag = Tag::Slider(slider);
                     },
+                    "input" => {
+                        let mut input = Input::default();
+                        input.flags = params.get("flags").and_then(|lit| if let Lit::Str(str) = lit { Some(str.value()) } else { None });
+                        input.label = params.get("label").and_then(|lit| if let Lit::Str(str) = lit { Some(str.value()) } else { None });
+                        input.step = params.get("step").and_then(|lit| if let Lit::Float(f) = lit { Some(f.value() as f32) } else { None });
+                        input.step_fast = params.get("step_fast").and_then(|lit| if let Lit::Float(f) = lit { Some(f.value() as f32) } else { None });
+                        tag = Tag::Input(input);
+                    }
                     _ => return Err(Error::new(meta_list.ident.span(), "Unrecognized widget type.")),
                 }
                 state = Parser::Widget;
@@ -310,7 +326,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<Tag>) -> Result<TokenStream, Error>
         match tag {
             Tag::Separator => token_stream.extend(quote!({ui.separator()})),
             #[rustfmt::ignore]
-            Tag::Input(Input { label, step, step_fast, precission }) => {
+            Tag::Input(Input { label, step, step_fast, precission, flags }) => {
                 let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());
                 let mut params = quote!{
                     use imgui_ext_traits::params::InputParams as Params;
@@ -320,11 +336,19 @@ fn parse_field_body(ident: Ident, imgui: Vec<Tag>) -> Result<TokenStream, Error>
                         precission: None,
                         step: None,
                         step_fast: None,
+                        flags: None,
                     };
                 };
                 if let Some(value) = step.map(Literal::f32_suffixed) { params.extend(quote!(params.step = Some(#value);)); }
                 if let Some(value) = step_fast.map(Literal::f32_suffixed) { params.extend(quote!(params.step_fast = Some(#value);)); }
                 if let Some(value) = precission.map(Literal::u32_suffixed) { params.extend(quote!(params.precission = Some(#value);)); }
+                if let Some(value) = flags {
+                    // TODO get correct span
+                    let fn_ident = Ident::new(value.as_str(), ident.span());
+                    params.extend(quote! {
+                        params.flags = Some( #fn_ident() );
+                    });
+                }
                 params.extend(quote!(params));
                 token_stream.extend(quote!({
                     use imgui_ext_traits::Input;
@@ -389,6 +413,12 @@ fn parse_field_body(ident: Ident, imgui: Vec<Tag>) -> Result<TokenStream, Error>
                     use imgui::im_str;
                     Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
                 }));
+            }
+            Tag::Nested => {
+                token_stream.extend(quote! {{
+                    use imgui_ext_traits::ImGuiExt;
+                    ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+                }});
             }
             Tag::Display(Display { label, display, params }) => {
                 let label = Literal::string(label.unwrap_or(ident.to_string()).as_str());

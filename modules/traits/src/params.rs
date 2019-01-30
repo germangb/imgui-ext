@@ -1,6 +1,7 @@
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2,
     InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4, Ui, InputText,
+    ImGuiInputTextFlags,
 };
 
 #[doc(hidden)]
@@ -26,6 +27,8 @@ pub struct InputParams<'ui, T> {
     // fields ignored in multidimensional inputs
     pub step: Option<T>,
     pub step_fast: Option<T>,
+
+    pub flags: Option<ImGuiInputTextFlags>,
 }
 
 #[doc(hidden)]

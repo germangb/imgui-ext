@@ -1,7 +1,7 @@
 use imgui::{
-    DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2,
-    InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4, Ui, InputText,
-    ImGuiInputTextFlags,
+    DragFloat, DragFloat2, DragFloat3, DragFloat4, ImGuiInputTextFlags, ImStr, ImString,
+    InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4,
+    InputText, Ui,
 };
 
 #[doc(hidden)]
@@ -10,7 +10,7 @@ pub struct SliderParams<'ui, T> {
     pub min: T,
     pub max: T,
     pub label: &'ui ImStr,
-    pub display: Option<&'ui ImStr>,
+    pub format: Option<&'ui ImStr>,
 
     // ignored for integers
     pub power: Option<f32>,
@@ -35,7 +35,8 @@ pub struct InputParams<'ui, T> {
 #[derive(Copy, Clone)]
 pub struct DragParams<'ui, T> {
     pub label: &'ui ImStr,
-    pub display: Option<&'ui ImStr>,
+    // TODO use this
+    pub format: Option<&'ui ImStr>,
     pub min: Option<T>,
     pub max: Option<T>,
     pub speed: Option<f32>,

@@ -1,8 +1,9 @@
 use params::*;
 
 use imgui::{
-    DragFloat, DragFloat2, DragFloat3, DragFloat4, ImStr, ImString, InputFloat, InputFloat2,
-    InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4, Ui, InputText,
+    DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImStr,
+    ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3,
+    InputInt4, InputText, Ui,
 };
 
 pub mod params;
@@ -113,7 +114,7 @@ macro_rules! impl_slider {
             #[inline]
             fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) {
                 let mut s = ui.$fun(params.label, elem, params.min, params.max);
-                if let Some(disp) = params.display { s = s.display_format(disp); }
+                if let Some(disp) = params.format { s = s.display_format(disp); }
                 if let Some(power) = params.power { s = s.power(power); }
                 s.build();
             }
@@ -124,7 +125,7 @@ macro_rules! impl_slider {
             #[inline]
             fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) {
                 let mut s = ui.$fun(params.label, elem, params.min, params.max);
-                if let Some(disp) = params.display { s = s.display_format(disp); }
+                if let Some(disp) = params.format { s = s.display_format(disp); }
                 s.build();
             }
         })+
@@ -195,6 +196,20 @@ macro_rules! impl_drag {
                 if let Some(val) = params.min { drag = drag.min(val); }
                 if let Some(val) = params.speed { drag = drag.speed(val); }
                 if let Some(val) = params.power { drag = drag.power(val); }
+                if let Some(disp) = params.format { drag = drag.display_format(disp); }
+                drag.build();
+            }
+        }
+    )+};
+
+    ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
+        impl Drag<i32> for $t {
+            fn build(ui: &Ui, elem: &mut Self, params: DragParams<i32>) {
+                let mut drag = $fun::new(ui, params.label, elem);
+                if let Some(val) = params.max { drag = drag.max(val); }
+                if let Some(val) = params.min { drag = drag.min(val); }
+                if let Some(val) = params.speed { drag = drag.speed(val); }
+                if let Some(disp) = params.format { drag = drag.display_format(disp); }
                 drag.build();
             }
         }
@@ -240,4 +255,11 @@ impl_drag! {
     [f32; 2] , f32 => DragFloat2,
     [f32; 3] , f32 => DragFloat3,
     [f32; 4] , f32 => DragFloat4,
+}
+
+impl_drag! {
+    i32, i32 => DragInt,
+    [i32; 2] , i32 => DragInt2,
+    [i32; 3] , i32 => DragInt3,
+    [i32; 4] , i32 => DragInt4,
 }

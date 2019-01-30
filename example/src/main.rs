@@ -3,7 +3,7 @@ use imgui_ext::prelude::*;
 mod support;
 //mod ui;
 
-#[derive(Default, ImGuiExt)]
+#[derive(Default, Debug, ImGuiExt)]
 struct Mouse {
     x: f32,
     y: f32,
@@ -32,7 +32,7 @@ impl Default for Login {
 
 #[derive(Default, ImGuiExt)]
 struct Demo {
-    #[imgui(slider(min = 0.0, max = 10.0))]
+    #[imgui(slider(min = 0.0, max = 10.0, format = "slider %.02f"))]
     #[imgui(drag(label = "Alt"))]
     x: [f32; 2],
     #[imgui(slider(min = 0.0, max = 8.0))]
@@ -50,6 +50,11 @@ struct Demo {
     #[imgui(label = "", display = "Username: {:?}", username)]
     #[imgui(label = "", display = "Password: {:?}", password)]
     creds: Login,
+
+    #[imgui(slider(min = 0, max = 10))]
+    #[imgui(drag(min = 0, max = 10, format = "haha"))]
+    #[imgui(input(step = 1, step_fast = 2))]
+    int_input: i32,
 }
 
 fn main() {

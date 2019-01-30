@@ -1,5 +1,7 @@
 # imgui-ext
 
+[![Build Status](https://travis-ci.org/germangb/imgui-ext.svg?branch=master)](https://travis-ci.org/germangb/imgui-ext)
+
 Experimental crate to quickly build [imgui] UIs using annotations and a custom Derive. (Built on top of the [**imgui**] crate).
 
 To try it, point directly to this repo in your `Cargo.toml`:

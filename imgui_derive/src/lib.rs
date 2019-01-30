@@ -83,11 +83,11 @@ struct Input {
     flags: Option<Lit>,
     step: Option<Lit>,
     step_fast: Option<Lit>,
-    precission: Option<Lit>,
+    precision: Option<Lit>,
 }
 
 impl Input {
-    const PARAMS: &'static [&'static str] = &["label", "flags", "step", "step_fast", "precission"];
+    const PARAMS: &'static [&'static str] = &["label", "flags", "step", "step_fast", "precision"];
 }
 
 /// `#[imgui(slider(label = "...", min = 0.0, max = 4.0, format = "..."))]`
@@ -385,7 +385,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                             .map(Clone::clone);
                         input.flags = params.get("flags").map(|(_, lit)| lit.clone());
                         input.label = params.get("label").map(|(_, lit)| lit.clone());
-                        input.precission = params.get("precission").map(|(_, lit)| lit.clone());
+                        input.precision = params.get("precision").map(|(_, lit)| lit.clone());
                         tag = Tag::Input(input);
                     }
                     _ => {
@@ -449,7 +449,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                 label,
                 step,
                 step_fast,
-                precission,
+                precision,
                 flags,
             }) => {
                 let label = match label {
@@ -464,7 +464,7 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     use imgui::im_str;
                     let mut params = Params {
                         label: im_str!( #label ),
-                        precission: None,
+                        precision: None,
                         step: None,
                         step_fast: None,
                         flags: None,
@@ -489,9 +489,9 @@ fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenS
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
                 }
 
-                match precission {
+                match precision {
                     Some(Lit::Int(value)) => {
-                        params.extend(quote! { params.precission = Some(#value); })
+                        params.extend(quote! { params.precision = Some(#value); })
                     }
                     None => {}
                     _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),

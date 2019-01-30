@@ -56,7 +56,8 @@ pub fn run<F: FnMut(&Ui)>(
         }
 
         unsafe {
-            gl::ClearColor(0.5, 0.5, 0.5, 1.0);
+            //gl::ClearColor(0.5, 0.5, 0.5, 1.0);
+            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 

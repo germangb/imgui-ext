@@ -12,8 +12,12 @@ use syn::{
     MetaNameValue, NestedMeta,
 };
 
-// TODO Richer error messages
+// TODO richer errors
 const INVALID_FORMAT: &str = "Invalid annotation format.";
+const MULTIPLE_ANNOT: &str = "Found multiple `#[imgui(...)]` annotations in a single field.";
+const STRUCT_SUPPORT: &str = "`#[derive(ImGuiExt)]` only supports structs.";
+const UNRECOG_MODE: &str = "Unrecognized mode.";
+const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
 
 /// Allowed tags:
 ///
@@ -41,19 +45,11 @@ enum DisplayParam {
     Ident(Ident),
 }
 
-impl DisplayParam {
-    fn into_tokens(self) -> TokenStream {
-        match self {
-            DisplayParam::Literal(lit) => quote!(#lit),
-            DisplayParam::Ident(ident) => quote!(#ident),
-        }
-    }
-}
-
-/// `#[imgui(label = "...", display = "...", x, y, z)]`
-///                                          ^---,
-///                                      idents & literals
-struct Display {
+/// `#[imgui(label(label = "...", display = "...", x, y, z))]`
+///                                                   ^---,
+///                                                idents & literals
+#[derive(Default)]
+struct Label {
     label: Option<Lit>,
     display: Option<Lit>,
     params: Vec<DisplayParam>,
@@ -73,7 +69,22 @@ struct Checkbox {
 }
 
 impl Checkbox {
-    const PARAMS: &'static [&'static str] = &["label"];
+    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+        let mut widget = Self {
+            label: None
+        };
+        for param in list.nested.iter() {
+            match param {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
+                    "label" => widget.label = Some(lit.clone()),
+                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                }
+                // TODO use proper span
+                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
+            }
+        }
+        Ok(widget)
+    }
 }
 
 /// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0, precision = 3))]`
@@ -87,7 +98,30 @@ struct Input {
 }
 
 impl Input {
-    const PARAMS: &'static [&'static str] = &["label", "flags", "step", "step_fast", "precision"];
+    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+        let mut widget = Self {
+            label: None,
+            flags: None,
+            step: None,
+            step_fast: None,
+            precision: None
+        };
+        for param in list.nested.iter() {
+            match param {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
+                    "label" => widget.label = Some(lit.clone()),
+                    "flags" => widget.flags = Some(lit.clone()),
+                    "step" => widget.step = Some(lit.clone()),
+                    "step_fast" => widget.step_fast = Some(lit.clone()),
+                    "precission" => widget.precision = Some(lit.clone()),
+                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                }
+                // TODO use proper span
+                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
+            }
+        }
+        Ok(widget)
+    }
 }
 
 /// `#[imgui(slider(label = "...", min = 0.0, max = 4.0, format = "..."))]`
@@ -114,11 +148,36 @@ struct Drag {
 }
 
 impl Drag {
-    const PARAMS: &'static [&'static str] = &["label", "format", "min", "max", "speed", "power"];
+    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+        let mut widget = Self {
+            label: None,
+            min: None,
+            max: None,
+            speed: None,
+            power: None,
+            format: None
+        };
+        for param in list.nested.iter() {
+            match param {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
+                    "label" => widget.label = Some(lit.clone()),
+                    "min" => widget.min = Some(lit.clone()),
+                    "max" => widget.max = Some(lit.clone()),
+                    "speed" => widget.speed = Some(lit.clone()),
+                    "power" => widget.power = Some(lit.clone()),
+                    "format" => widget.format = Some(lit.clone()),
+                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                }
+                // TODO use proper span
+                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
+            }
+        }
+        Ok(widget)
+    }
 }
 
 enum Tag {
-    Display(Display),
+    Label(Label),
     Checkbox(Checkbox),
     Input(Input),
     Slider(Slider),
@@ -132,8 +191,8 @@ enum Tag {
 }
 
 impl Tag {
-    fn display(&mut self) -> &mut Display {
-        if let &mut Tag::Display(ref mut disp) = self {
+    fn display(&mut self) -> &mut Label {
+        if let &mut Tag::Label(ref mut disp) = self {
             disp
         } else {
             panic!("Unexpected state")
@@ -147,10 +206,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 
     let body = match input.data {
         Data::Struct(ref body) => struct_body(body.fields.clone()),
-        _ => Err(Error::new(
-            input.span(),
-            "`ImGuiExt` is only supported for structs at the moment.",
-        )),
+        _ => Err(Error::new(input.span(), STRUCT_SUPPORT)),
     }?;
 
     Ok(quote! {
@@ -174,27 +230,55 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 ///     #[imgui(input(...))]
 ///     y: f32,
 /// }
+#[rustfmt::skip]
 fn struct_body(fields: Fields) -> Result<TokenStream, Error> {
     let field_body = fields
         .iter()
-        .map(|field| {
-            // TODO support for unnamed attributes
+        .flat_map(|field| {
+
+            // TODO add support for unnamed attributes
             let ident = field.ident.clone().expect("Named field");
 
-            // collect all imgui attributes from this field
-            // (anything that contains the `imgui` path)
-            let imgui: Result<Vec<_>, Error> = field
-                .attrs
-                .iter()
-                // TODO check attribute style (Outer or Inner)
-                .filter(|attr| attr.path.is_ident(Ident::new("imgui", attr.span())))
-                // parse into `Tag` enums
-                .map(|f| f.parse_meta().and_then(parse_meta).map(|m| (f.clone(), m)))
+            // collect all the imgui attributes
+            // we need to check that there is only one.
+            let attrs: Vec<Attribute> = field.attrs.iter()
+                .filter(|attr| {
+                    let ident = Ident::new("imgui", attr.span());
+                    attr.path.is_ident(ident)
+                })
+                .cloned()
                 .collect();
 
-            match imgui {
-                Ok(imgui) => parse_field_body(ident, imgui),
-                Err(error) => Err(error),
+            let mut attrs = attrs.into_iter();
+            let first = attrs.next();
+            let second = attrs.next();
+
+            match (first, second) {
+                // No annotations were found.
+                // Emmit no sourcecode.
+                (None,          None     ) => vec![Ok(TokenStream::new())],
+
+                // There is more than one imgui annotation.
+                // Raise a descriptive error pointing to the extra annotation.
+                (Some(_),       Some(err)) => vec![Err(Error::new(err.span(), MULTIPLE_ANNOT))],
+
+                // There is a single annotation, as it should.
+                // Parse the annotation and emmit the source code for this field
+                (Some(attr),    None     ) => {
+                    let tags = attr
+                        .parse_meta()           // -> Meta
+                        .and_then(parse_meta);  // -> Result<Vec<Tag>>
+
+                    match tags {
+                        Err(e) => vec![Err(e)],
+                        Ok(tags) => tags
+                            .into_iter()
+                            .map(|tag| emmit_tag_tokens(&ident, (&attr, &tag)))
+                            .collect()
+                    }
+                },
+
+                _ => unreachable!(),
             }
         })
         .collect::<Result<Vec<_>, Error>>()?;
@@ -202,26 +286,89 @@ fn struct_body(fields: Fields) -> Result<TokenStream, Error> {
     Ok(quote! { #( #field_body );*})
 }
 
-/// meta is the whole tag: `#[imgui]` or `#[imgui(...)]`
-fn parse_meta(meta: Meta) -> Result<Tag, Error> {
+/// meta is the whole (parsed) tag: `#[imgui]` or `#[imgui(...)]`
+fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
     match meta {
-        // simple #[imgui]
-        Meta::Word(_) => Ok(Tag::Display(Display {
-            label: None,
-            display: None,
-            params: vec![],
-        })),
-
+        // #[imgui = ...] Nope
         Meta::NameValue(named) => Err(Error::new(named.span(), INVALID_FORMAT)),
-
-        // general case: #[imgui(meta_list)]
+        // #[imgui], treated as an empty label
+        Meta::Word(_) => Ok(vec![Tag::Label(Label::default())]),
+        // #[imgui(meta_list)] (general)
         Meta::List(meta_list) => parse_meta_list(meta_list),
     }
 }
 
 /// Parse the inside of `#[imgui(...)]`
 ///                              ^^^
-fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
+/// `#[imgui(foo(...), bar(...))]`
+/// `#[imgui(foo(...),)]`
+/// `#[imgui(foo(...))]`
+///
+/// (Init) -> (Label)
+///   - label = "..."
+///   - display = "..."
+///
+fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
+    #[derive(Copy, Clone, Eq, PartialEq)]
+    enum State {
+        Init,
+        Label,
+        Tags,
+    }
+
+    let mut state = State::Init;
+    let mut tags = vec![];
+
+    for nested in meta_list.nested.iter() {
+        match (state, nested) {
+            (_, NestedMeta::Literal(_)) => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+            // Parse as a label(...)
+            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, .. })))
+                if ident.to_string() == "label" || ident.to_string() == "display" =>
+            {
+                tags.push(Tag::Label(parse_label(&meta_list)?));
+                // any errors will have been reported by the previous call to `parse_label`.
+                // At this point I can break out of the loop.
+                break;
+            },
+
+            // widgets that can take no parameters
+            (s, NestedMeta::Meta(Meta::Word(ident))) if s == State::Init || s == State::Tags => {
+                match ident.to_string().as_str() {
+                    "separator" => tags.push(Tag::Separator),
+                    "new_line" => tags.push(Tag::NewLine),
+                    "nested" => tags.push(Tag::Nested),
+
+                    "label" => tags.push(Tag::Label(Default::default())),
+                    "checkbox" => tags.push(Tag::Checkbox(Default::default())),
+                    "input" => tags.push(Tag::Input(Default::default())),
+                    "drag" => tags.push(Tag::Drag(Default::default())),
+                    _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
+                }
+                state = State::Tags;
+            }
+            (s, NestedMeta::Meta(Meta::List(meta_list))) if s == State::Init || s == State::Tags => {
+
+                let tag = match meta_list.ident.to_string().as_str() {
+                    "separator" => Tag::Separator,
+                    "new_line" => Tag::NewLine,
+                    "nested" => Tag::Nested,
+
+                    "label" => Tag::Label(parse_label(&meta_list)?),
+                    "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
+                    "input" => Tag::Input(Input::from_meta_list(meta_list)?),
+                    "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
+                    _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
+                };
+
+                tags.push(tag);
+                state = State::Tags;
+            }
+            _ => panic!(),
+        }
+    }
+    Ok(tags)
+    /*
     #[derive(Copy, Clone, Eq, PartialEq)]
     enum Parser {
         Init,
@@ -231,7 +378,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
     }
 
     let mut state = Parser::Init;
-    let mut tag = Tag::Display(Display {
+    let mut tag = Tag::Display(Label {
         label: None,
         display: None,
         params: vec![],
@@ -389,10 +536,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
                         tag = Tag::Input(input);
                     }
                     _ => {
-                        return Err(Error::new(
-                            meta_list.ident.span(),
-                            "Unrecognized widget type.",
-                        ));
+                        return Err(Error::new(meta_list.ident.span(), INVALID_FORMAT));
                     }
                 }
                 state = Parser::Widget;
@@ -402,9 +546,13 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Tag, Error> {
         }
     }
 
+
     Ok(tag)
+    */
 }
 
+/// Parse the contents of: `foo(k=v, ...)`
+/// It must contain only key=value pairs, otherwise returns an Err.
 fn parse_params(params: &MetaList) -> Result<HashMap<String, (Ident, Lit)>, Error> {
     params
         .nested
@@ -419,279 +567,290 @@ fn parse_params(params: &MetaList) -> Result<HashMap<String, (Ident, Lit)>, Erro
         .collect::<Result<HashMap<_, _>, Error>>()
 }
 
-fn validate_fields<'a, 'b>(
-    actual: impl Iterator<Item = (&'a String, &'b Ident)>,
-    allowed: &[&'static str],
-) -> Result<(), Error> {
-    for (item, ident) in actual {
-        // TODO proper span
-        allowed
-            .iter()
-            .find(|a| item == *a)
-            .ok_or(Error::new(ident.span(), "Unrecognized parameter."))?;
+/// Parse the contents of a label tag: `label(label = "...", display = "...", foo, bar)`
+/// Asumes that `params.ident` is equal to "label"
+fn parse_label(params: &MetaList) -> Result<Label, Error> {
+    #[derive(Clone, Copy)]
+    enum State {
+        Init,
+        Display,
     }
-    Ok(())
-}
 
-/// Output source code for a given field identifier, and its metadata.
-///
-/// imgui only contains the legal variants of Meta
-///   - Meta::World => `#[imgui]`
-///   - Meta::List => `#[imgui(...)]`
-fn parse_field_body(ident: Ident, imgui: Vec<(Attribute, Tag)>) -> Result<TokenStream, Error> {
-    let mut token_stream = TokenStream::new();
+    let mut state = State::Init;
+    let mut display = Label::default();
 
-    for (attr, tag) in imgui {
-        match tag {
-            Tag::Separator => token_stream.extend(quote!({ ui.separator() })),
-            Tag::NewLine => token_stream.extend(quote!({ ui.new_line() })),
-            Tag::Input(Input {
-                label,
-                step,
-                step_fast,
-                precision,
-                flags,
-            }) => {
-                let label = match label {
-                    Some(Lit::Str(stri)) => stri.value(),
-                    None => ident.to_string(),
-                    // TODO proper error span
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let label = Literal::string(&label);
-                let mut params = quote! {
-                    use imgui_ext::input::InputParams as Params;
-                    use imgui::im_str;
-                    let mut params = Params {
-                        label: im_str!( #label ),
-                        precision: None,
-                        step: None,
-                        step_fast: None,
-                        flags: None,
-                    };
-                };
-
-                match step {
-                    Some(Lit::Float(step)) => params.extend(quote! { params.step = Some(#step); }),
-                    Some(Lit::Int(step)) => params.extend(quote! { params.step = Some(#step); }),
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                match step_fast {
-                    Some(Lit::Float(step)) => {
-                        params.extend(quote! { params.step_fast = Some(#step); })
-                    }
-                    Some(Lit::Int(step)) => {
-                        params.extend(quote! { params.step_fast = Some(#step); })
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                match precision {
-                    Some(Lit::Int(value)) => {
-                        params.extend(quote! { params.precision = Some(#value); })
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                match flags {
-                    Some(Lit::Str(flags)) => {
-                        let fn_ident = Ident::new(&flags.value(), ident.span());
-                        params.extend(quote! { params.flags = Some( #fn_ident() ); });
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                params.extend(quote!(params));
-                token_stream.extend(quote!({
-                    use imgui_ext::Input;
-                    Input::build(ui, &mut ext.#ident, { #params });
-                }));
+    for attr in params.nested.iter() {
+        match (state, attr) {
+            (State::Display, NestedMeta::Literal(lit)) => {
+                display.params.push(DisplayParam::Literal(lit.clone()));
             }
-            Tag::Drag(Drag {
-                label,
-                min,
-                max,
-                speed,
-                power,
-                format,
-            }) => {
-                let label = match label {
-                    Some(Lit::Str(stri)) => stri.value(),
-                    None => ident.to_string(),
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let label = Literal::string(&label);
-                let mut params = quote! {
-                    use imgui_ext::drag::DragParams as Params;
-                    use imgui::im_str;
-                    let mut params = Params {
-                        label: im_str!( #label ),
-                        min: None,
-                        max: None,
-                        speed: None,
-                        power: None,
-                        format: None,
-                    };
-                };
 
-                match (min, max) {
-                    (Some(Lit::Float(min)), Some(Lit::Float(max))) => {
-                        params.extend(quote!(params.min = Some(#min);));
-                        params.extend(quote!(params.max = Some(#max);));
-                    }
-                    (Some(Lit::Int(min)), Some(Lit::Int(max))) => {
-                        params.extend(quote!(params.min = Some(#min);));
-                        params.extend(quote!(params.max = Some(#max);));
-                    }
-                    (Some(Lit::Float(min)), None) => {
-                        params.extend(quote!(params.min = Some(#min);))
-                    }
-                    (Some(Lit::Int(min)), None) => params.extend(quote!(params.min = Some(#min);)),
-                    (None, Some(Lit::Float(max))) => {
-                        params.extend(quote!(params.max = Some(#max);))
-                    }
-                    (None, Some(Lit::Int(max))) => params.extend(quote!(params.max = Some(#max);)),
-                    (None, None) => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                match speed {
-                    Some(Lit::Float(value)) => {
-                        params.extend(quote! { params.speed = Some(#value); })
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-                match power {
-                    Some(Lit::Float(value)) => {
-                        params.extend(quote! { params.power = Some(#value); })
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-                match format {
-                    Some(Lit::Str(value)) => {
-                        params.extend(quote!(params.format = Some(im_str!(#value));))
-                    }
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-
-                params.extend(quote!(params));
-                token_stream.extend(quote!({
-                    use imgui_ext::Drag;
-                    Drag::build(ui, &mut ext.#ident, { #params });
-                }));
+            (State::Display, NestedMeta::Meta(Meta::Word(ident))) => {
+                display.params.push(DisplayParam::Ident(ident.clone()));
             }
-            Tag::Slider(Slider {
-                label,
-                min,
-                max,
-                format,
-                power,
-            }) => {
-                let label = match label {
-                    Some(Lit::Str(stri)) => stri.value(),
-                    None => ident.to_string(),
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let label = Literal::string(&label);
-                let min_max = match (min, max) {
-                    (Lit::Int(min), Lit::Int(max)) => quote! { min: #min, max: #max },
-                    (Lit::Float(min), Lit::Float(max)) => quote! { min: #min, max: #max },
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let mut params = quote! {
-                    use imgui_ext::slider::SliderParams as Params;
-                    use imgui::im_str;
-                    let mut params = Params {
-                        label: im_str!( #label ),
-                        format: None,
-                        #min_max,
-                        power: None,
-                    };
-                };
-                match format {
-                    Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-                match power {
-                    Some(Lit::Float(value)) => params.extend(quote!(params.power = Some(#value);)),
-                    None => {}
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                }
-                params.extend(quote!(params));
-                token_stream.extend(quote!({
-                    use imgui_ext::Slider;
-                    Slider::build(ui, &mut ext.#ident, { #params });
-                }));
-            }
-            Tag::Checkbox(Checkbox { label }) => {
-                let label = match label {
-                    Some(Lit::Str(lab)) => lab.value(),
-                    None => ident.to_string(),
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let label = Literal::string(&label);
-                token_stream.extend(quote!({
-                    use imgui_ext::Checkbox;
-                    use imgui_ext::checkbox::CheckboxParams as Params;
-                    use imgui::im_str;
-                    Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
-                }));
-            }
-            Tag::Nested => {
-                token_stream.extend(quote! {{
-                    use imgui_ext::ImGuiExt;
-                    ImGuiExt::imgui_ext(ui, &mut ext.#ident);
-                }});
-            }
-            Tag::Display(Display {
-                label,
-                display,
-                params,
-            }) => {
-                let label = match label {
-                    Some(Lit::Str(lab)) => lab.value(),
-                    None => ident.to_string(),
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-                let label = Literal::string(&label);
 
-                let display = match display {
-                    Some(Lit::Str(disp)) => Some(disp.value()),
-                    None => None,
-                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-                };
-
-                let display = if let Some(display) = display {
-                    let literal = Literal::string(display.as_str());
-                    let params: Vec<_> = params
-                        .into_iter()
-                        .map(|i| {
-                            let field = i.into_tokens();
-                            quote!( ext.#ident.#field )
-                        })
-                        .collect();
-                    quote!(#literal , #( #params ),*)
-                } else {
-                    // display the variable using the Display trait
-                    quote!("{}", ext.#ident)
-                };
-
-                token_stream.extend(quote!({
-                    use imgui::im_str;
-                    ui.label_text(im_str!(#label), im_str!(#display));
-                }));
+            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
+                if ident.to_string() == "label" =>
+            {
+                display.label = Some(lit.clone());
             }
+
+            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
+                if ident.to_string() == "display" =>
+            {
+                display.display = Some(lit.clone());
+                state = State::Display;
+            }
+
+            _ => return Err(Error::new(params.span(), INVALID_FORMAT)),
         }
     }
 
-    Ok(token_stream)
+    Ok(display)
+}
+
+/// Output source code for a given field, a given attribute, and one of the parsed `Tag`s
+///
+/// For example, the this annotation: `#[imgui(label(...), input(...))]`
+/// produces two tags: `Tag::Label` and `Tag::Input`.
+///
+/// This function needs to be called twice (once per Tag)
+fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<TokenStream, Error> {
+    let tokens = match tag {
+        Tag::Separator => quote!({ ui.separator() }),
+        Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Input(Input {
+            label,
+            step,
+            step_fast,
+            precision,
+            flags,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                // TODO proper error span
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::input::InputParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    precision: None,
+                    step: None,
+                    step_fast: None,
+                    flags: None,
+                };
+            };
+
+            match step {
+                Some(Lit::Float(step)) => params.extend(quote! { params.step = Some(#step); }),
+                Some(Lit::Int(step)) => params.extend(quote! { params.step = Some(#step); }),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match step_fast {
+                Some(Lit::Float(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
+                Some(Lit::Int(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match precision {
+                Some(Lit::Int(value)) => params.extend(quote! { params.precision = Some(#value); }),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let fn_ident = Ident::new(&flags.value(), ident.span());
+                    params.extend(quote! { params.flags = Some( #fn_ident() ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            params.extend(quote!(params));
+            quote!({
+                use imgui_ext::Input;
+                Input::build(ui, &mut ext.#ident, { #params });
+            })
+        }
+        Tag::Drag(Drag {
+            label,
+            min,
+            max,
+            speed,
+            power,
+            format,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::drag::DragParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    min: None,
+                    max: None,
+                    speed: None,
+                    power: None,
+                    format: None,
+                };
+            };
+
+            match (min, max) {
+                (Some(Lit::Float(min)), Some(Lit::Float(max))) => {
+                    params.extend(quote!(params.min = Some(#min);));
+                    params.extend(quote!(params.max = Some(#max);));
+                }
+                (Some(Lit::Int(min)), Some(Lit::Int(max))) => {
+                    params.extend(quote!(params.min = Some(#min);));
+                    params.extend(quote!(params.max = Some(#max);));
+                }
+                (Some(Lit::Float(min)), None) => params.extend(quote!(params.min = Some(#min);)),
+                (Some(Lit::Int(min)), None) => params.extend(quote!(params.min = Some(#min);)),
+                (None, Some(Lit::Float(max))) => params.extend(quote!(params.max = Some(#max);)),
+                (None, Some(Lit::Int(max))) => params.extend(quote!(params.max = Some(#max);)),
+                (None, None) => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match speed {
+                Some(Lit::Float(value)) => params.extend(quote! { params.speed = Some(#value); }),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            match power {
+                Some(Lit::Float(value)) => params.extend(quote! { params.power = Some(#value); }),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            match format {
+                Some(Lit::Str(value)) => {
+                    params.extend(quote!(params.format = Some(im_str!(#value));))
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            params.extend(quote!(params));
+            quote!({
+                use imgui_ext::Drag;
+                Drag::build(ui, &mut ext.#ident, { #params });
+            })
+        }
+        Tag::Slider(Slider {
+            label,
+            min,
+            max,
+            format,
+            power,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let min_max = match (min, max) {
+                (Lit::Int(min), Lit::Int(max)) => quote! { min: #min, max: #max },
+                (Lit::Float(min), Lit::Float(max)) => quote! { min: #min, max: #max },
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let mut params = quote! {
+                use imgui_ext::slider::SliderParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    format: None,
+                    #min_max,
+                    power: None,
+                };
+            };
+            match format {
+                Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            match power {
+                Some(Lit::Float(value)) => params.extend(quote!(params.power = Some(#value);)),
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            params.extend(quote!(params));
+            quote!({
+                use imgui_ext::Slider;
+                Slider::build(ui, &mut ext.#ident, { #params });
+            })
+        }
+        Tag::Checkbox(Checkbox { label }) => {
+            let label = match label {
+                Some(Lit::Str(lab)) => lab.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            quote!({
+                use imgui_ext::Checkbox;
+                use imgui_ext::checkbox::CheckboxParams as Params;
+                use imgui::im_str;
+                Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
+            })
+        }
+        Tag::Nested => {
+            quote! {{
+                use imgui_ext::ImGuiExt;
+                ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+            }}
+        }
+        Tag::Label(Label {
+            label,
+            display,
+            params,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(lab)) => lab.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+
+            let display = match display {
+                Some(Lit::Str(disp)) => Some(disp.value()),
+                None => None,
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+
+            let display = if let Some(display) = display {
+                let literal = Literal::string(display.as_str());
+                let params: Vec<_> = params
+                    .into_iter()
+                    .map(|field| match field {
+                        DisplayParam::Literal(lit) => quote!( ext.#ident.#lit ),
+                        DisplayParam::Ident(ident) => quote!( ext.#ident.#ident ),
+                    })
+                    .collect();
+                quote!(#literal , #( #params ),*)
+            } else {
+                // display the variable using the Display trait
+                quote!("{}", ext.#ident)
+            };
+
+            quote!({
+                use imgui::im_str;
+                ui.label_text(im_str!(#label), im_str!(#display));
+            })
+        }
+    };
+
+    Ok(tokens)
 }

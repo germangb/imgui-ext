@@ -43,12 +43,16 @@ pub fn run<F: FnMut(&Ui)>(
     'mainloop: loop {
         for event in event_pump.poll_iter() {
             imgui_sdl2.handle_event(&mut imgui, &event);
-            if let &sdl2::event::Event::Window {
-                win_event: sdl2::event::WindowEvent::Close,
-                ..
-            } = &event
-            {
-                break 'mainloop;
+            match &event {
+                &sdl2::event::Event::Window {
+                    win_event: sdl2::event::WindowEvent::Close,
+                    ..
+                }
+                | &sdl2::event::Event::KeyDown {
+                    keycode: Some(sdl2::keyboard::Keycode::Escape),
+                    ..
+                } => break 'mainloop,
+                _ => {}
             }
             if imgui_sdl2.ignore_event(&event) {
                 continue;

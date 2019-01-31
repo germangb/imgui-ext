@@ -12,12 +12,68 @@ use syn::{
     MetaNameValue, NestedMeta,
 };
 
-// TODO richer errors
+// error messages
 const INVALID_FORMAT: &str = "Invalid annotation format.";
 const MULTIPLE_ANNOT: &str = "Found multiple `#[imgui(...)]` annotations in a single field.";
 const STRUCT_SUPPORT: &str = "`#[derive(ImGuiExt)]` only supports structs.";
 const UNRECOG_MODE: &str = "Unrecognized mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
+const FIELD_ALREADY_DEFINED: &str = "Field is already defined.";
+
+macro_rules! tag {
+    (
+        $(#[$meta:meta])*
+        struct $tag:ident {
+            fields { $( $field:ident : Lit ,)* },
+            optional { $( $opt_field:ident : Option<Lit> ,)* }
+        }
+    ) => {
+        $(#[$meta])*
+        struct $tag {
+            $( $field : Lit ,)*
+            $( $opt_field : Option<Lit> ,)*
+        }
+        impl $tag {
+            fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+            /*
+                let mut widget = Self {
+                    //$( $fields : None ,)*
+                    $( $opt_field : None ,)*
+                };
+                */
+                $( let mut $field = None; )*
+                $( let mut $opt_field = None; )*
+                for param in list.nested.iter() {
+                    match param {
+                        NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
+                            //"label" => widget.label = Some(lit.clone()),
+                            $( stringify!($opt_field) => {
+                                if $opt_field.is_some() {
+                                    return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
+                                }
+                                $opt_field = Some(lit.clone());
+                            },)*
+                            $( stringify!($field) => {
+                                if $field.is_some() {
+                                    return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
+                                }
+                                $field = Some(lit.clone());
+                            },)*
+                            _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                        }
+                        // TODO use proper span
+                        _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
+                    }
+                }
+                Ok(Self {
+                    $( $field : $field.ok_or(Error::new(list.span(), format!("Parameter `{}` missing.", stringify!($field) )))?,)*
+                    $( $opt_field,)*
+                })
+            }
+        }
+
+    }
+}
 
 /// Allowed tags:
 ///
@@ -55,124 +111,65 @@ struct Label {
     params: Vec<DisplayParam>,
 }
 
-/*
-//Never used
-impl Display {
-    const PARAMS: &'static [&'static str] = &["label", "display"];
-}
-*/
-
-/// `#[imgui(checkbox(label = "..."))]`
-#[derive(Default)]
-struct Checkbox {
-    label: Option<Lit>,
-}
-
-impl Checkbox {
-    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
-        let mut widget = Self {
-            label: None
-        };
-        for param in list.nested.iter() {
-            match param {
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
-                    "label" => widget.label = Some(lit.clone()),
-                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
-                }
-                // TODO use proper span
-                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
-            }
+tag! {
+    /// `#[imgui(checkbox(label = "..."))]`
+    #[derive(Default)]
+    struct Checkbox {
+        fields {
+            // none
+        },
+        optional {
+            label: Option<Lit>,
         }
-        Ok(widget)
     }
 }
 
-/// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0, precision = 3))]`
-#[derive(Default)]
-struct Input {
-    label: Option<Lit>,
-    flags: Option<Lit>,
-    step: Option<Lit>,
-    step_fast: Option<Lit>,
-    precision: Option<Lit>,
-}
-
-impl Input {
-    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
-        let mut widget = Self {
-            label: None,
-            flags: None,
-            step: None,
-            step_fast: None,
-            precision: None
-        };
-        for param in list.nested.iter() {
-            match param {
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
-                    "label" => widget.label = Some(lit.clone()),
-                    "flags" => widget.flags = Some(lit.clone()),
-                    "step" => widget.step = Some(lit.clone()),
-                    "step_fast" => widget.step_fast = Some(lit.clone()),
-                    "precission" => widget.precision = Some(lit.clone()),
-                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
-                }
-                // TODO use proper span
-                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
-            }
+tag! {
+    /// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0, precision = 3))]`
+    #[derive(Default)]
+    struct Input {
+        fields {
+            // none
+        },
+        optional {
+            label: Option<Lit>,
+            flags: Option<Lit>,
+            step: Option<Lit>,
+            step_fast: Option<Lit>,
+            precision: Option<Lit>,
         }
-        Ok(widget)
     }
 }
 
-/// `#[imgui(slider(label = "...", min = 0.0, max = 4.0, format = "..."))]`
-struct Slider {
-    label: Option<Lit>,
-    format: Option<Lit>,
-    min: Lit,
-    max: Lit,
-    power: Option<Lit>,
-}
-
-impl Slider {
-    const PARAMS: &'static [&'static str] = &["label", "format", "min", "max", "power"];
-}
-
-#[derive(Default)]
-struct Drag {
-    label: Option<Lit>,
-    min: Option<Lit>,
-    max: Option<Lit>,
-    speed: Option<Lit>,
-    power: Option<Lit>,
-    format: Option<Lit>,
-}
-
-impl Drag {
-    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
-        let mut widget = Self {
-            label: None,
-            min: None,
-            max: None,
-            speed: None,
-            power: None,
-            format: None
-        };
-        for param in list.nested.iter() {
-            match param {
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
-                    "label" => widget.label = Some(lit.clone()),
-                    "min" => widget.min = Some(lit.clone()),
-                    "max" => widget.max = Some(lit.clone()),
-                    "speed" => widget.speed = Some(lit.clone()),
-                    "power" => widget.power = Some(lit.clone()),
-                    "format" => widget.format = Some(lit.clone()),
-                    _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
-                }
-                // TODO use proper span
-                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
-            }
+tag! {
+    /// `#[imgui(slider(label = "...", min = 0.0, max = 4.0, format = "..."))]`
+    struct Slider {
+        fields {
+            min: Lit,
+            max: Lit,
+        },
+        optional {
+            label: Option<Lit>,
+            format: Option<Lit>,
+            power: Option<Lit>,
         }
-        Ok(widget)
+    }
+}
+
+tag! {
+    #[derive(Default)]
+    struct Drag {
+        fields {
+            // none
+        },
+        optional {
+            label: Option<Lit>,
+            min: Option<Lit>,
+            max: Option<Lit>,
+            speed: Option<Lit>,
+            power: Option<Lit>,
+            format: Option<Lit>,
+        }
     }
 }
 
@@ -330,7 +327,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                 // any errors will have been reported by the previous call to `parse_label`.
                 // At this point I can break out of the loop.
                 break;
-            },
+            }
 
             // widgets that can take no parameters
             (s, NestedMeta::Meta(Meta::Word(ident))) if s == State::Init || s == State::Tags => {
@@ -347,8 +344,9 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                 }
                 state = State::Tags;
             }
-            (s, NestedMeta::Meta(Meta::List(meta_list))) if s == State::Init || s == State::Tags => {
-
+            (s, NestedMeta::Meta(Meta::List(meta_list)))
+                if s == State::Init || s == State::Tags =>
+            {
                 let tag = match meta_list.ident.to_string().as_str() {
                     "separator" => Tag::Separator,
                     "new_line" => Tag::NewLine,
@@ -358,6 +356,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
+                    "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 };
 
@@ -368,187 +367,6 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
         }
     }
     Ok(tags)
-    /*
-    #[derive(Copy, Clone, Eq, PartialEq)]
-    enum Parser {
-        Init,
-        Label,
-        Display,
-        Widget,
-    }
-
-    let mut state = Parser::Init;
-    let mut tag = Tag::Display(Label {
-        label: None,
-        display: None,
-        params: vec![],
-    });
-
-    for pair in meta_list.nested.iter() {
-        match (state, pair) {
-            // label = "..." without trailing comma
-            (
-                Parser::Init,
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue {
-                    ident,
-                    lit: Lit::Str(value),
-                    ..
-                })),
-            ) if ident.to_string() == "label" => {
-                tag.display().label =
-                    Some(Lit::Str(syn::LitStr::new(&value.value(), value.span())));
-                state = Parser::Label;
-            }
-            (
-                prev,
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue {
-                    ident,
-                    lit: Lit::Str(value),
-                    ..
-                })),
-            ) if ident.to_string() == "display" && prev == Parser::Init
-                || prev == Parser::Label =>
-            {
-                //tag.display().display = Some(value.value());
-                tag.display().display =
-                    Some(Lit::Str(syn::LitStr::new(&value.value(), value.span())));
-                state = Parser::Display;
-            }
-
-            // Display tokens:
-            //  - ident                 ;   identifier from inner field
-            //  - literal               ;   raw literal
-            //  - TODO ident=literal    ;   identifier in formatted str
-            (Parser::Display, NestedMeta::Literal(lit)) => tag
-                .display()
-                .params
-                .push(DisplayParam::Literal(lit.clone())),
-            (Parser::Display, NestedMeta::Meta(Meta::Word(ident))) => tag
-                .display()
-                .params
-                .push(DisplayParam::Ident(ident.clone())),
-
-            // widgets that can take no parameters:
-            //  - #[imgui(separator)]
-            //  - #[imgui(input)]
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident)))
-                if ident.to_string() == "separator" =>
-            {
-                tag = Tag::Separator;
-                state = Parser::Widget;
-            }
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident)))
-                if ident.to_string() == "new_line" =>
-            {
-                tag = Tag::NewLine;
-                state = Parser::Widget;
-            }
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident))) if ident.to_string() == "input" => {
-                tag = Tag::Input(Default::default());
-                state = Parser::Widget;
-            }
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident)))
-                if ident.to_string() == "checkbox" =>
-            {
-                tag = Tag::Checkbox(Default::default());
-                state = Parser::Widget;
-            }
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident))) if ident.to_string() == "drag" => {
-                tag = Tag::Drag(Default::default());
-                state = Parser::Widget;
-            }
-            (Parser::Init, NestedMeta::Meta(Meta::Word(ident)))
-                if ident.to_string() == "nested" =>
-            {
-                tag = Tag::Nested;
-                state = Parser::Widget;
-            }
-
-            // Parse widget function
-            //  - #[imgui(input(...))]
-            //  - #[imgui(slide(...))]
-            (Parser::Init, NestedMeta::Meta(Meta::List(meta_list))) => {
-                let params = parse_params(meta_list)?;
-                let params_ident = params.iter().map(|(param, (ident, _))| (param, ident));
-                match meta_list.ident.to_string().as_str() {
-                    "nested" => {
-                        validate_fields(params_ident, &[])?;
-                        tag = Tag::Nested
-                    }
-                    "separator" => {
-                        validate_fields(params_ident, &[])?;
-                        tag = Tag::Separator
-                    }
-                    "new_line" => {
-                        validate_fields(params_ident, &[])?;
-                        tag = Tag::NewLine
-                    }
-                    "checkbox" => {
-                        validate_fields(params_ident, Checkbox::PARAMS)?;
-                        let mut check = Checkbox::default();
-                        check.label = params.get("label").map(|(_, lit)| lit.clone());
-                        tag = Tag::Checkbox(check);
-                    }
-                    "drag" => {
-                        validate_fields(params_ident, Drag::PARAMS)?;
-                        let mut drag = Drag::default();
-                        drag.min = params.get("min").map(|(_, lit)| lit).map(Clone::clone);
-                        drag.max = params.get("max").map(|(_, lit)| lit).map(Clone::clone);
-                        drag.speed = params.get("speed").map(|(_, lit)| lit.clone());
-                        drag.power = params.get("power").map(|(_, lit)| lit.clone());
-                        drag.label = params.get("label").map(|(_, lit)| lit.clone());
-                        drag.format = params.get("format").map(|(_, lit)| lit.clone());
-                        tag = Tag::Drag(drag);
-                    }
-                    "slider" => {
-                        validate_fields(params_ident, Slider::PARAMS)?;
-                        let min = params
-                            .get("min")
-                            .map(|(_, lit)| lit)
-                            .ok_or(Error::new(meta_list.span(), "Attribute `min` is missing."))?;
-                        let max = params
-                            .get("max")
-                            .map(|(_, lit)| lit)
-                            .ok_or(Error::new(meta_list.span(), "Attribute `max` is missing."))?;
-                        let mut slider = Slider {
-                            min: min.clone(),
-                            max: max.clone(),
-                            label: None,
-                            format: None,
-                            power: None,
-                        };
-
-                        slider.power = params.get("power").map(|(_, lit)| lit.clone());
-                        slider.label = params.get("label").map(|(_, lit)| lit.clone());
-                        tag = Tag::Slider(slider);
-                    }
-                    "input" => {
-                        validate_fields(params_ident, Input::PARAMS)?;
-                        let mut input = Input::default();
-                        input.step = params.get("step").map(|(_, lit)| lit).map(Clone::clone);
-                        input.step_fast = params
-                            .get("step_fast")
-                            .map(|(_, lit)| lit)
-                            .map(Clone::clone);
-                        input.flags = params.get("flags").map(|(_, lit)| lit.clone());
-                        input.label = params.get("label").map(|(_, lit)| lit.clone());
-                        input.precision = params.get("precision").map(|(_, lit)| lit.clone());
-                        tag = Tag::Input(input);
-                    }
-                    _ => {
-                        return Err(Error::new(meta_list.ident.span(), INVALID_FORMAT));
-                    }
-                }
-                state = Parser::Widget;
-            }
-
-            _ => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
-        }
-    }
-
-
-    Ok(tag)
-    */
 }
 
 /// Parse the contents of: `foo(k=v, ...)`

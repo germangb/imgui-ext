@@ -24,13 +24,57 @@
 //! }
 //! ```
 //!
-//! ### Result
-//!
 //! ![ui result][result]
 //!
-//! ## Mixing UI and non-UI fields
+//! ## Nested UIs
 //!
-//! `#[imgui]` tags are optional. If a fields doesn't have it, it won't be part of the UI:
+//! Types that `#[derive(ImGuiExt)]` can be nested:
+//!
+//! ```ignore
+//! #[derive(ImGuiExt)]
+//! struct Form {
+//!     #[imgui(input)]
+//!     user: ImString,
+//!     #[imgui(input(flags = "passwd_flags"))]
+//!     passwd: ImString,
+//! }
+//!
+//! #[derive(ImGuiExt)]
+//! struct Example {
+//!     #[imgui(nested)]
+//!     login_form: Form,
+//!     #[imgui(checkbox(label = "Remember login?"))]
+//!     remember: bool,
+//! }
+//!
+//! ```
+//!
+//! ![][nested_example]
+//!
+//! ## Rich compiler errors
+//!
+//! The following example will produce an error message like:
+//!
+//! ```ignore
+//! #[derive(ImGuiExt)]
+//! struct Example {
+//!     #[imgui(min = 0.0)]
+//!     foo: f32,
+//! }
+//! ```
+//!
+//! ```nonrust
+//! error: Parameter `max` missing.
+//!   --> example/src/main.rs:10:13
+//!    |
+//! 10 |     #[imgui(slider(min = 0.0))]
+//!    |             ^^^^^^
+//! ```
+//!
+//! ## Combining UI and non-UI fields
+//!
+//! Not every field needs to be annotated. If a field doesn't have an `#[imgui]` annotation, it
+//! will be ignored by the UI.
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
@@ -55,6 +99,7 @@
 //! [`imgui_ext!`]: ./macro.imgui_ext.html
 //! [result]: https://i.imgur.com/llyqEFY.png
 //! [highly complex and intricate layouts]: https://github.com/ocornut/imgui/issues/2265
+//! [nested_example]: https://i.imgur.com/Us8bNdE.png
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImString,
     InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4,

@@ -5,7 +5,7 @@ authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 
 [workspace]
-members = ["imgui_derive"]
+members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "*"

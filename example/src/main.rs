@@ -38,8 +38,17 @@ fn passwd_flags() -> ImGuiInputTextFlags {
 struct Example {
     #[imgui(nested)]
     login_form: Form,
-    #[imgui(checkbox(label = "Remember login?"))]
+
+    #[imgui(
+        button(label = "Login", size = "size", catch = "click"),
+        separator(),
+        checkbox(label = "Remember login?")
+    )]
     remember: bool,
+}
+
+fn size() -> (f32, f32) {
+    (64.0, 24.0)
 }
 
 fn main() {

@@ -120,6 +120,7 @@ tag! {
         },
         optional {
             label: Option<Lit>,
+            catch: Option<Lit>,
         }
     }
 }
@@ -137,6 +138,7 @@ tag! {
             step: Option<Lit>,
             step_fast: Option<Lit>,
             precision: Option<Lit>,
+            catch: Option<Lit>,
         }
     }
 }
@@ -152,6 +154,7 @@ tag! {
             label: Option<Lit>,
             format: Option<Lit>,
             power: Option<Lit>,
+            catch: Option<Lit>,
         }
     }
 }
@@ -169,6 +172,19 @@ tag! {
             speed: Option<Lit>,
             power: Option<Lit>,
             format: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
+tag! {
+    struct Button {
+        fields {
+            size: Lit,
+        },
+        optional {
+            label: Option<Lit>,
+            catch: Option<Lit>,
         }
     }
 }
@@ -179,6 +195,7 @@ enum Tag {
     Input(Input),
     Slider(Slider),
     Drag(Drag),
+    Button(Button),
     Nested,
 
     /// `#[imgui(separator)]`
@@ -357,6 +374,8 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
+
+                    "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 };
 
@@ -443,6 +462,7 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             step_fast,
             precision,
             flags,
+            catch,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -485,7 +505,7 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
 
             match flags {
                 Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), ident.span());
+                    let fn_ident = Ident::new(&flags.value(), flags.span());
                     params.extend(quote! { params.flags = Some( #fn_ident() ); });
                 }
                 None => {}
@@ -505,6 +525,7 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             speed,
             power,
             format,
+            catch,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -566,12 +587,30 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
                 Drag::build(ui, &mut ext.#ident, { #params });
             })
         }
+        Tag::Button(Button { label, size, catch }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+
+            let size_fn = match size {
+                Lit::Str(size) => Ident::new(&size.value(), size.span()),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            quote! {{
+                use imgui::im_str;
+                ui.button( im_str!( #label ), { #size_fn() } );
+            }}
+        }
         Tag::Slider(Slider {
             label,
             min,
             max,
             format,
             power,
+            catch,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -610,7 +649,7 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
                 Slider::build(ui, &mut ext.#ident, { #params });
             })
         }
-        Tag::Checkbox(Checkbox { label }) => {
+        Tag::Checkbox(Checkbox { label, catch }) => {
             let label = match label {
                 Some(Lit::Str(lab)) => lab.value(),
                 None => ident.to_string(),

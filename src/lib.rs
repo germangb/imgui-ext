@@ -53,12 +53,12 @@
 //!
 //! ## Rich compiler errors
 //!
-//! The following example will produce an error message like:
+//! You get descriptive compiler errors whenever UI is misdefined.
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
 //! struct Example {
-//!     #[imgui(min = 0.0)]
+//!     #[imgui(slider(min = 0.0))]
 //!     foo: f32,
 //! }
 //! ```
@@ -106,11 +106,21 @@ use imgui::{
     InputText, Ui,
 };
 
+pub use checkbox::Checkbox;
+use checkbox::CheckboxParams;
+pub use drag::Drag;
+use drag::DragParams;
+pub use input::Input;
+use input::InputParams;
+pub use slider::Slider;
+use slider::SliderParams;
+
 #[doc(hidden)]
 pub mod macros;
 pub mod prelude {
-    pub use super::{Checkbox, Drag, Input, Slider};
     pub use imgui_ext_derive::ImGuiExt;
+
+    pub use super::{Checkbox, Drag, Input, Slider};
 }
 
 /// `slider(...)` docs.
@@ -241,21 +251,8 @@ pub mod layout {}
 pub mod label {}
 /// `nested(...)` docs (used to build nested UIs).
 pub mod nested {}
-
-#[doc(hidden)]
-pub fn imgui_ext_impl<U: ImGuiExt>(ui: &Ui, ext: &mut U) {
-    U::imgui_ext(ui, ext);
-}
-
-pub use checkbox::Checkbox;
-pub use drag::Drag;
-pub use input::Input;
-pub use slider::Slider;
-
-use checkbox::CheckboxParams;
-use drag::DragParams;
-use input::InputParams;
-use slider::SliderParams;
+/// `button(...)` docs.
+pub mod button {}
 
 #[doc(hidden)]
 pub trait ImGuiExt {

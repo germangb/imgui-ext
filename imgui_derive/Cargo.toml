@@ -1,5 +1,5 @@
 [package]
-name = "imgui_ext_derive"
+name = "imgui-ext-derive"
 version = "0.1.0"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"

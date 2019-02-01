@@ -8,7 +8,7 @@ A crate to quickly build **[imgui]** UIs using annotations and a custom Derive.
 
 ```toml
 [dependencies]
-imgui_ext = "0.1"
+imgui-ext = "0.1"
 ```
 
 [imgui]: https://github.com/Gekkio/imgui-rs

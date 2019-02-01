@@ -11,4 +11,4 @@ imgui-opengl-renderer = "0.3.2"
 gl = "0.11.0"
 
 imgui = "0.0.21"
-imgui_ext = { path = "../" }
+imgui-ext = { path = "../" }

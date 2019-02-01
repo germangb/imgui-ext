@@ -1,5 +1,5 @@
 [package]
-name = "imgui_ext"
+name = "imgui-ext"
 version = "0.1.0"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
@@ -9,4 +9,4 @@ members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "*"
-imgui_ext_derive = { path = "imgui_derive" }
+imgui-ext-derive = { path = "imgui_derive" }

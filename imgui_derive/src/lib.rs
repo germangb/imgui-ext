@@ -1,3 +1,4 @@
+#![recursion_limit = "128"]
 extern crate proc_macro;
 
 use std::collections::HashMap;
@@ -35,12 +36,6 @@ macro_rules! tag {
         }
         impl $tag {
             fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
-            /*
-                let mut widget = Self {
-                    //$( $fields : None ,)*
-                    $( $opt_field : None ,)*
-                };
-                */
                 $( let mut $field = None; )*
                 $( let mut $opt_field = None; )*
                 for param in list.nested.iter() {
@@ -189,6 +184,19 @@ tag! {
     }
 }
 
+tag! {
+    /// `#[imgui(bullet)]`
+    /// `#[imgui(bullet(label = "Bullet list item"))]`
+    #[derive(Default)]
+    struct Bullet {
+        fields {
+        },
+        optional {
+            text: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     Label(Label),
     Checkbox(Checkbox),
@@ -196,6 +204,7 @@ enum Tag {
     Slider(Slider),
     Drag(Drag),
     Button(Button),
+    Bullet(Bullet),
     Nested,
 
     /// `#[imgui(separator)]`
@@ -218,15 +227,28 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let body = match input.data {
+    let (body, catch_fields) = match input.data {
         Data::Struct(ref body) => struct_body(body.fields.clone()),
         _ => Err(Error::new(input.span(), STRUCT_SUPPORT)),
     }?;
 
+    // crate a new type.
+    // It should never generate a collision
+    let event_type = Ident::new(&format!("{}ImGuiExt", name.to_string()), input.span());
+
     Ok(quote! {
+        #[derive(Default)]
+        pub struct #event_type {
+            #catch_fields
+        }
         impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
-            fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) {
+            type Events = #event_type;
+            fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
+                let mut events = #event_type {
+                    ..Default::default()
+                };
                 #body
+                events
             }
         }
     })
@@ -245,7 +267,11 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 ///     y: f32,
 /// }
 #[rustfmt::skip]
-fn struct_body(fields: Fields) -> Result<TokenStream, Error> {
+fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
+    let catch_fields = quote! {
+        pub click: bool,
+        pub rem: bool,
+    };
     let field_body = fields
         .iter()
         .flat_map(|field| {
@@ -297,7 +323,7 @@ fn struct_body(fields: Fields) -> Result<TokenStream, Error> {
         })
         .collect::<Result<Vec<_>, Error>>()?;
 
-    Ok(quote! { #( #field_body );*})
+    Ok((quote! { #( #field_body );*}, catch_fields))
 }
 
 /// meta is the whole (parsed) tag: `#[imgui]` or `#[imgui(...)]`
@@ -314,14 +340,11 @@ fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
 
 /// Parse the inside of `#[imgui(...)]`
 ///                              ^^^
-/// `#[imgui(foo(...), bar(...))]`
-/// `#[imgui(foo(...),)]`
-/// `#[imgui(foo(...))]`
-///
-/// (Init) -> (Label)
-///   - label = "..."
-///   - display = "..."
-///
+/// Possible cases:
+///   - `#[imgui(foo(...), bar(...))]`
+///   - `#[imgui(foo(...),)]`
+///   - `#[imgui(foo(...))]`
+///   - `#[imgui(label = "...", display = "...", foo, bar)]`
 fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
     #[derive(Copy, Clone, Eq, PartialEq)]
     enum State {
@@ -357,6 +380,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
                     "drag" => tags.push(Tag::Drag(Default::default())),
+                    "bullet" => tags.push(Tag::Bullet(Default::default())),
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 }
                 state = State::Tags;
@@ -374,7 +398,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
-
+                    "bullet" => Tag::Bullet(Bullet::from_meta_list(meta_list)?),
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 };
@@ -513,9 +537,16 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             }
 
             params.extend(quote!(params));
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                quote! { events.#id = _ev; }
+            } else {
+                quote!()
+            };
             quote!({
                 use imgui_ext::Input;
-                Input::build(ui, &mut ext.#ident, { #params });
+                let _ev = Input::build(ui, &mut ext.#ident, { #params });
+                #catch
             })
         }
         Tag::Drag(Drag {
@@ -599,10 +630,32 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
                 Lit::Str(size) => Ident::new(&size.value(), size.span()),
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             };
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                quote! { events.#id = _ev; }
+            } else {
+                quote!()
+            };
             quote! {{
-                use imgui::im_str;
-                ui.button( im_str!( #label ), { #size_fn() } );
+                let _ev = ui.button( imgui::im_str!( #label ), { #size_fn() } );
+                #catch
             }}
+        }
+        Tag::Bullet(Bullet { text }) => {
+            let text = match text {
+                Some(Lit::Str(text)) => Some(text),
+                None => None,
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+
+            if let Some(text) = text {
+                quote! {{
+                    use imgui::im_str;
+                    ui.bullet_text( im_str!( #text ));
+                }}
+            } else {
+                quote! { ui.bullet(); }
+            }
         }
         Tag::Slider(Slider {
             label,
@@ -656,11 +709,18 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             };
             let label = Literal::string(&label);
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                quote! { events.#id = _ev; }
+            } else {
+                quote!()
+            };
             quote!({
                 use imgui_ext::Checkbox;
                 use imgui_ext::checkbox::CheckboxParams as Params;
                 use imgui::im_str;
-                Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
+                let _ev = Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
+                #catch
             })
         }
         Tag::Nested => {

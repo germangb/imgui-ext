@@ -1,26 +1,9 @@
-use imgui_ext::imgui_ext;
 use imgui_ext::prelude::*;
+use imgui_ext::{imgui_ext, Events};
 
 use imgui::ImGuiInputTextFlags;
 
 mod support;
-
-#[derive(Default, ImGuiExt)]
-struct Demo {
-    //#[imgui(slider(min = 0.0, max = 4.0))]
-    x: f32,
-    #[imgui(slider(min = 0.0, max = 1.0))]
-    foo: f32,
-    #[imgui(drag(label = "Drag 2D", speed = 0.1))]
-    drag_2d: [f32; 2],
-
-    #[imgui(
-        checkbox(label = "Turbo mode"),
-        separator,
-        label(label = "Is turbo enabled?")
-    )]
-    turbo: bool,
-}
 
 #[derive(Default, ImGuiExt)]
 struct Form {
@@ -38,13 +21,19 @@ fn passwd_flags() -> ImGuiInputTextFlags {
 struct Example {
     #[imgui(nested)]
     login_form: Form,
-
     #[imgui(
         button(label = "Login", size = "size", catch = "click"),
-        separator(),
-        checkbox(label = "Remember login?")
+        separator,
+        checkbox(label = "Remember login?", catch = "rem")
     )]
     remember: bool,
+    #[imgui(
+        new_line,
+        bullet(text = "Be nice."),
+        bullet(text = "Kill all humans."),
+        bullet(text = "Don't reveal your password.")
+    )]
+    _bullet: (),
 }
 
 fn size() -> (f32, f32) {
@@ -57,5 +46,15 @@ fn main() {
     demo.login_form.user = imgui::ImString::with_capacity(64);
     demo.login_form.passwd = imgui::ImString::with_capacity(64);
 
-    support::run("Demo", (640, 480), |ui| imgui_ext!(ui, &mut demo));
+    support::run("Demo", (640, 480), |ui| {
+        let events = imgui_ext!(ui, &mut demo);
+
+        if events.click {
+            println!("click!");
+        }
+
+        if events.rem {
+            println!("rem!");
+        }
+    });
 }

@@ -26,6 +26,14 @@
 //!
 //! ![ui result][result]
 //!
+//! ## No allocs
+//!
+//! The generated code doesn't perform any dynamic allocations.
+//!
+//! ## Input catching
+//!
+//! Catch discrete input events (clicks, edits, etc).
+//!
 //! ## Nested UIs
 //!
 //! Types that `#[derive(ImGuiExt)]` can be nested:
@@ -91,14 +99,9 @@
 //!
 //! A general purpose imgui library (for all cases anyway).
 //!
-//! Instead it's meant to compliment [imgui] in order to remove some of the boilerplate. You may also
-//! find that the annotations are not flexible enough to produce [highly complex and intricate layouts].
-//!
-//!
 //! [imgui]: https://crates.io/crates/imgui
 //! [`imgui_ext!`]: ./macro.imgui_ext.html
 //! [result]: https://i.imgur.com/llyqEFY.png
-//! [highly complex and intricate layouts]: https://github.com/ocornut/imgui/issues/2265
 //! [nested_example]: https://i.imgur.com/Us8bNdE.png
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImString,
@@ -195,7 +198,7 @@ pub mod input {
         pub flags: Option<imgui::ImGuiInputTextFlags>,
     }
     pub trait Input<T> {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: InputParams<T>);
+        fn build(ui: &imgui::Ui, elem: &mut Self, params: InputParams<T>) -> bool;
     }
 }
 /// `drag(...)` docs.
@@ -242,7 +245,7 @@ pub mod checkbox {
 
     /// Trait for types that can be represented with a checkbox.
     pub trait Checkbox {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: CheckboxParams);
+        fn build(ui: &imgui::Ui, elem: &mut Self, params: CheckboxParams) -> bool;
     }
 }
 /// Support for some (basic) layout annotations.
@@ -253,25 +256,28 @@ pub mod label {}
 pub mod nested {}
 /// `button(...)` docs.
 pub mod button {}
+/// `bullet(...)` docs.
+pub mod bullet {}
 
 #[doc(hidden)]
 pub trait ImGuiExt {
-    fn imgui_ext(ui: &Ui, ext: &mut Self);
+    type Events;
+    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
 impl Checkbox for bool {
-    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) {
-        ui.checkbox(params.label, elem);
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
+        ui.checkbox(params.label, elem)
     }
 }
 
 impl Input<f32> for ImString {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
         let mut text = InputText::new(ui, params.label, elem);
         if let Some(flags) = params.flags {
             text = text.flags(flags);
         }
-        text.build();
+        text.build()
     }
 }
 
@@ -303,13 +309,13 @@ macro_rules! impl_input {
     ($( $t:ty => $fun:ident , )+ ) => {$(
         impl Input<$t> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) -> bool {
                 let mut input = $fun::new(ui, params.label, elem);
                 if let Some(value) = params.step { input = input.step(value) }
                 if let Some(value) = params.step_fast { input = input.step_fast(value) }
                 if let Some(value) = params.precision { input = input.decimal_precision(value) }
                 if let Some(value) = params.flags { input = input.flags(value) }
-                input.build();
+                input.build()
             }
         })+
     }
@@ -319,11 +325,11 @@ macro_rules! impl_input_i32 {
     ($( $t:ty => $fun:ident , )+ ) => {$(
         impl Input<$t> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) -> bool {
                 let mut input = $fun::new(ui, params.label, elem);
                 if let Some(value) = params.step { input = input.step(value) }
                 if let Some(value) = params.step_fast { input = input.step_fast(value) }
-                input.build();
+                input.build()
             }
         })+
     }
@@ -333,10 +339,10 @@ macro_rules! impl_input_d {
     ( $( $t:ty => $fun:ident , )+ ) => {$(
         impl Input<f32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
                 let mut input = $fun::new(ui, params.label, elem);
                 if let Some(value) = params.precision { input = input.decimal_precision(value) }
-                input.build();
+                input.build()
             }
         })+
     }
@@ -346,9 +352,9 @@ macro_rules! impl_input_i32_d {
     ( $( $t:ty => $fun:ident , )+ ) => {$(
         impl Input<i32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
                 let input = $fun::new(ui, params.label, elem);
-                input.build();
+                input.build()
             }
         })+
     }

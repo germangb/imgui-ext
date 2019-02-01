@@ -2,13 +2,28 @@
 
 [![Build Status](https://travis-ci.org/germangb/imgui-ext.svg?branch=master)](https://travis-ci.org/germangb/imgui-ext)
 
-Experimental crate to quickly build [imgui] UIs using annotations and a custom Derive. (Built on top of the [**imgui**] crate).
+***Warning: API from master is heavily subject to changes.***
 
-To try it, point directly to this repo in your `Cargo.toml`:
+A crate to quickly build **[imgui]** UIs using annotations and a custom Derive.
+
 ```toml
 [dependencies]
-imgui_ext = { git = "https://github.com/germangb/imgui-ext" }
+imgui_ext = "0.1"
 ```
+
+[imgui]: https://github.com/Gekkio/imgui-rs
+
+## Features
+
+* Encode UI directly on the types.
+* Static code generation (no heap allocations): [example].
+* Support for most imgui widgets.
+* Support for building nested UIs (see the [`imgui(nested)`] attribute).
+* Descriptive compiler errors.
+
+[`imgui(nested)`]: ./README.md
+
+[example]: ./CODEGEN.md
 
 ## Usage example
 
@@ -24,7 +39,6 @@ struct Example {
     y: i32,
     #[imgui(drag(label = "Drag 2D"))]
     drag_2d: [f32; 2],
-
     #[imgui(
         checkbox(label = "Turbo mode"),
         label(label = "Is turbo enabled?"),
@@ -33,22 +47,19 @@ struct Example {
 }
 ```
 
-Result:
+#### Result:
 
-![ui result][result]
+![][result]
 
 ## Limitations
 
-* `#[derive(ImGuiExt)]` is only available for `struct`s at the moment.
-* There is no API to find out if a particular input has been triggered yet.
-* Limited layout options.
+* `#[derive(ImGuiExt)]` is only supported for `struct`s with named fields, at the moment.
+* Limited layout support.
 
 ## License
 
 [MIT]
 
-[imgui]: https://github.com/ocornut/imgui
-[**imgui**]: https://github.com/Gekkio/imgui-rs
 [**example**]: example/src/ui.rs
 [result]: assets/demo.png
 [MIT]: LICENSE.md

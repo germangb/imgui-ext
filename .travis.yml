@@ -12,4 +12,4 @@ matrix:
     - rust: nightly
   fast_finish: true
 after_success:
-- test $TRAVIS_BRANCH = "stabilize" && bash ci/publish_docs.sh
+- test $TRAVIS_BRANCH = "master" && bash ci/publish_docs.sh

@@ -202,6 +202,8 @@ impl_i32_array! {
 
 #[cfg(test)]
 mod tests {
+    #![allow(dead_code)]
+
     use crate as imgui_ext;
     use crate::prelude::*;
     use imgui::ImGuiInputTextFlags as Flags;

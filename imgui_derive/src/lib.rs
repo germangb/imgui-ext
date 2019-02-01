@@ -6,11 +6,12 @@ use std::string::ToString;
 
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
+use quote::ToTokens;
 use syn::parse::Error;
 use syn::spanned::Spanned;
 use syn::{
     parse_macro_input, Attribute, Data, DeriveInput, Fields, Ident, Lit, Meta, MetaList,
-    MetaNameValue, NestedMeta,
+    MetaNameValue, NestedMeta, Type,
 };
 
 // error messages
@@ -197,6 +198,17 @@ tag! {
     }
 }
 
+tag! {
+    #[derive(Default)]
+    struct Nested {
+        fields {
+        },
+        optional {
+            catch: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     Label(Label),
     Checkbox(Checkbox),
@@ -205,7 +217,7 @@ enum Tag {
     Drag(Drag),
     Button(Button),
     Bullet(Bullet),
-    Nested,
+    Nested(Nested),
 
     /// `#[imgui(separator)]`
     Separator,
@@ -244,9 +256,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
         impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
             type Events = #event_type;
             fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
-                let mut events = #event_type {
-                    ..Default::default()
-                };
+                let mut events: Self::Events = Default::default();
                 #body
                 events
             }
@@ -268,16 +278,16 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 /// }
 #[rustfmt::skip]
 fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
-    let catch_fields = quote! {
-        pub click: bool,
-        pub rem: bool,
-    };
+    // TODO FIXME refactor the way input fields are collected
+    let mut input: Vec<TokenStream> = vec![];
+
     let field_body = fields
         .iter()
         .flat_map(|field| {
 
             // TODO add support for unnamed attributes
             let ident = field.ident.clone().expect("Named field");
+            let ty = &field.ty;
 
             // collect all the imgui attributes
             // we need to check that there is only one.
@@ -313,7 +323,7 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
                         Err(e) => vec![Err(e)],
                         Ok(tags) => tags
                             .into_iter()
-                            .map(|tag| emmit_tag_tokens(&ident, (&attr, &tag)))
+                            .map(|tag| emmit_tag_tokens(&ident, &ty, &attr, &tag, &mut input))
                             .collect()
                     }
                 },
@@ -322,6 +332,12 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
             }
         })
         .collect::<Result<Vec<_>, Error>>()?;
+
+    let catch_fields = quote! {
+        #( #input ),*
+        //pub click: bool,
+        //pub rem: bool,
+    };
 
     Ok((quote! { #( #field_body );*}, catch_fields))
 }
@@ -374,8 +390,8 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                 match ident.to_string().as_str() {
                     "separator" => tags.push(Tag::Separator),
                     "new_line" => tags.push(Tag::NewLine),
-                    "nested" => tags.push(Tag::Nested),
 
+                    "nested" => tags.push(Tag::Nested(Default::default())),
                     "label" => tags.push(Tag::Label(Default::default())),
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
@@ -391,9 +407,9 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                 let tag = match meta_list.ident.to_string().as_str() {
                     "separator" => Tag::Separator,
                     "new_line" => Tag::NewLine,
-                    "nested" => Tag::Nested,
 
                     "label" => Tag::Label(parse_label(&meta_list)?),
+                    "nested" => Tag::Nested(Nested::from_meta_list(meta_list)?),
                     "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
@@ -476,7 +492,13 @@ fn parse_label(params: &MetaList) -> Result<Label, Error> {
 /// produces two tags: `Tag::Label` and `Tag::Input`.
 ///
 /// This function needs to be called twice (once per Tag)
-fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<TokenStream, Error> {
+fn emmit_tag_tokens(
+    ident: &Ident,
+    ty: &Type,
+    attr: &Attribute,
+    tag: &Tag,
+    input: &mut Vec<TokenStream>,
+) -> Result<TokenStream, Error> {
     let tokens = match tag {
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
@@ -539,12 +561,14 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             params.extend(quote!(params));
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
-                quote! { events.#id = _ev; }
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
             } else {
                 quote!()
             };
             quote!({
-                use imgui_ext::Input;
+                use imgui_ext::input::Input;
                 let _ev = Input::build(ui, &mut ext.#ident, { #params });
                 #catch
             })
@@ -632,7 +656,9 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             };
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
-                quote! { events.#id = _ev; }
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
             } else {
                 quote!()
             };
@@ -696,10 +722,21 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
+
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
+
             params.extend(quote!(params));
             quote!({
-                use imgui_ext::Slider;
-                Slider::build(ui, &mut ext.#ident, { #params });
+                use imgui_ext::slider::Slider;
+                let _ev = Slider::build(ui, &mut ext.#ident, { #params });
+                #catch
             })
         }
         Tag::Checkbox(Checkbox { label, catch }) => {
@@ -711,22 +748,34 @@ fn emmit_tag_tokens(ident: &Ident, (attr, tag): (&Attribute, &Tag)) -> Result<To
             let label = Literal::string(&label);
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
-                quote! { events.#id = _ev; }
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
             } else {
                 quote!()
             };
             quote!({
-                use imgui_ext::Checkbox;
+                use imgui_ext::checkbox::Checkbox;
                 use imgui_ext::checkbox::CheckboxParams as Params;
                 use imgui::im_str;
                 let _ev = Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
                 #catch
             })
         }
-        Tag::Nested => {
+        Tag::Nested(Nested { catch }) => {
+            // TODO catch events
+            let catch = if let Some(catch) = catch {
+                match ty {
+                    Type::Path(path) => unimplemented!("Nested type input catch."),
+                    _ => panic!("Invalid field type"),
+                }
+            } else {
+                quote!()
+            };
             quote! {{
                 use imgui_ext::ImGuiExt;
-                ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+                let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+                #catch
             }}
         }
         Tag::Label(Label {

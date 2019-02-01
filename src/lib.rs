@@ -1,8 +1,8 @@
 //! A crate to quickly build [imgui] GUIs using a `#[derive]` macro.
 //!
-//! ## Basic usage
+//! [imgui]: https://crates.io/crates/imgui
 //!
-//! For a more in-depth example, check out the [`imgui_ext!`] macro.
+//! ## Basic usage
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
@@ -26,13 +26,31 @@
 //!
 //! ![ui result][result]
 //!
-//! ## No allocs
+//! ## Static
 //!
-//! The generated code doesn't perform any dynamic allocations.
+//! The generated code won't contain extra dynamic allocations.
 //!
-//! ## Input catching
+//! You can see what the generated code looks like in [this example].
 //!
-//! Catch discrete input events (clicks, edits, etc).
+//! [this example]: #
+//!
+//! ## Handle button presses and other inputs
+//!
+//! Most annotations can take an optional `catch = "..."` parameter that can be used to identify
+//! when a given button is pressed or an input changes later on:
+//!
+//! ```ignore
+//! #[derive(ImGuiExt)]
+//! struct Example {
+//!     #[imgui(checkbox(catch = "check"))]
+//!     input_check: bool,
+//! }
+//!
+//! let events = imgui_ext(ui, &mut example);
+//! if events.check {
+//!     println!("New value: {}", example.input_check);
+//! }
+//! ```
 //!
 //! ## Nested UIs
 //!
@@ -59,9 +77,10 @@
 //!
 //! ![][nested_example]
 //!
-//! ## Rich compiler errors
+//! ## Descriptive errors
 //!
-//! You get descriptive compiler errors whenever UI is misdefined.
+//! The correctness of the UI definition is checked at compile time. Thus, if something is misdefined,
+//! the compiler will raise an error.
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
@@ -81,8 +100,7 @@
 //!
 //! ## Combining UI and non-UI fields
 //!
-//! Not every field needs to be annotated. If a field doesn't have an `#[imgui]` annotation, it
-//! will be ignored by the UI.
+//! If a field is not annotated, it will be ignored in the UI.
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
@@ -95,12 +113,6 @@
 //! }
 //! ```
 //!
-//! ## What this crate is not
-//!
-//! A general purpose imgui library (for all cases anyway).
-//!
-//! [imgui]: https://crates.io/crates/imgui
-//! [`imgui_ext!`]: ./macro.imgui_ext.html
 //! [result]: https://i.imgur.com/llyqEFY.png
 //! [nested_example]: https://i.imgur.com/Us8bNdE.png
 use imgui::{
@@ -109,167 +121,178 @@ use imgui::{
     InputText, Ui,
 };
 
-pub use checkbox::Checkbox;
 use checkbox::CheckboxParams;
-pub use drag::Drag;
 use drag::DragParams;
-pub use input::Input;
+pub use imgui_ext_derive::ImGuiExt;
 use input::InputParams;
-pub use slider::Slider;
 use slider::SliderParams;
 
 #[doc(hidden)]
 pub mod macros;
 pub mod prelude {
-    pub use imgui_ext_derive::ImGuiExt;
-
-    pub use super::{Checkbox, Drag, Input, Slider};
+    pub use super::checkbox::Checkbox;
+    pub use super::drag::Drag;
+    pub use super::input::Input;
+    pub use super::slider::Slider;
+    pub use super::{ImGuiExt, UiExt};
 }
 
-/// `slider(...)` docs.
-pub mod slider {
-    #[derive(Copy, Clone)]
-    pub struct SliderParams<'ui, T> {
-        pub min: T,
-        pub max: T,
-        pub label: &'ui imgui::ImStr,
-        pub format: Option<&'ui imgui::ImStr>,
-        pub power: Option<f32>,
-    }
-    pub trait Slider<T> {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: SliderParams<T>);
-    }
-}
-/// `input(...)` docs.
-pub mod input {
-    //!
-    //! The input trait is implemented for numeric types (`f32` and `i32`) and their corresponding
-    //! array types of up to 4 elements, and [`ImString`]
-    //! ```ignore
-    //! #[derive(ImGuiExt)]
-    //! struct Example {
-    //!     // parameters in input() are all optional
-    //!     #[imgui(input)]
-    //!     input_0: f32,
-    //!
-    //!     // `precision = ..` specifies the decimal precision.
-    //!     // This parameter only has an effect in f32 types.
-    //!     #[imgui(input(precision = 2))]
-    //!     input_1: [f32; 2],
-    //!
-    //!     // `step` and `step_fast`
-    //!     #[imgui(input(step = 4, step_fast = 42))]
-    //!     input_2: i32,
-    //! }
-    //! ```
-    //!
-    //! ### Result
-    //!
-    //! ![result][result]
-    //!
-    //! ## Custom input flags
-    //!
-    //! You can specify a local function from where to load any input flags.
-    //!
-    //! The only is that these flags cannot be changed at runtime.
-    //!
-    //! ```ignore
-    //! use imgui::ImGuiInputTextFlags;
-    //!
-    //! #[derive(ImGuiExt)]
-    //! struct Example {
-    //!     #[imgui(input(flags = "my_flags"))]
-    //!     input_2: i32,
-    //! }
-    //!
-    //! fn my_flags() -> ImGuiInputTextFlags {
-    //!     ImGuiInputTextFlags::Password
-    //! }
-    //! ```
-    //!
-    //! [`ImString`]: #
-    //! [result]: https://i.imgur.com/BPvMGAp.png
-    #[derive(Copy, Clone)]
-    pub struct InputParams<'ui, T> {
-        pub label: &'ui imgui::ImStr,
-        pub precision: Option<i32>,
-        pub step: Option<T>,
-        pub step_fast: Option<T>,
-        pub flags: Option<imgui::ImGuiInputTextFlags>,
-    }
-    pub trait Input<T> {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: InputParams<T>) -> bool;
-    }
-}
-/// `drag(...)` docs.
-pub mod drag {
-    #[derive(Copy, Clone)]
-    pub struct DragParams<'ui, T> {
-        pub label: &'ui imgui::ImStr,
-        pub format: Option<&'ui imgui::ImStr>,
-        pub min: Option<T>,
-        pub max: Option<T>,
-        pub speed: Option<f32>,
-        pub power: Option<f32>,
-    }
-    pub trait Drag<T> {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: DragParams<T>);
-    }
-}
 /// `checkbox(...)` docs.
-pub mod checkbox {
-    //! ```ignore
-    //! #[derive(ImGuiExt)]
-    //! struct Checkboxes {
-    //!     // All parameters are optional.
-    //!     #[imgui(checkbox)]
-    //!     turbo: bool,
-    //!
-    //!     // Optionally, you can override the label:
-    //!     #[imgui(checkbox(label = "Checkbox!"))]
-    //!     check: bool,
-    //! }
-    //! ```
-    //!
-    //! ### Result
-    //!
-    //! ![][result]
-    //!
-    //! [result]: https://i.imgur.com/1hTR89V.png
-
-    /// Structure generated by the annoration.
-    #[derive(Copy, Clone)]
-    pub struct CheckboxParams<'ui> {
-        pub label: &'ui imgui::ImStr,
-    }
-
-    /// Trait for types that can be represented with a checkbox.
-    pub trait Checkbox {
-        fn build(ui: &imgui::Ui, elem: &mut Self, params: CheckboxParams) -> bool;
-    }
-}
+pub mod checkbox;
+/// `drag(...)` docs.
+pub mod drag;
+/// `input(...)` docs.
+pub mod input;
+/// `slider(...)` docs.
+pub mod slider;
 /// Support for some (basic) layout annotations.
 pub mod layout {}
 /// `label(...)` docs.
-pub mod label {}
+pub mod label {
+    //!
+    //! `label(...)` is used to display the contents of a field:
+    //!
+    //! It has two optional fields:
+    //!
+    //! * `label = "..."` to override the label title.
+    //! * `display = "..."` to format text.
+    //!
+    //! ```ignore
+    //! #[derive(ImGuiExt)]
+    //! struct Labels {
+    //!     #[imgui(label)]
+    //!     foo: f32,
+    //!
+    //!     // Use inner fields to format the text.
+    //!     #[imgui(label(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
+    //!     bar: (f32, bool, usize),
+    //!
+    //!     // if label() is the only annotation, you can avoid writting the "label()" part:
+    //!     #[imgui(label = "String param")]
+    //!     baz: String,
+    //! }
+    //! ```
+    //!
+    //! ![][result]
+    //!
+    //! [result]: https://i.imgur.com/Wf4Uze7.png
+}
 /// `nested(...)` docs (used to build nested UIs).
 pub mod nested {}
 /// `button(...)` docs.
-pub mod button {}
+pub mod button {
+    //!
+    //! `button(...)` is not associated to any particular type, but its position within an annotation
+    //! will determine where it is rendered in the final UI.
+    //!
+    //! ```ignore
+    //! #[derive(ImGuiExt)]
+    //! struct Buttons {
+    //!     #[imgui(
+    //!         button(size = "btn_size", label = "Click me!", catch = "click"),
+    //!         separator,
+    //!         label(label = "Clicks"),
+    //!     )]
+    //!     count: i32,
+    //! }
+    //!
+    //! fn btn_size() -> (f32, f32) {
+    //!     (100.0, 20.0)
+    //! }
+    //!
+    //! // initialize ui and Buttons...
+    //! let events = ui.imgui_ext(&mut buttons);
+    //! if events.click {
+    //!     buttons.count += 1;
+    //! }
+    //!
+    //! ```
+    //!
+    //! ![][image]
+    //!
+    //! [image]: https://i.imgur.com/PpOcZK8.png
+}
 /// `bullet(...)` docs.
-pub mod bullet {}
+pub mod bullet {
+    //!
+    //! `bullet(...)` is used to define bullet lists. It has two variants:
+    //!
+    //! * `bullet(text = "...")` defines a bullet'd text.
+    //! * `bullet(...)` bullets whatever is inside of ...
+    //!
+    //! ```ignore
+    //! #[derive(ImGuiExt)]
+    //! struct Bullet {
+    //!     #[imgui(
+    //!         bullet(text = "Kill all humans"),
+    //!         bullet(slider(min = 0.0, max = 1.0)),
+    //!     )]
+    //!     foo: f32,
+    //! }
+    //! ```
+    //!
+    //! ![][result]
+    //!
+    //! [result]: https://i.imgur.com/pe4YstR.png
+}
 
-#[doc(hidden)]
+/// Trait implemented by the derive macro.
 pub trait ImGuiExt {
     type Events;
     fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
-impl Checkbox for bool {
-    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
-        ui.checkbox(params.label, elem)
+/// Extension trait for an imgui Ui.
+pub trait UiExt<'ui> {
+    fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events;
+}
+
+impl<'ui> UiExt<'ui> for Ui<'ui> {
+    #[inline]
+    fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events {
+        imgui_ext(self, ext)
     }
 }
+
+/// Render imgui UI and collect all the events
+///
+/// ```ignore
+/// #[derive(ImGuiExt)]
+/// struct Example {
+///     #[derive(checkbox(catch = "click"))]
+///     check_box: bool,
+/// }
+///
+/// // initialize imgui and example...
+///
+/// let events = imgui_ext(ui, &mut example);
+/// if events.click {
+///     println!("New value: {}", example.check_box);
+/// }
+/// ```
+///
+/// Optionally you can call an extension method on the ui directly by using the [`UiExt`] trait.
+///
+/// [`UiExt`]: #
+///
+/// ```ignore
+/// // imports the UiExt trait
+/// use imgui_ext::prelude::*;
+///
+/// // initialize ui and example...
+///
+/// let events = ui.imgui_ext(&mut example);
+/// if events.click {
+///     // ...
+/// }
+#[inline]
+pub fn imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
+    U::imgui_ext(ui, ext)
+}
+
+use drag::Drag;
+use input::Input;
+use slider::Slider;
 
 impl Input<f32> for ImString {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
@@ -285,21 +308,21 @@ macro_rules! impl_slider {
     ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
         impl Slider<f32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) {
+            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
                 let mut s = ui.$fun(params.label, elem, params.min, params.max);
                 if let Some(disp) = params.format { s = s.display_format(disp); }
                 if let Some(power) = params.power { s = s.power(power); }
-                s.build();
+                s.build()
             }
         })+
     };
     ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
         impl Slider<i32> for $t {
             #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) {
+            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
                 let mut s = ui.$fun(params.label, elem, params.min, params.max);
                 if let Some(disp) = params.format { s = s.display_format(disp); }
-                s.build();
+                s.build()
             }
         })+
     }

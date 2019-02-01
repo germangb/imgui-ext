@@ -21,6 +21,8 @@ const STRUCT_SUPPORT: &str = "`#[derive(ImGuiExt)]` only supports structs.";
 const UNRECOG_MODE: &str = "Unrecognized mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
 const FIELD_ALREADY_DEFINED: &str = "Field is already defined.";
+const NESTED_BULLET: &str = "Nested `bullet` is not yet implemented. See #0";
+const NESTED_INPUTS: &str = "Nested input is not yet implemented. See #0";
 
 macro_rules! tag {
     (
@@ -71,18 +73,6 @@ macro_rules! tag {
     }
 }
 
-/// Allowed tags:
-///
-/// To display the contents of a field:
-///   - `#[imgui]`
-///   - `#[imgui(label = "...")]`
-///   - `#[imgui(label = "...", display = "Display format: {}", field)]`
-///
-/// To add interaction:
-///   - `#[imgui(checkbox(...))]`
-///   - `#[imgui(input(...))]`
-///   - `#[imgui(drag(...))]`
-///   - `#[imgui(slider(...))]`
 #[proc_macro_derive(ImGuiExt, attributes(imgui))]
 pub fn imgui_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -414,8 +404,24 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
-                    "bullet" => Tag::Bullet(Bullet::from_meta_list(meta_list)?),
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
+
+                    // TODO implement nested bullet
+                    "bullet" => {
+                        if meta_list.nested.len() == 1 {
+                            use syn::punctuated::Pair;
+                            let span = meta_list.span();
+                            match meta_list.nested.first() {
+                                Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _))
+                                | Some(Pair::End(NestedMeta::Meta(Meta::List(_)))) => {
+                                    return Err(Error::new(span, NESTED_BULLET));
+                                }
+                                _ => Tag::Bullet(Bullet::from_meta_list(meta_list)?),
+                            }
+                        } else {
+                            Tag::Bullet(Bullet::from_meta_list(meta_list)?)
+                        }
+                    }
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 };
 
@@ -638,7 +644,7 @@ fn emmit_tag_tokens(
 
             params.extend(quote!(params));
             quote!({
-                use imgui_ext::Drag;
+                use imgui_ext::drag::Drag;
                 Drag::build(ui, &mut ext.#ident, { #params });
             })
         }
@@ -713,7 +719,9 @@ fn emmit_tag_tokens(
                 };
             };
             match format {
-                Some(Lit::Str(value)) => params.extend(quote!(params.format = Some(#value);)),
+                Some(Lit::Str(value)) => {
+                    params.extend(quote!(params.format = Some( im_str!(#value) );))
+                }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
@@ -765,10 +773,13 @@ fn emmit_tag_tokens(
         Tag::Nested(Nested { catch }) => {
             // TODO catch events
             let catch = if let Some(catch) = catch {
-                match ty {
-                    Type::Path(path) => unimplemented!("Nested type input catch."),
-                    _ => panic!("Invalid field type"),
-                }
+                return Err(Error::new(attr.span(), NESTED_INPUTS));
+            /*
+            match ty {
+                Type::Path(path) => unimplemented!("Nested type input catch."),
+                _ => panic!("Invalid field type"),
+            }
+            */
             } else {
                 quote!()
             };

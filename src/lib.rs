@@ -4,7 +4,7 @@
 //!
 //! ## Basic usage
 //!
-//! ```ignore
+//! ```
 //! use imgui_ext::prelude::*;
 //!
 //! #[derive(ImGuiExt)]
@@ -26,18 +26,49 @@
 //!
 //! ![ui result][result]
 //!
-//! ## Static
+//! ## Static code generation
 //!
 //! The generated code won't contain extra dynamic allocations.
 //!
-//! You can see what the generated code looks like in [this example].
+//! In [this example] you can see what the generated code looks like.
 //!
 //! [this example]: #
+//!
+//! ## Nested UIs
+//!
+//! Types that `#[derive(ImGuiExt)]` can be nested:
+//!
+//! ```
+//! use imgui_ext::prelude::*;
+//! use imgui::{ImString, ImGuiInputTextFlags};
+//!
+//! #[derive(ImGuiExt)]
+//! struct Form {
+//!     #[imgui(input)]
+//!     user: ImString,
+//!     #[imgui(input(flags = "passwd_flags"))]
+//!     passwd: ImString,
+//! }
+//!
+//! fn passwd_flags() -> ImGuiInputTextFlags {
+//!     ImGuiInputTextFlags::Password
+//! }
+//!
+//! #[derive(ImGuiExt)]
+//! struct Example {
+//!     #[imgui(nested)]
+//!     login_form: Form,
+//!     #[imgui(checkbox(label = "Remember login?"))]
+//!     remember: bool,
+//! }
+//! ```
+//!
+//! ![][nested_example]
 //!
 //! ## Handle button presses and other inputs
 //!
 //! Most annotations can take an optional `catch = "..."` parameter that can be used to identify
-//! when a given button is pressed or an input changes later on:
+//! when a button is pressed, an input changes, later on:
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
@@ -51,36 +82,32 @@
 //!     println!("New value: {}", example.input_check);
 //! }
 //! ```
+//! ### Limitations
 //!
-//! ## Nested UIs
+//! Not available for nested UIs yet. See [`#0`]
 //!
-//! Types that `#[derive(ImGuiExt)]` can be nested:
+//! [`#0`]: #
 //!
-//! ```ignore
-//! #[derive(ImGuiExt)]
-//! struct Form {
-//!     #[imgui(input)]
-//!     user: ImString,
-//!     #[imgui(input(flags = "passwd_flags"))]
-//!     passwd: ImString,
-//! }
+//! ## Combining UI and non-UI fields
+//!
+//! If a field is not annotated, it will be ignored in the UI.
+//!
+//! ```
+//! use imgui_ext::prelude::*;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
-//!     #[imgui(nested)]
-//!     login_form: Form,
-//!     #[imgui(checkbox(label = "Remember login?"))]
-//!     remember: bool,
+//!     #[imgui(label = "Some i32")]
+//!     in_ui: u32,
+//!
+//!     // since this field is not annotated, it is ignored by the UI
+//!     not_in_ui: Vec<u8>,
 //! }
-//!
 //! ```
-//!
-//! ![][nested_example]
 //!
 //! ## Descriptive errors
 //!
-//! The correctness of the UI definition is checked at compile time. Thus, if something is misdefined,
-//! the compiler will raise an error.
+//! UI correctness is checked at compile time.
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]
@@ -98,27 +125,12 @@
 //!    |             ^^^^^^
 //! ```
 //!
-//! ## Combining UI and non-UI fields
-//!
-//! If a field is not annotated, it will be ignored in the UI.
-//!
-//! ```ignore
-//! #[derive(ImGuiExt)]
-//! struct Mix {
-//!     #[imgui(label = "Some i32")]
-//!     in_ui: u32,
-//!
-//!     // since this field is not annotated, it is ignored by the UI
-//!     not_in_ui: Vec<u8>,
-//! }
-//! ```
-//!
 //! [result]: https://i.imgur.com/llyqEFY.png
 //! [nested_example]: https://i.imgur.com/Us8bNdE.png
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImString,
     InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4,
-    InputText, Ui,
+    InputText, Ui, Window,
 };
 
 use checkbox::CheckboxParams;
@@ -146,28 +158,47 @@ pub mod input;
 /// `slider(...)` docs.
 pub mod slider;
 /// Support for some (basic) layout annotations.
-pub mod layout {}
+pub mod layout {
+    //!
+    //! This module is mostly a work in progress. Any suggestions or contributions it are very welcome.
+    //!
+    //! Please file [an issue] if you wish to do so.
+    //!
+    //! [an issue]: https://github.com/germangb/imgui-ext/issues
+    //!
+    //! ## Annotations:
+    //!
+    //! * `#[imgui(separator)]` inserts a separator
+    //! * `#[imgui(new_line)]` inserts an empty line
+}
 /// `label(...)` docs.
 pub mod label {
     //!
     //! `label(...)` is used to display the contents of a field:
     //!
-    //! It has two optional fields:
+    //! ## Optional fields
     //!
-    //! * `label = "..."` to override the label title.
-    //! * `display = "..."` to format text.
+    //! * `label`
+    //! * `display` formatted text.
     //!
-    //! ```ignore
+    //! ## Example
+    //!
+    //! ```
+    //! use imgui_ext::prelude::*;
+    //!
     //! #[derive(ImGuiExt)]
     //! struct Labels {
-    //!     #[imgui(label)]
+    //!     #[imgui(label)] // same as writing #[imgui(label())]
     //!     foo: f32,
+    //!
+    //!     #[imgui(label())]
+    //!     foobar: &'static str,
     //!
     //!     // Use inner fields to format the text.
     //!     #[imgui(label(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
     //!     bar: (f32, bool, usize),
     //!
-    //!     // if label() is the only annotation, you can avoid writting the "label()" part:
+    //!     // when label() is the only annotation, writing it in full is optional:
     //!     #[imgui(label = "String param")]
     //!     baz: String,
     //! }
@@ -178,7 +209,15 @@ pub mod label {
     //! [result]: https://i.imgur.com/Wf4Uze7.png
 }
 /// `nested(...)` docs (used to build nested UIs).
-pub mod nested {}
+pub mod nested {
+    //! ## Optional fields
+    //!
+    //! * `catch`
+    //!
+    //! ## Example
+    //!
+    //! ### Result
+}
 /// `button(...)` docs.
 pub mod button {
     //!
@@ -242,7 +281,24 @@ pub trait ImGuiExt {
     fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
-/// Extension trait for an imgui Ui.
+/// Extension trait for imgui Ui.
+///
+/// ```ignore
+/// use imgui::Ui;
+/// use imgui_ext::prelude::*;
+///
+/// #[derive(ImGuiExt)]
+/// struct Example {
+///     // ...
+/// }
+///
+/// // initialize imgui...
+/// let ui: Ui<_> = ...;
+/// // initialize Example...
+/// let mut example: Example = ...;
+///
+/// ui.imgui_ext(&mut example);
+/// ```
 pub trait UiExt<'ui> {
     fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events;
 }

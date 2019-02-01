@@ -1,20 +1,28 @@
+//! ## Optional fields
+//!
+//! * `label`
+//! * `precision`
+//! * `step`
+//! * `step_fast`
+//! * `flags` name of local function from where to get input flags
+//! * `catch`
+//!
+//! ## Example
 //!
 //! The input trait is implemented for numeric types (`f32` and `i32`) and their corresponding
 //! array types of up to 4 elements, and [`ImString`]
 //!
-//! ```ignore
+//! ```
+//! use imgui_ext::prelude::*;
+//!
 //! #[derive(ImGuiExt)]
 //! struct Example {
-//!     // parameters in input() are all optional
 //!     #[imgui(input)]
 //!     input_0: f32,
 //!
-//!     // `precision = ..` specifies the decimal precision.
-//!     // This parameter only has an effect in f32 types.
 //!     #[imgui(input(precision = 2))]
 //!     input_1: [f32; 2],
 //!
-//!     // `step` and `step_fast`
 //!     #[imgui(input(step = 4, step_fast = 42))]
 //!     input_2: i32,
 //! }
@@ -24,19 +32,20 @@
 //!
 //! ![result][result]
 //!
-//! ## Custom input flags
+//! ## Input flags
 //!
 //! You can specify a local function from where to load any input flags.
 //!
-//! The only is that these flags cannot be changed at runtime.
+//! The only limitation is that these flags cannot be changed at runtime.
 //!
-//! ```ignore
-//! use imgui::ImGuiInputTextFlags;
+//! ```
+//! use imgui_ext::prelude::*;
+//! use imgui::{ImString, ImGuiInputTextFlags};
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
 //!     #[imgui(input(flags = "my_flags"))]
-//!     input_2: i32,
+//!     password: ImString,
 //! }
 //!
 //! fn my_flags() -> ImGuiInputTextFlags {
@@ -59,4 +68,69 @@ pub struct InputParams<'ui, T> {
 
 pub trait Input<T> {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate as imgui_ext;
+    use crate::prelude::*;
+    use imgui::ImGuiInputTextFlags as Flags;
+    use imgui::ImString;
+
+    fn flags() -> Flags {
+        Flags::Password
+    }
+
+    #[test]
+    fn input_text() {
+        #[derive(ImGuiExt)]
+        struct Foo {
+            #[imgui(input)]
+            a: i32,
+            #[imgui(input(flags = "flags"))]
+            b: ImString,
+        }
+    }
+
+    #[test]
+    fn input_f32() {
+        #[derive(ImGuiExt)]
+        struct Foo {
+            #[imgui(input)]
+            a: f32,
+            #[imgui(input())]
+            b: [f32; 2],
+            #[imgui(input(flags = "flags"))]
+            c: [f32; 3],
+            #[imgui(input(step = 0.1, step_fast = 10.0, flags = "flags"))]
+            d: f32,
+            #[imgui(
+                input(step = 0.1, step_fast = 2.0, flags = "flags"),
+                input(step = 0.1, step_fast = 2.0, flags = "flags"),
+                input(step = 0.1, step_fast = 2.0)
+            )]
+            e: f32,
+        }
+    }
+
+    #[test]
+    fn input_i32() {
+        #[derive(ImGuiExt)]
+        struct Foo {
+            #[imgui(input)]
+            a: i32,
+            #[imgui(input())]
+            b: [i32; 2],
+            #[imgui(input(flags = "flags"))]
+            c: [i32; 3],
+            #[imgui(input(step = 0, step_fast = 10, flags = "flags"))]
+            d: i32,
+            #[imgui(
+                input(step = 0, step_fast = 2, flags = "flags"),
+                input(step = 0, step_fast = 2, flags = "flags"),
+                input(step = 0, step_fast = 2)
+            )]
+            e: i32,
+        }
+    }
 }

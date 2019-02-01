@@ -1,4 +1,13 @@
-//! ```ignore
+//! ## Optional fields
+//!
+//! * `label`
+//! * `catch`
+//!
+//! ## Example
+//!
+//! ```
+//! use imgui_ext::prelude::*;
+//!
 //! #[derive(ImGuiExt)]
 //! struct Checkboxes {
 //!     // All parameters are optional.

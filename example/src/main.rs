@@ -61,7 +61,11 @@ struct Labels {
 
 #[derive(ImGuiExt, Default)]
 struct Bullet {
-    #[imgui(bullet(text = "Kill all humans"), bullet, slider(min = 0.0, max = 1.0))]
+    #[imgui(
+        bullet(text = "Be Nice"),
+        bullet(text = "Kill all humans"),
+        slider(min = 0.0, max = 1.0)
+    )]
     foo: f32,
 }
 
@@ -73,6 +77,14 @@ fn size() -> (f32, f32) {
     (64.0, 24.0)
 }
 
+#[derive(ImGuiExt, Default)]
+struct Sliders {
+    #[imgui(slider(min = 0.0, max = 1.0))]
+    foo: f32,
+    #[imgui(slider(min = 0, max = 16, format = "bar = %.02f"))]
+    bar: [i32; 2],
+}
+
 fn main() {
     let mut bullet = Bullet::default();
     let mut demo = Example::default();
@@ -82,6 +94,7 @@ fn main() {
         bar: (2.0, false, 8),
         baz: "hello world".to_string(),
     };
+    let mut sliders = Sliders::default();
 
     demo.login_form.user = imgui::ImString::with_capacity(64);
     demo.login_form.passwd = imgui::ImString::with_capacity(64);
@@ -94,7 +107,7 @@ fn main() {
         }
         */
 
-        ui.imgui_ext(&mut bullet);
+        ui.imgui_ext(&mut sliders);
         /*
         let events = ui.imgui_ext(&mut demo.login_form);
         if events.user {

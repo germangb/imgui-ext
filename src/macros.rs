@@ -26,6 +26,7 @@
 #[macro_export]
 macro_rules! Events {
     ( $ui:ident ) => {
-        concat_idents!($ui, ImGuiExt)
+        unimplemented!("Events! macros is not implemented yet. See #0")
+        //concat_idents!($ui, ImGuiExt)
     };
 }

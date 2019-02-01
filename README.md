@@ -17,7 +17,7 @@ imgui_ext = "0.1"
 
 * Encode UI directly on the types.
 * Static code generation (no heap allocations): [example].
-* Support for most imgui slider, input, checkbox, drag and button widgets.
+* Support for imgui's slider, input, checkbox, drag and button widgets.
 * Support for building nested UIs (see the [`imgui(nested)`] attribute).
 * Descriptive compiler errors.
 

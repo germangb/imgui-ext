@@ -39,8 +39,8 @@
 //! Types that `#[derive(ImGuiExt)]` can be nested:
 //!
 //! ```
-//! use imgui_ext::prelude::*;
 //! use imgui::{ImString, ImGuiInputTextFlags};
+//! use imgui_ext::prelude::*;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Form {
@@ -48,10 +48,16 @@
 //!     user: ImString,
 //!     #[imgui(input(flags = "passwd_flags"))]
 //!     passwd: ImString,
+//!     #[imgui(button(label = "Login", size = "size"))]
+//!     _btn: (),
 //! }
 //!
 //! fn passwd_flags() -> ImGuiInputTextFlags {
 //!     ImGuiInputTextFlags::Password
+//! }
+//!
+//! fn size() -> (f32, f32) {
+//!     (64.0, 24.0)
 //! }
 //!
 //! #[derive(ImGuiExt)]
@@ -65,21 +71,30 @@
 //!
 //! ![][nested_example]
 //!
-//! ## Handle button presses and other inputs
+//! [nested_example]: https://i.imgur.com/l6omyf4.png
 //!
-//! Most annotations can take an optional `catch = "..."` parameter that can be used to identify
-//! when a button is pressed, an input changes, later on:
+//! ## Input events
+//!
+//! Most annotations can take an optional `catch = "..."` parameter which can be used to identify
+//! when a button is pressed, an input has changed, etc.., later on:
 //!
 //! ```ignore
+//! use imgui_ext::prelude::*;
+//!
 //! #[derive(ImGuiExt)]
 //! struct Example {
 //!     #[imgui(checkbox(catch = "check"))]
 //!     input_check: bool,
+//!     #[imgui(input(catch = "text"))]
+//!     text: ImString,
 //! }
 //!
-//! let events = imgui_ext(ui, &mut example);
+//! let events = ui.imgui_ext(&mut example);
 //! if events.check {
 //!     println!("New value: {}", example.input_check);
+//! }
+//! if events.text {
+//!     println!("New text value: {:?}", example.text);
 //! }
 //! ```
 //! ### Limitations
@@ -126,18 +141,8 @@
 //! ```
 //!
 //! [result]: https://i.imgur.com/llyqEFY.png
-//! [nested_example]: https://i.imgur.com/Us8bNdE.png
-use imgui::{
-    DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImString,
-    InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt, InputInt2, InputInt3, InputInt4,
-    InputText, Ui, Window,
-};
-
-use checkbox::CheckboxParams;
-use drag::DragParams;
+use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
-use input::InputParams;
-use slider::SliderParams;
 
 #[doc(hidden)]
 pub mod macros;
@@ -224,18 +229,29 @@ pub mod button {
     //! `button(...)` is not associated to any particular type, but its position within an annotation
     //! will determine where it is rendered in the final UI.
     //!
+    //! ## Fields
+    //!
+    //! - `label`
+    //! - `size` name of a local function that returns the button size.
+    //!
+    //! ## Optional fields
+    //!
+    //! - `catch`
+    //!
+    //! ## Example
+    //!
     //! ```ignore
     //! #[derive(ImGuiExt)]
     //! struct Buttons {
     //!     #[imgui(
-    //!         button(size = "btn_size", label = "Click me!", catch = "click"),
+    //!         button(size = "button_size", label = "Click me!", catch = "click"),
     //!         separator,
     //!         label(label = "Clicks"),
     //!     )]
     //!     count: i32,
     //! }
     //!
-    //! fn btn_size() -> (f32, f32) {
+    //! const fn button_size() -> (f32, f32) {
     //!     (100.0, 20.0)
     //! }
     //!
@@ -344,174 +360,4 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 #[inline]
 pub fn imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
     U::imgui_ext(ui, ext)
-}
-
-use drag::Drag;
-use input::Input;
-use slider::Slider;
-
-impl Input<f32> for ImString {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
-        let mut text = InputText::new(ui, params.label, elem);
-        if let Some(flags) = params.flags {
-            text = text.flags(flags);
-        }
-        text.build()
-    }
-}
-
-macro_rules! impl_slider {
-    ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
-        impl Slider<f32> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
-                let mut s = ui.$fun(params.label, elem, params.min, params.max);
-                if let Some(disp) = params.format { s = s.display_format(disp); }
-                if let Some(power) = params.power { s = s.power(power); }
-                s.build()
-            }
-        })+
-    };
-    ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
-        impl Slider<i32> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
-                let mut s = ui.$fun(params.label, elem, params.min, params.max);
-                if let Some(disp) = params.format { s = s.display_format(disp); }
-                s.build()
-            }
-        })+
-    }
-}
-
-macro_rules! impl_input {
-    ($( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input<$t> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) -> bool {
-                let mut input = $fun::new(ui, params.label, elem);
-                if let Some(value) = params.step { input = input.step(value) }
-                if let Some(value) = params.step_fast { input = input.step_fast(value) }
-                if let Some(value) = params.precision { input = input.decimal_precision(value) }
-                if let Some(value) = params.flags { input = input.flags(value) }
-                input.build()
-            }
-        })+
-    }
-}
-
-macro_rules! impl_input_i32 {
-    ($( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input<$t> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$t>) -> bool {
-                let mut input = $fun::new(ui, params.label, elem);
-                if let Some(value) = params.step { input = input.step(value) }
-                if let Some(value) = params.step_fast { input = input.step_fast(value) }
-                input.build()
-            }
-        })+
-    }
-}
-
-macro_rules! impl_input_d {
-    ( $( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input<f32> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
-                let mut input = $fun::new(ui, params.label, elem);
-                if let Some(value) = params.precision { input = input.decimal_precision(value) }
-                input.build()
-            }
-        })+
-    }
-}
-
-macro_rules! impl_input_i32_d {
-    ( $( $t:ty => $fun:ident , )+ ) => {$(
-        impl Input<i32> for $t {
-            #[inline]
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
-                let input = $fun::new(ui, params.label, elem);
-                input.build()
-            }
-        })+
-    }
-}
-
-macro_rules! impl_drag {
-    ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
-        impl Drag<f32> for $t {
-            fn build(ui: &Ui, elem: &mut Self, params: DragParams<f32>) {
-                let mut drag = $fun::new(ui, params.label, elem);
-                if let Some(val) = params.max { drag = drag.max(val); }
-                if let Some(val) = params.min { drag = drag.min(val); }
-                if let Some(val) = params.speed { drag = drag.speed(val); }
-                if let Some(val) = params.power { drag = drag.power(val); }
-                if let Some(disp) = params.format { drag = drag.display_format(disp); }
-                drag.build();
-            }
-        }
-    )+};
-
-    ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
-        impl Drag<i32> for $t {
-            fn build(ui: &Ui, elem: &mut Self, params: DragParams<i32>) {
-                let mut drag = $fun::new(ui, params.label, elem);
-                if let Some(val) = params.max { drag = drag.max(val); }
-                if let Some(val) = params.min { drag = drag.min(val); }
-                if let Some(val) = params.speed { drag = drag.speed(val); }
-                if let Some(disp) = params.format { drag = drag.display_format(disp); }
-                drag.build();
-            }
-        }
-    )+}
-}
-
-impl_slider! {
-    f32 , f32 => slider_float,
-    [f32; 2] , f32 => slider_float2,
-    [f32; 3] , f32 => slider_float3,
-    [f32; 4] , f32 => slider_float4,
-}
-
-impl_slider! {
-    i32 , i32 => slider_int,
-    [i32; 2] , i32 => slider_int2,
-    [i32; 3] , i32 => slider_int3,
-    [i32; 4] , i32 => slider_int4,
-}
-
-impl_input! {
-    f32 => InputFloat,
-}
-
-impl_input_i32! {
-    i32 => InputInt,
-}
-
-impl_input_d! {
-    [f32; 2] => InputFloat2,
-    [f32; 3] => InputFloat3,
-    [f32; 4] => InputFloat4,
-}
-
-impl_input_i32_d! {
-    [i32; 2] => InputInt2,
-    [i32; 3] => InputInt3,
-    [i32; 4] => InputInt4,
-}
-
-impl_drag! {
-    f32, f32 => DragFloat,
-    [f32; 2] , f32 => DragFloat2,
-    [f32; 3] , f32 => DragFloat3,
-    [f32; 4] , f32 => DragFloat4,
-}
-
-impl_drag! {
-    i32, i32 => DragInt,
-    [i32; 2] , i32 => DragInt2,
-    [i32; 3] , i32 => DragInt3,
-    [i32; 4] , i32 => DragInt4,
 }

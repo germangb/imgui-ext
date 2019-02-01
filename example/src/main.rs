@@ -51,10 +51,8 @@ struct Buttons {
 struct Labels {
     #[imgui(label)]
     foo: f32,
-    // Use inner fields to format the text.
     #[imgui(label(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
     bar: (f32, bool, usize),
-    // if label() is the only annotation, you can avoid writting the "label()" part:
     #[imgui(label = "String param")]
     baz: String,
 }
@@ -107,7 +105,13 @@ fn main() {
         }
         */
 
-        ui.imgui_ext(&mut sliders);
+        let events = ui.imgui_ext(&mut demo);
+        /*
+        if events.user {
+            println!("New value: {:?}", demo.login_form.user);
+        }
+        */
+
         /*
         let events = ui.imgui_ext(&mut demo.login_form);
         if events.user {

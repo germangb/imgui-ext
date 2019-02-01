@@ -55,7 +55,10 @@
 //!
 //! [`ImString`]: #
 //! [result]: https://i.imgur.com/BPvMGAp.png
-use imgui::{ImGuiInputTextFlags, ImStr, Ui};
+use imgui::{
+    ImGuiInputTextFlags, ImStr, ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4,
+    InputInt, InputInt2, InputInt3, InputInt4, InputText, Ui,
+};
 
 #[derive(Copy, Clone)]
 pub struct InputParams<'ui, T> {
@@ -68,6 +71,133 @@ pub struct InputParams<'ui, T> {
 
 pub trait Input<T> {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool;
+}
+
+macro_rules! impl_f32_array {
+    ( $($arr:ty => $input:ident),* ) => {$(
+        impl Input<f32> for $arr {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
+                let mut input = $input::new(ui, params.label, elem);
+                if let Some(value) = params.precision { input = input.decimal_precision(value) }
+                if let Some(value) = params.flags { input = input.flags(value) }
+                input.build()
+            }
+        }
+
+        impl Input<f32> for Option<$arr> {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
+                if let Some(ref mut elem) = elem {
+                    let mut input = $input::new(ui, params.label, elem);
+                    if let Some(value) = params.precision { input = input.decimal_precision(value) }
+                    if let Some(value) = params.flags { input = input.flags(value) }
+                    input.build()
+                } else {
+                    false
+                }
+            }
+        }
+    )*}
+}
+
+macro_rules! impl_i32_array {
+    ( $($arr:ty => $input:ident),* ) => {$(
+        impl Input<i32> for $arr {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
+                let mut input = $input::new(ui, params.label, elem);
+                if let Some(value) = params.flags { input = input.flags(value) }
+                input.build()
+            }
+        }
+
+        impl Input<i32> for Option<$arr> {
+            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
+                if let Some(ref mut elem) = elem {
+                    let mut input = $input::new(ui, params.label, elem);
+                    if let Some(value) = params.flags { input = input.flags(value) }
+                    input.build()
+                } else {
+                    false
+                }
+            }
+        }
+    )*}
+}
+
+impl Input<f32> for ImString {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
+        let mut text = InputText::new(ui, params.label, elem);
+        if let Some(flags) = params.flags {
+            text = text.flags(flags);
+        }
+        text.build()
+    }
+}
+
+impl Input<f32> for f32 {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
+        let mut input = InputFloat::new(ui, params.label, elem);
+        if let Some(value) = params.step {
+            input = input.step(value)
+        }
+        if let Some(value) = params.step_fast {
+            input = input.step_fast(value)
+        }
+        if let Some(value) = params.precision {
+            input = input.decimal_precision(value)
+        }
+        if let Some(value) = params.flags {
+            input = input.flags(value)
+        }
+        input.build()
+    }
+}
+
+impl Input<f32> for Option<f32> {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
+        if let Some(ref mut elem) = elem {
+            f32::build(ui, elem, params)
+        } else {
+            false
+        }
+    }
+}
+
+impl Input<i32> for i32 {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
+        let mut input = InputInt::new(ui, params.label, elem);
+        if let Some(value) = params.step {
+            input = input.step(value)
+        }
+        if let Some(value) = params.step_fast {
+            input = input.step_fast(value)
+        }
+        if let Some(value) = params.flags {
+            input = input.flags(value)
+        }
+        input.build()
+    }
+}
+
+impl Input<i32> for Option<i32> {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
+        if let Some(ref mut elem) = elem {
+            i32::build(ui, elem, params)
+        } else {
+            false
+        }
+    }
+}
+
+impl_f32_array! {
+    [f32; 2] => InputFloat2,
+    [f32; 3] => InputFloat3,
+    [f32; 4] => InputFloat4
+}
+
+impl_i32_array! {
+    [i32; 2] => InputInt2,
+    [i32; 3] => InputInt3,
+    [i32; 4] => InputInt4
 }
 
 #[cfg(test)]
@@ -131,6 +261,8 @@ mod tests {
                 input(step = 0, step_fast = 2)
             )]
             e: i32,
+
+            _ignore: Vec<u8>,
         }
     }
 }

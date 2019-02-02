@@ -164,10 +164,10 @@ tag! {
 tag! {
     struct Button {
         fields {
-            size: Lit,
+            label: Lit,
         },
         optional {
-            label: Option<Lit>,
+            size: Option<Lit>,
             catch: Option<Lit>,
         }
     }
@@ -399,7 +399,6 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "button" => {
                         Tag::Button(Button::from_meta_list(&meta_list)?);
                     }
-
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 }
                 state = State::Tags;
@@ -717,16 +716,10 @@ fn emmit_tag_tokens(
         }
         Tag::Button(Button { label, size, catch }) => {
             let label = match label {
-                Some(Lit::Str(stri)) => stri.value(),
-                None => ident.to_string(),
+                Lit::Str(stri) => Literal::string(&stri.value()),
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             };
-            let label = Literal::string(&label);
 
-            let size_fn = match size {
-                Lit::Str(size) => Ident::new(&size.value(), size.span()),
-                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-            };
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
                 let q = quote! { events.#id = _ev; };
@@ -735,11 +728,24 @@ fn emmit_tag_tokens(
             } else {
                 quote!()
             };
-            quote! {{
-                use imgui::ImVec2;
-                let _ev = ui.button( imgui::im_str!( #label ), { ImVec2::from(#size_fn()) } );
-                #catch
-            }}
+
+            if let Some(size) = size {
+                let size_fn = match size {
+                    Lit::Str(size) => Ident::new(&size.value(), size.span()),
+                    _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+                };
+                quote! {{
+                    use imgui::ImVec2;
+                    let _ev = ui.button( imgui::im_str!( #label ), { ImVec2::from(#size_fn()) } );
+                    #catch
+                }}
+            } else {
+                quote! {{
+                    use imgui::ImVec2;
+                    let _ev = ui.small_button( imgui::im_str!( #label ) );
+                    #catch
+                }}
+            }
         }
         Tag::Bullet(Bullet { text }) => {
             let text = match text {

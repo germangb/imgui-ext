@@ -197,16 +197,12 @@ pub mod nested {
     //!     user: ImString,
     //!     #[imgui(text(flags = "passwd_flags"))]
     //!     passwd: ImString,
-    //!     #[imgui(button(label = "Login", size = "size"))]
+    //!     #[imgui(button(label = "Login"))]
     //!     _btn: (),
     //! }
     //!
     //! fn passwd_flags() -> ImGuiInputTextFlags {
     //!     ImGuiInputTextFlags::Password
-    //! }
-    //!
-    //! fn size() -> (f32, f32) {
-    //!     (64.0, 24.0)
     //! }
     //!
     //! #[derive(ImGuiExt)]
@@ -234,10 +230,10 @@ pub mod button {
     //! ## Fields
     //!
     //! - `label`
-    //! - `size` name of a local function that returns the button size.
     //!
     //! ## Optional fields
     //!
+    //! - `size` name of a local function that returns the button size.
     //! - `catch`
     //!
     //! ## Example

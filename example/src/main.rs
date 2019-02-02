@@ -93,19 +93,12 @@ struct Comment {
     name: imgui::ImString,
     #[imgui(text)]
     email: imgui::ImString,
-    #[imgui(
-        text(size = "size2"),
-        button(label = "submit", size = "btn_size2")
-    )]
+    #[imgui(text(size = "size2"), button(label = "submit"))]
     comment: imgui::ImString,
 }
 
 const fn size2() -> (f32, f32) {
     (200.0, 100.0)
-}
-
-const fn btn_size2() -> (f32, f32) {
-    (50.0, 20.0)
 }
 
 fn main() {

@@ -25,7 +25,7 @@ imgui-ext = "0.1"
 
 [example]: ./CODEGEN.md
 
-## Usage example
+## Example
 
 ```rust
 // You need to import the prelude

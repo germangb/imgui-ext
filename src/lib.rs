@@ -2,21 +2,57 @@
 //!
 //! [imgui]: https://crates.io/crates/imgui
 //!
-//! Annotations map directly to a subset of imgui types and methods:
+//! Annotations map to a subset of imgui types and methods:
 //!
-//! | Annotation       | Imgui Type |
+//! | Annotation       | Mapped Imgui Type |
 //! | ---              | --- |
-//! | `slider(...)`    | `SliderFloat`, `SliderFloat2`, `SliderFloat3`, `SliderFloat4`, `SliderInt`, `SliderInt2`, `SliderInt3`, `SliderInt4` |
-//! | `drag(...)`      | `DragFloat`, `DragFloat2`, `DragFloat3`, `DragFloat4`, `DragInt`, `DragInt2`, `DragInt3`, `DragInt4` |
-//! | `input(...)`     | `InputFloat`, `InputFloat2`, `InputFloat3`, `InputFloat4`, `InputInt`, `InputInt2`, `InputInt3`, `InputInt4` |
-//! | `text(...)`      | `InputText`, `InputTextMultiLine` |
-//! | `button(...)`    | `Ui::button`, `Ui::small_button` |
-//! | `checkbox(...)`  | `Ui::checkbox` |
-//! | `separator(...)` | `Ui::separator` |
-//! | `new_line(...)`  | `Ui::new_line` |
-//! | `display(...)`   | `Ui::label_text` |
-//! | `bullet(...)`    | `Ui::bullet_text`, `Ui::bullet` |
+//! | `slider(...)`    | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
+//! | `drag(...)`      | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
+//! | `input(...)`     | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
+//! | `text(...)`      | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
+//! | `button(...)`    | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
+//! | `checkbox(...)`  | [`Ui::checkbox`][Ui::checkbox] |
+//! | `separator(...)` | [`Ui::separator`][Ui::separator] |
+//! | `new_line(...)`  | [`Ui::new_line`][Ui::new_line] |
+//! | `display(...)`   | [`Ui::label_text`][Ui::label_text] |
+//! | `bullet(...)`    | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
 //! | `nested(...)`    | See [`nested`](./nested/index.html) module. |
+//!
+//! [SliderFloat]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat.html
+//! [SliderFloat2]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat2.html
+//! [SliderFloat3]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat3.html
+//! [SliderFloat4]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat4.html
+//! [SliderInt]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt.html
+//! [SliderInt2]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt2.html
+//! [SliderInt3]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt3.html
+//! [SliderInt4]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt4.html
+//! [DragFloat]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat.html
+//! [DragFloat2]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat2.html
+//! [DragFloat3]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat3.html
+//! [DragFloat4]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat4.html
+//! [DragInt]:https://docs.rs/imgui/0.0/imgui/struct.DragInt.html
+//! [DragInt2]:https://docs.rs/imgui/0.0/imgui/struct.DragInt2.html
+//! [DragInt3]:https://docs.rs/imgui/0.0/imgui/struct.DragInt3.html
+//! [DragInt4]:https://docs.rs/imgui/0.0/imgui/struct.DragInt4.html
+//! [InputFloat]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat.html
+//! [InputFloat2]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat2.html
+//! [InputFloat3]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat3.html
+//! [InputFloat4]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat4.html
+//! [InputInt]:https://docs.rs/imgui/0.0/imgui/struct.InputInt.html
+//! [InputInt2]:https://docs.rs/imgui/0.0/imgui/struct.InputInt2.html
+//! [InputInt3]:https://docs.rs/imgui/0.0/imgui/struct.InputInt3.html
+//! [InputInt4]:https://docs.rs/imgui/0.0/imgui/struct.InputInt4.html
+//! [InputText]:https://docs.rs/imgui/0.0/imgui/struct.InputText.html
+//! [InputTextMultiline]:https://docs.rs/imgui/0.0/imgui/struct.InputTextMultiline.html
+//!
+//! [Ui::button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.button
+//! [Ui::small_button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.small_button
+//! [Ui::checkbox]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.checkbox
+//! [Ui::separator]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.separator
+//! [Ui::new_line]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.new_line
+//! [Ui::label_text]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.label_text
+//! [Ui::bullet_text]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.bullet_text
+//! [Ui::bullet]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.bullet
 //!
 //! ## Basic usage
 //!

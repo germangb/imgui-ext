@@ -37,7 +37,7 @@ struct Example {
     drag_2d: [f32; 2],
     #[imgui(
         checkbox(label = "Turbo mode"),
-        label(label = "Is turbo enabled?"),
+        display(label = "Is turbo enabled?"),
     )]
     turbo: bool,
 }

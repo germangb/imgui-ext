@@ -112,7 +112,21 @@ const fn size2() -> (f32, f32) {
     (200.0, 100.0)
 }
 
+#[derive(ImGuiExt, Default)]
+struct ExampleDocs {
+    #[imgui(slider(min = 0.0, max = 4.0))]
+    x: f32,
+    #[imgui(input(step = 2))]
+    y: i32,
+    #[imgui(drag(label = "Drag 2D"))]
+    drag_2d: [f32; 2],
+
+    #[imgui(checkbox(label = "Turbo mode"), display(label = "Is turbo enabled?"))]
+    turbo: bool,
+}
+
 fn main() {
+    let mut example_docs = ExampleDocs::default();
     let mut progress = Progress::default();
     let mut bullet = Bullet::default();
     let mut comment = Comment::default();
@@ -132,7 +146,8 @@ fn main() {
         progress.progress = 0.586;
         progress._progress = 0.252;
 
-        ui.imgui_ext(&mut progress);
+        ui.imgui_ext(&mut example_docs);
+        //ui.imgui_ext(&mut progress);
 
         /*
         let events = ui.imgui_ext(&mut buttons);

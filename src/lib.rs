@@ -91,7 +91,9 @@
 //! }
 //! ```
 //!
-//! ![ui result][result]
+//! ![][result]
+//!
+//! [result]: https://i.imgur.com/Xrl1Nt0.png
 //!
 //! ## Input events
 //!
@@ -156,8 +158,6 @@
 //! 10 |     #[imgui(slider(min = 0.0))]
 //!    |             ^^^^^^
 //! ```
-//!
-//! [result]: https://i.imgur.com/llyqEFY.png
 use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 
@@ -167,7 +167,9 @@ pub mod prelude {
     pub use super::checkbox::Checkbox;
     pub use super::drag::Drag;
     pub use super::input::Input;
+    pub use super::progress::Progress;
     pub use super::slider::Slider;
+    pub use super::text::Text;
     pub use super::{ImGuiExt, UiExt};
 }
 

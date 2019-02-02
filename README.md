@@ -1,10 +1,10 @@
-# imgui-ext
-
-[![Build Status](https://travis-ci.org/germangb/imgui-ext.svg?branch=master)](https://travis-ci.org/germangb/imgui-ext)
+# imgui-ext [![Build Status](https://travis-ci.org/germangb/imgui-ext.svg?branch=master)](https://travis-ci.org/germangb/imgui-ext) [![Cargo package](https://img.shields.io/crates/v/imgui-ext.svg)](https://crates.io/crates/imgui-ext) [![Documentation on docs.rs](https://docs.rs/imgui-ext/badge.svg)](https://docs.rs/imgui-ext)
 
 ***Warning: API from master is heavily subject to changes.***
 
 A crate to quickly build **[imgui]** UIs using annotations and a custom Derive.
+
+[**Master docs**](http://germangb.github.io/imgui-ext/)
 
 ```toml
 [dependencies]

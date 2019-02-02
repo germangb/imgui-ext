@@ -93,8 +93,19 @@ struct Comment {
     name: imgui::ImString,
     #[imgui(text)]
     email: imgui::ImString,
-    #[imgui(text(size = "size2"), button(label = "submit"))]
+    #[imgui(text(size = "size2"), button(label = "submit", catch = "submit"))]
     comment: imgui::ImString,
+
+    #[imgui(progress(size = "size2"))]
+    _progress: Option<f32>,
+}
+
+#[derive(ImGuiExt, Default)]
+struct Progress {
+    #[imgui(progress)]
+    progress: f32,
+    #[imgui(progress)]
+    _progress: f32,
 }
 
 const fn size2() -> (f32, f32) {
@@ -102,6 +113,7 @@ const fn size2() -> (f32, f32) {
 }
 
 fn main() {
+    let mut progress = Progress::default();
     let mut bullet = Bullet::default();
     let mut comment = Comment::default();
     let mut demo = Example::default();
@@ -117,6 +129,11 @@ fn main() {
     demo.login_form.passwd = imgui::ImString::with_capacity(64);
 
     support::run("Demo", (640, 480), |ui| {
+        progress.progress = 0.586;
+        progress._progress = 0.252;
+
+        ui.imgui_ext(&mut progress);
+
         /*
         let events = ui.imgui_ext(&mut buttons);
         if events.click {
@@ -124,7 +141,20 @@ fn main() {
         }
         */
 
+        /*
+        if let Some(pro) = &mut comment._progress {
+            progress += 1;
+            *pro = (progress % 120) as f32 / 120.0;
+        }
         let events = ui.imgui_ext(&mut comment);
+        if events.submit {
+            if comment._progress.is_none() {
+                comment._progress = Some(0.0)
+            } else {
+                comment._progress = None
+            }
+        }
+        */
         /*
         if events.user {
             println!("New value: {:?}", demo.login_form.user);

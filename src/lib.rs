@@ -4,19 +4,33 @@
 //!
 //! Annotations map to a subset of imgui types and methods:
 //!
-//! | Annotation       | Mapped Imgui Type |
-//! | ---              | --- |
-//! | `slider(...)`    | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
-//! | `drag(...)`      | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
-//! | `input(...)`     | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
-//! | `text(...)`      | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
-//! | `button(...)`    | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
-//! | `checkbox(...)`  | [`Ui::checkbox`][Ui::checkbox] |
-//! | `separator(...)` | [`Ui::separator`][Ui::separator] |
-//! | `new_line(...)`  | [`Ui::new_line`][Ui::new_line] |
-//! | `display(...)`   | [`Ui::label_text`][Ui::label_text] |
-//! | `bullet(...)`    | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
-//! | `nested(...)`    | See [`nested`](./nested/index.html) module. |
+//! | Annotation                    | Mapped Imgui Type |
+//! | ----------------------------- | --- |
+//! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
+//! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
+//! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
+//! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
+//! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
+//! | [`button(...)`][button]       | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
+//! | [`checkbox(...)`][checkbox]   | [`Ui::checkbox`][Ui::checkbox] |
+//! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
+//! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
+//! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
+//! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
+//! | [`nested(...)`][nested]       | See the [`nested` module](./nested/index.html) docs. |
+//!
+//! [slider]: ./slider/index.html
+//! [drag]: ./drag/index.html
+//! [input]: ./input/index.html
+//! [text]: ./text/index.html
+//! [progress]: ./progress/index.html
+//! [button]: ./button/index.html
+//! [checkbox]: ./checkbox/index.html
+//! [separator]: ./separator/index.html
+//! [new_line]: ./new_line/index.html
+//! [display]: ./display/index.html
+//! [bullet]: ./bullet/index.html
+//! [nested]: ./nested/index.html
 //!
 //! [SliderFloat]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat.html
 //! [SliderFloat2]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat2.html
@@ -44,6 +58,7 @@
 //! [InputInt4]:https://docs.rs/imgui/0.0/imgui/struct.InputInt4.html
 //! [InputText]:https://docs.rs/imgui/0.0/imgui/struct.InputText.html
 //! [InputTextMultiline]:https://docs.rs/imgui/0.0/imgui/struct.InputTextMultiline.html
+//! [ProgressBar]:https://docs.rs/imgui/0.0/imgui/struct.ProgressBar.html
 //!
 //! [Ui::button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.button
 //! [Ui::small_button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.small_button
@@ -162,6 +177,8 @@ pub mod checkbox;
 pub mod drag;
 /// `input(...)` docs.
 pub mod input;
+/// `progress(...)` docs.
+pub mod progress;
 /// `slider(...)` docs.
 pub mod slider;
 /// `text(...)` docs.

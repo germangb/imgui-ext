@@ -211,6 +211,18 @@ tag! {
     }
 }
 
+tag! {
+    #[derive(Default)]
+    struct Progress {
+        fields {
+        },
+        optional {
+            overlay: Option<Lit>,
+            size: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     Display(Display),
     Checkbox(Checkbox),
@@ -221,6 +233,7 @@ enum Tag {
     Bullet(Bullet),
     Nested(Nested),
     Text(Text),
+    Progress(Progress),
 
     /// `#[imgui(separator)]`
     Separator,
@@ -391,6 +404,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "input" => tags.push(Tag::Input(Default::default())),
                     "drag" => tags.push(Tag::Drag(Default::default())),
                     "bullet" => tags.push(Tag::Bullet(Default::default())),
+                    "progress" => tags.push(Tag::Progress(Default::default())),
 
                     // errors
                     "slider" => {
@@ -418,6 +432,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list(meta_list)?),
+                    "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
 
                     // TODO implement nested bullet
                     "bullet" => {
@@ -505,6 +520,45 @@ fn emmit_tag_tokens(
     let tokens = match tag {
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Progress(Progress { overlay, size }) => {
+            let mut params = quote! {
+                use imgui_ext::progress::ProgressParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    overlay: None,
+                    size: None,
+                };
+            };
+
+            let ident_str = ident.to_string();
+            match (overlay, ident_str.as_bytes()[0]) {
+                (Some(Lit::Str(stri)), _) => {
+                    params.extend(quote! {{ params.overlay = Some(im_str!(#stri)); }})
+                }
+                (None, b'_') => {}
+                (None, _) => {
+                    let overlay = Literal::string(&ident_str);
+                    params.extend(quote! {{ params.overlay = Some(im_str!(#overlay)); }});
+                }
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match size {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            quote! {{
+                use imgui_ext::progress::Progress;
+                Progress::build(ui, &ext.#ident, { #params; params });
+            }}
+        }
         Tag::Text(Text {
             label,
             size,

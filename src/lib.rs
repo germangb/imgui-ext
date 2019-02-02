@@ -2,6 +2,22 @@
 //!
 //! [imgui]: https://crates.io/crates/imgui
 //!
+//! Annotations map directly to a subset of imgui types and methods:
+//!
+//! | Annotation       | Imgui Type |
+//! | ---              | --- |
+//! | `slider(...)`    | `SliderFloat`, `SliderFloat2`, `SliderFloat3`, `SliderFloat4`, `SliderInt`, `SliderInt2`, `SliderInt3`, `SliderInt4` |
+//! | `drag(...)`      | `DragFloat`, `DragFloat2`, `DragFloat3`, `DragFloat4`, `DragInt`, `DragInt2`, `DragInt3`, `DragInt4` |
+//! | `input(...)`     | `InputFloat`, `InputFloat2`, `InputFloat3`, `InputFloat4`, `InputInt`, `InputInt2`, `InputInt3`, `InputInt4` |
+//! | `text(...)`      | `InputText`, `InputTextMultiLine` |
+//! | `button(...)`    | `Ui::button`, `Ui::small_button` |
+//! | `checkbox(...)`  | `Ui::checkbox` |
+//! | `separator(...)` | `Ui::separator` |
+//! | `new_line(...)`  | `Ui::new_line` |
+//! | `display(...)`   | `Ui::label_text` |
+//! | `bullet(...)`    | `Ui::bullet_text`, `Ui::bullet` |
+//! | `nested(...)`    | See [`nested`](./nested/index.html) module. |
+//!
 //! ## Basic usage
 //!
 //! ```
@@ -25,18 +41,6 @@
 //! ```
 //!
 //! ![ui result][result]
-//!
-//! ## Static code generation
-//!
-//! No extra dynamic allocations.
-//!
-//! [Codegen example][example].
-//!
-//! [example]: https://github.com/germangb/imgui-ext/blob/master/CODEGEN.md
-//!
-//! ## Nested UIs
-//!
-//! See the [`nested`](./nested/index.html) module docs.
 //!
 //! ## Input events
 //!

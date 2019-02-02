@@ -44,9 +44,9 @@
 //!
 //! #[derive(ImGuiExt)]
 //! struct Form {
-//!     #[imgui(input)]
+//!     #[imgui(text)]
 //!     user: ImString,
-//!     #[imgui(input(flags = "passwd_flags"))]
+//!     #[imgui(text(flags = "passwd_flags"))]
 //!     passwd: ImString,
 //!     #[imgui(button(label = "Login", size = "size"))]
 //!     _btn: (),
@@ -85,7 +85,7 @@
 //! struct Example {
 //!     #[imgui(checkbox(catch = "check"))]
 //!     input_check: bool,
-//!     #[imgui(input(catch = "text"))]
+//!     #[imgui(text(catch = "text"))]
 //!     text: ImString,
 //! }
 //!
@@ -162,12 +162,14 @@ pub mod drag;
 pub mod input;
 /// `slider(...)` docs.
 pub mod slider;
+/// `text(...)` docs.
+pub mod text;
 /// Support for some (basic) layout annotations.
 pub mod layout {
     //!
-    //! This module is mostly a work in progress. Any suggestions or contributions it are very welcome.
+    //! This module is mostly a work in progress. Any suggestions or contributions are very welcome.
     //!
-    //! Please file [an issue] if you wish to do so.
+    //! Please file [an issue] if you wish contribute.
     //!
     //! [an issue]: https://github.com/germangb/imgui-ext/issues
     //!

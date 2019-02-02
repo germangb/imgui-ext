@@ -1,12 +1,10 @@
 #![recursion_limit = "128"]
 extern crate proc_macro;
 
-use std::collections::HashMap;
 use std::string::ToString;
 
 use proc_macro2::{Literal, TokenStream};
 use quote::quote;
-use quote::ToTokens;
 use syn::parse::Error;
 use syn::spanned::Spanned;
 use syn::{
@@ -199,6 +197,20 @@ tag! {
     }
 }
 
+tag! {
+    #[derive(Default)]
+    struct Text {
+        fields {
+        },
+        optional {
+            label: Option<Lit>,
+            flags: Option<Lit>,
+            size: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     Label(Label),
     Checkbox(Checkbox),
@@ -208,21 +220,12 @@ enum Tag {
     Button(Button),
     Bullet(Bullet),
     Nested(Nested),
+    Text(Text),
 
     /// `#[imgui(separator)]`
     Separator,
     /// `#[imgui(new_line)]`
     NewLine,
-}
-
-impl Tag {
-    fn display(&mut self) -> &mut Label {
-        if let &mut Tag::Label(ref mut disp) = self {
-            disp
-        } else {
-            panic!("Unexpected state")
-        }
-    }
 }
 
 fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
@@ -355,7 +358,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
     #[derive(Copy, Clone, Eq, PartialEq)]
     enum State {
         Init,
-        Label,
+        //Label,
         Tags,
     }
 
@@ -382,6 +385,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "new_line" => tags.push(Tag::NewLine),
 
                     "nested" => tags.push(Tag::Nested(Default::default())),
+                    "text" => tags.push(Tag::Text(Default::default())),
                     "label" => tags.push(Tag::Label(Default::default())),
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
@@ -405,6 +409,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
+                    "text" => Tag::Text(Text::from_meta_list(meta_list)?),
 
                     // TODO implement nested bullet
                     "bullet" => {
@@ -432,22 +437,6 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
         }
     }
     Ok(tags)
-}
-
-/// Parse the contents of: `foo(k=v, ...)`
-/// It must contain only key=value pairs, otherwise returns an Err.
-fn parse_params(params: &MetaList) -> Result<HashMap<String, (Ident, Lit)>, Error> {
-    params
-        .nested
-        .iter()
-        .map(|nested| {
-            if let NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) = nested {
-                Ok((ident.to_string(), (ident.clone(), lit.clone())))
-            } else {
-                Err(Error::new(params.span(), INVALID_FORMAT))
-            }
-        })
-        .collect::<Result<HashMap<_, _>, Error>>()
 }
 
 /// Parse the contents of a label tag: `label(label = "...", display = "...", foo, bar)`
@@ -500,7 +489,7 @@ fn parse_label(params: &MetaList) -> Result<Label, Error> {
 /// This function needs to be called twice (once per Tag)
 fn emmit_tag_tokens(
     ident: &Ident,
-    ty: &Type,
+    _ty: &Type,
     attr: &Attribute,
     tag: &Tag,
     input: &mut Vec<TokenStream>,
@@ -508,6 +497,65 @@ fn emmit_tag_tokens(
     let tokens = match tag {
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Text(Text {
+            label,
+            size,
+            flags,
+            catch,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                // TODO proper error span
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::text::TextParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    flags: None,
+                    size: None,
+                };
+            };
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    params.extend(quote! { params.flags = Some( #fn_ident() ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match size {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            // TODO ??????1
+            params.extend(quote!(params));
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
+            quote!({
+                use imgui_ext::text::Text;
+                let _ev = Text::build(ui, &mut ext.#ident, { #params });
+                #catch
+            })
+        }
         Tag::Input(Input {
             label,
             step,
@@ -564,6 +612,7 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
+            // TODO ????????
             params.extend(quote!(params));
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
@@ -642,10 +691,19 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
             params.extend(quote!(params));
             quote!({
                 use imgui_ext::drag::Drag;
-                Drag::build(ui, &mut ext.#ident, { #params });
+                let _ev = Drag::build(ui, &mut ext.#ident, { #params });
+                #catch
             })
         }
         Tag::Button(Button { label, size, catch }) => {
@@ -669,7 +727,8 @@ fn emmit_tag_tokens(
                 quote!()
             };
             quote! {{
-                let _ev = ui.button( imgui::im_str!( #label ), { #size_fn() } );
+                use imgui::ImVec2;
+                let _ev = ui.button( imgui::im_str!( #label ), { ImVec2::from(#size_fn()) } );
                 #catch
             }}
         }
@@ -772,7 +831,7 @@ fn emmit_tag_tokens(
         }
         Tag::Nested(Nested { catch }) => {
             // TODO catch events
-            let catch = if let Some(catch) = catch {
+            let catch = if let Some(_catch) = catch {
                 return Err(Error::new(attr.span(), NESTED_INPUTS));
             /*
             match ty {

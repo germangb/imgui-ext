@@ -10,7 +10,7 @@
 //! ## Example
 //!
 //! The input trait is implemented for numeric types (`f32` and `i32`) and their corresponding
-//! array types of up to 4 elements, and [`ImString`]
+//! array types of up to 4 elements.
 //!
 //! ```
 //! use imgui_ext::prelude::*;
@@ -40,12 +40,12 @@
 //!
 //! ```
 //! use imgui_ext::prelude::*;
-//! use imgui::{ImString, ImGuiInputTextFlags};
+//! use imgui::ImGuiInputTextFlags;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
 //!     #[imgui(input(flags = "my_flags"))]
-//!     password: ImString,
+//!     n: f32,
 //! }
 //!
 //! fn my_flags() -> ImGuiInputTextFlags {
@@ -53,11 +53,10 @@
 //! }
 //! ```
 //!
-//! [`ImString`]: #
 //! [result]: https://i.imgur.com/BPvMGAp.png
 use imgui::{
-    ImGuiInputTextFlags, ImStr, ImString, InputFloat, InputFloat2, InputFloat3, InputFloat4,
-    InputInt, InputInt2, InputInt3, InputInt4, InputText, Ui,
+    ImGuiInputTextFlags, ImStr, InputFloat, InputFloat2, InputFloat3, InputFloat4, InputInt,
+    InputInt2, InputInt3, InputInt4, Ui,
 };
 
 #[derive(Copy, Clone)]
@@ -121,16 +120,6 @@ macro_rules! impl_i32_array {
             }
         }
     )*}
-}
-
-impl Input<f32> for ImString {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
-        let mut text = InputText::new(ui, params.label, elem);
-        if let Some(flags) = params.flags {
-            text = text.flags(flags);
-        }
-        text.build()
-    }
 }
 
 impl Input<f32> for f32 {
@@ -207,7 +196,6 @@ mod tests {
     use crate as imgui_ext;
     use crate::prelude::*;
     use imgui::ImGuiInputTextFlags as Flags;
-    use imgui::ImString;
 
     fn flags() -> Flags {
         Flags::Password
@@ -219,8 +207,6 @@ mod tests {
         struct Foo {
             #[imgui(input)]
             a: i32,
-            #[imgui(input(flags = "flags"))]
-            b: ImString,
         }
     }
 

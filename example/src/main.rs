@@ -7,10 +7,15 @@ mod support;
 
 #[derive(Default, ImGuiExt)]
 struct Form {
-    #[imgui(input(catch = "user"))]
+    //#[imgui(text(catch = "user", size = "multi_size"))]
+    #[imgui(text(catch = "user"))]
     user: imgui::ImString,
-    #[imgui(input(flags = "passwd_flags"))]
+    #[imgui(text(flags = "passwd_flags"))]
     passwd: imgui::ImString,
+}
+
+fn multi_size() -> (f32, f32) {
+    (200.0, 100.0)
 }
 
 fn passwd_flags() -> ImGuiInputTextFlags {
@@ -19,7 +24,6 @@ fn passwd_flags() -> ImGuiInputTextFlags {
 
 #[derive(Default, ImGuiExt)]
 struct Example {
-    //#[imgui(nested(catch = "form"))]
     #[imgui(nested)]
     login_form: Form,
     #[imgui(

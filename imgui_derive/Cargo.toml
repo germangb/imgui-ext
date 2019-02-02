@@ -5,7 +5,6 @@ authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 description = "Procedural macro for the imgui-ext crate."
 repository = "https://github.com/germangb/imgui-ext"
-readme = "README.md"
 keywords = ["gui", "imgui", "macro"]
 categories = ["gui", "api-bindings", "game-engines"]
 license = "MIT"

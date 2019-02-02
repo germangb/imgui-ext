@@ -1,6 +1,6 @@
 [package]
 name = "imgui-ext"
-version = "0.1.0-rc3"
+version = "0.1.0"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 description = "Define imgui UIs using a derive macro."
@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["gui", "imgui", "macro"]
 categories = ["gui", "api-bindings", "game-engines"]
 license = "MIT"
+exclude = ["ci/*"]
 
 [badges]
 travis-ci = { repository = "germangb/imgui-ext", branch = "master" }
@@ -18,4 +19,4 @@ members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "^0.0"
-imgui-ext-derive = { version = "0.1.0-rc3", path = "imgui_derive" }
+imgui-ext-derive = { version = "0.1.0", path = "imgui_derive" }

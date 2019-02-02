@@ -1,33 +1,28 @@
-use imgui_ext::imgui_ext;
-use imgui_ext::prelude::*;
+use imgui::{im_str, ImGuiInputTextFlags};
 
-use imgui::ImGuiInputTextFlags;
+use imgui_ext::prelude::*;
 
 mod support;
 
 #[derive(Default, ImGuiExt)]
 struct Form {
-    //#[imgui(text(catch = "user", size = "multi_size"))]
     #[imgui(text(catch = "user"))]
     user: imgui::ImString,
     #[imgui(text(flags = "passwd_flags"))]
     passwd: imgui::ImString,
 }
 
-fn multi_size() -> (f32, f32) {
-    (200.0, 100.0)
-}
-
-fn passwd_flags() -> ImGuiInputTextFlags {
+const fn passwd_flags() -> ImGuiInputTextFlags {
     ImGuiInputTextFlags::Password
 }
 
 #[derive(Default, ImGuiExt)]
-struct Example {
+struct FormExample {
     #[imgui(nested)]
     login_form: Form,
     #[imgui(
-        button(label = "Login", size = "size", catch = "click"),
+        button(label = "Login", catch = "click"),
+        button(label = "Clear", catch = "clear"),
         separator,
         checkbox(label = "Remember login?", catch = "mem")
     )]
@@ -44,7 +39,7 @@ struct Example {
 #[derive(ImGuiExt, Default)]
 struct Buttons {
     #[imgui(
-        button(size = "btn_size", label = "Click me!", catch = "click"),
+        button(label = "Click me!", catch = "click"),
         separator,
         display(label = "Clicks")
     )]
@@ -71,14 +66,6 @@ struct Bullet {
     foo: f32,
 }
 
-fn btn_size() -> (f32, f32) {
-    (100.0, 20.0)
-}
-
-fn size() -> (f32, f32) {
-    (64.0, 24.0)
-}
-
 #[derive(ImGuiExt, Default)]
 struct Sliders {
     #[imgui(slider(min = 0.0, max = 1.0))]
@@ -93,11 +80,12 @@ struct Comment {
     name: imgui::ImString,
     #[imgui(text)]
     email: imgui::ImString,
-    #[imgui(text(size = "size2"), button(label = "submit", catch = "submit"))]
+    #[imgui(text(size = "size"), button(label = "submit", catch = "submit"))]
     comment: imgui::ImString,
+}
 
-    #[imgui(progress(size = "size2"))]
-    _progress: Option<f32>,
+const fn size() -> (f32, f32) {
+    (200.0, 100.0)
 }
 
 #[derive(ImGuiExt, Default)]
@@ -106,10 +94,8 @@ struct Progress {
     progress: f32,
     #[imgui(progress)]
     _progress: f32,
-}
 
-const fn size2() -> (f32, f32) {
-    (200.0, 100.0)
+    count: u32,
 }
 
 #[derive(ImGuiExt, Default)]
@@ -120,67 +106,68 @@ struct ExampleDocs {
     y: i32,
     #[imgui(drag(label = "Drag 2D"))]
     drag_2d: [f32; 2],
-
     #[imgui(checkbox(label = "Turbo mode"), display(label = "Is turbo enabled?"))]
     turbo: bool,
 }
 
 fn main() {
+    let mut sliders = Sliders::default();
     let mut example_docs = ExampleDocs::default();
     let mut progress = Progress::default();
     let mut bullet = Bullet::default();
     let mut comment = Comment::default();
-    let mut demo = Example::default();
+    let mut demo = FormExample::default();
     let mut buttons = Buttons::default();
     let mut labels = Labels {
         foo: 42.0,
         bar: (2.0, false, 8),
         baz: "hello world".to_string(),
     };
-    let mut sliders = Sliders::default();
+    demo.login_form.user.reserve(64);
+    demo.login_form.passwd.reserve(64);
+    comment.name.reserve(64);
+    comment.email.reserve(128);
+    comment.comment.reserve(512);
 
-    demo.login_form.user = imgui::ImString::with_capacity(64);
-    demo.login_form.passwd = imgui::ImString::with_capacity(64);
+    support::run("Demo", (800, 600), |ui| {
+        ui.window(im_str!("README example")).build(|| {
+            ui.imgui_ext(&mut example_docs);
+        });
 
-    support::run("Demo", (640, 480), |ui| {
-        progress.progress = 0.586;
-        progress._progress = 0.252;
+        ui.window(im_str!("Sliders")).build(|| {
+            ui.imgui_ext(&mut sliders);
+        });
 
-        ui.imgui_ext(&mut example_docs);
-        //ui.imgui_ext(&mut progress);
+        ui.window(im_str!("Progress")).build(|| {
+            progress.count += 1;
+            progress.progress = (progress.count % 60) as f32 / 60.0;
+            progress._progress = (progress.count % 120) as f32 / 120.0;
+            ui.imgui_ext(&mut progress);
+        });
 
-        /*
-        let events = ui.imgui_ext(&mut buttons);
-        if events.click {
-            buttons.count += 1;
-        }
-        */
+        ui.window(im_str!("Bullet")).build(|| {
+            ui.imgui_ext(&mut bullet);
+        });
 
-        /*
-        if let Some(pro) = &mut comment._progress {
-            progress += 1;
-            *pro = (progress % 120) as f32 / 120.0;
-        }
-        let events = ui.imgui_ext(&mut comment);
-        if events.submit {
-            if comment._progress.is_none() {
-                comment._progress = Some(0.0)
-            } else {
-                comment._progress = None
+        ui.window(im_str!("Text")).build(|| {
+            ui.imgui_ext(&mut comment);
+        });
+
+        ui.window(im_str!("Nested")).build(|| {
+            if ui.imgui_ext(&mut demo).clear {
+                demo.login_form.user.clear();
+                demo.login_form.passwd.clear();
             }
-        }
-        */
-        /*
-        if events.user {
-            println!("New value: {:?}", demo.login_form.user);
-        }
-        */
+        });
 
-        /*
-        let events = ui.imgui_ext(&mut demo.login_form);
-        if events.user {
-            println!("new user: {:?}", demo.login_form.user);
-        }
-        */
+        ui.window(im_str!("Button")).build(|| {
+            if ui.imgui_ext(&mut buttons).click {
+                buttons.count += 1;
+            }
+        });
+
+        ui.window(im_str!("Labels")).build(|| {
+            ui.imgui_ext(&mut labels);
+        });
     });
 }

@@ -19,7 +19,7 @@ A crate to quickly build [imgui] UIs using annotations and a custom Derive.
 
 [nested]: https://germangb.github.io/imgui-ext/imgui_ext/nested/index.html
 
-[example]: ./CODEGEN.md
+[example]: ./imgui_derive/CODEGEN.md
 
 ## Example
 
@@ -46,6 +46,12 @@ struct Example {
 #### Result:
 
 ![](assets/demo.png)
+
+[**See more examples**](example/src/main.rs)
+
+```bash
+cargo run -p example
+```
 
 [result]: assets/demo.png
 

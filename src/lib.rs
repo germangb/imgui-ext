@@ -74,6 +74,7 @@
 //! ```
 //! use imgui_ext::prelude::*;
 //!
+//! // Place annotations on the fields you want to include in the Ui.
 //! #[derive(ImGuiExt)]
 //! struct Example {
 //!     #[imgui(slider(min = 0.0, max = 4.0))]

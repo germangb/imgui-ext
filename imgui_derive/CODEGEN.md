@@ -1,18 +1,13 @@
 ## Code generation
 
-Generated code doesn't contain any extra dynamic allocations:
 
 ### Example
-
-This is what you would write:
 
 ```rust
 use imgui_ext::prelude::*;
 
 #[derive(Default, ImGuiExt)]
 struct Example {
-    // `catch` is an optional parameter that is used to query discrete input events (mouse clicks, value changes, etc)
-    // See the docs for more info on this param.
     #[imgui(slider(label = "Slider label", min = 0.0, max = 1.0, catch = "change_foo"))]
     foo: f32,
     #[imgui(checkbox(catch = "change_bar"))]
@@ -31,8 +26,6 @@ if events.change_foo {
 ```
 
 ### Generated
-
-This is what the compiler generates for you:
 
 ```rust
 use imgui_ext::prelude::*;

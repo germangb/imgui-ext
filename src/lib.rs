@@ -18,7 +18,7 @@
 //!
 //!     #[imgui(
 //!         checkbox(label = "Turbo mode"),
-//!         label(label = "Is turbo enabled?"),
+//!         display(label = "Is turbo enabled?"),
 //!     )]
 //!     turbo: bool,
 //! }
@@ -28,50 +28,15 @@
 //!
 //! ## Static code generation
 //!
-//! The generated code won't contain extra dynamic allocations.
+//! No extra dynamic allocations.
 //!
-//! In [this example] you can see what the generated code looks like.
+//! [Codegen example][example].
 //!
-//! [this example]: https://github.com/germangb/imgui-ext/blob/master/CODEGEN.md
+//! [example]: https://github.com/germangb/imgui-ext/blob/master/CODEGEN.md
 //!
 //! ## Nested UIs
 //!
-//! Types that `#[derive(ImGuiExt)]` can be nested:
-//!
-//! ```
-//! use imgui::{ImString, ImGuiInputTextFlags};
-//! use imgui_ext::prelude::*;
-//!
-//! #[derive(ImGuiExt)]
-//! struct Form {
-//!     #[imgui(text)]
-//!     user: ImString,
-//!     #[imgui(text(flags = "passwd_flags"))]
-//!     passwd: ImString,
-//!     #[imgui(button(label = "Login", size = "size"))]
-//!     _btn: (),
-//! }
-//!
-//! fn passwd_flags() -> ImGuiInputTextFlags {
-//!     ImGuiInputTextFlags::Password
-//! }
-//!
-//! fn size() -> (f32, f32) {
-//!     (64.0, 24.0)
-//! }
-//!
-//! #[derive(ImGuiExt)]
-//! struct Example {
-//!     #[imgui(nested)]
-//!     login_form: Form,
-//!     #[imgui(checkbox(label = "Remember login?"))]
-//!     remember: bool,
-//! }
-//! ```
-//!
-//! ![][nested_example]
-//!
-//! [nested_example]: https://i.imgur.com/l6omyf4.png
+//! See the [`nested`](./nested/index.html) module docs.
 //!
 //! ## Input events
 //!
@@ -89,6 +54,8 @@
 //!     text: ImString,
 //! }
 //!
+//! // init imgui (ui)...
+//!
 //! let events = ui.imgui_ext(&mut example);
 //! if events.check {
 //!     println!("New value: {}", example.input_check);
@@ -97,11 +64,6 @@
 //!     println!("New text value: {:?}", example.text);
 //! }
 //! ```
-//! ### Limitations
-//!
-//! Not available for nested UIs yet. See [`#0`]
-//!
-//! [`#0`]: #
 //!
 //! ## Combining UI and non-UI fields
 //!
@@ -178,10 +140,10 @@ pub mod layout {
     //! * `#[imgui(separator)]` inserts a separator
     //! * `#[imgui(new_line)]` inserts an empty line
 }
-/// `label(...)` docs.
-pub mod label {
+/// `display(...)` docs.
+pub mod display {
     //!
-    //! `label(...)` is used to display the contents of a field:
+    //! `display(...)` is used to display a field.
     //!
     //! ## Optional fields
     //!
@@ -195,17 +157,14 @@ pub mod label {
     //!
     //! #[derive(ImGuiExt)]
     //! struct Labels {
-    //!     #[imgui(label)] // same as writing #[imgui(label())]
+    //!     #[imgui(display)]
     //!     foo: f32,
     //!
-    //!     #[imgui(label())]
-    //!     foobar: &'static str,
-    //!
     //!     // Use inner fields to format the text.
-    //!     #[imgui(label(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
+    //!     #[imgui(display(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
     //!     bar: (f32, bool, usize),
     //!
-    //!     // when label() is the only annotation, writing it in full is optional:
+    //!     // when display() is the only annotation, it can be abbreviated:
     //!     #[imgui(label = "String param")]
     //!     baz: String,
     //! }
@@ -217,13 +176,54 @@ pub mod label {
 }
 /// `nested(...)` docs (used to build nested UIs).
 pub mod nested {
+    //!
+    //! Types that #[derive(ImGuiExt)] can be nested.
+    //!
     //! ## Optional fields
     //!
-    //! * `catch`
+    //! * `catch` *currently unimplemented. See [#][issue]*
+    //!
+    //! [issue]: #
     //!
     //! ## Example
     //!
+    //! ```
+    //! use imgui::{ImString, ImGuiInputTextFlags};
+    //! use imgui_ext::prelude::*;
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Form {
+    //!     #[imgui(text)]
+    //!     user: ImString,
+    //!     #[imgui(text(flags = "passwd_flags"))]
+    //!     passwd: ImString,
+    //!     #[imgui(button(label = "Login", size = "size"))]
+    //!     _btn: (),
+    //! }
+    //!
+    //! fn passwd_flags() -> ImGuiInputTextFlags {
+    //!     ImGuiInputTextFlags::Password
+    //! }
+    //!
+    //! fn size() -> (f32, f32) {
+    //!     (64.0, 24.0)
+    //! }
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Example {
+    //!     #[imgui(nested)]
+    //!     login_form: Form,
+    //!     #[imgui(checkbox(label = "Remember login?"))]
+    //!     remember: bool,
+    //! }
+    //! ```
+    //!
     //! ### Result
+    //!
+    //! ![][result]
+    //!
+    //! [result]: https://i.imgur.com/l6omyf4.png
+    //!
 }
 /// `button(...)` docs.
 pub mod button {
@@ -248,7 +248,7 @@ pub mod button {
     //!     #[imgui(
     //!         button(size = "button_size", label = "Click me!", catch = "click"),
     //!         separator,
-    //!         label(label = "Clicks"),
+    //!         display(label = "Clicks"),
     //!     )]
     //!     count: i32,
     //! }
@@ -272,21 +272,29 @@ pub mod button {
 /// `bullet(...)` docs.
 pub mod bullet {
     //!
-    //! `bullet(...)` is used to define bullet lists. It has two variants:
+    //! Used to build bulleted lists. It has two variants:
     //!
-    //! * `bullet(text = "...")` defines a bullet'd text.
-    //! * `bullet(...)` bullets whatever is inside of ...
+    //! * `bullet(text = "...")`
+    //! * `bullet(...)` nests a UI element (currently unimplemented. See [#][issue])
+    //!
+    //! [issue]: #
+    //!
+    //! ## Example
     //!
     //! ```ignore
     //! #[derive(ImGuiExt)]
     //! struct Bullet {
     //!     #[imgui(
-    //!         bullet(text = "Kill all humans"),
+    //!         bullet(text = "Be nice to others."),
+    //!         bullet(text = "Don't repeat your password"),
+    //!         bullet(text = "Kill all humans."),
     //!         bullet(slider(min = 0.0, max = 1.0)),
     //!     )]
     //!     foo: f32,
     //! }
     //! ```
+    //!
+    //! ### Result
     //!
     //! ![][result]
     //!

@@ -46,16 +46,16 @@ struct Buttons {
     #[imgui(
         button(size = "btn_size", label = "Click me!", catch = "click"),
         separator,
-        label(label = "Clicks")
+        display(label = "Clicks")
     )]
     count: i32,
 }
 
 #[derive(ImGuiExt)]
 struct Labels {
-    #[imgui(label)]
+    #[imgui]
     foo: f32,
-    #[imgui(label(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
+    #[imgui(display(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
     bar: (f32, bool, usize),
     #[imgui(label = "String param")]
     baz: String,
@@ -87,8 +87,30 @@ struct Sliders {
     bar: [i32; 2],
 }
 
+#[derive(ImGuiExt, Default)]
+struct Comment {
+    #[imgui(text)]
+    name: imgui::ImString,
+    #[imgui(text)]
+    email: imgui::ImString,
+    #[imgui(
+        text(size = "size2"),
+        button(label = "submit", size = "btn_size2")
+    )]
+    comment: imgui::ImString,
+}
+
+const fn size2() -> (f32, f32) {
+    (200.0, 100.0)
+}
+
+const fn btn_size2() -> (f32, f32) {
+    (50.0, 20.0)
+}
+
 fn main() {
     let mut bullet = Bullet::default();
+    let mut comment = Comment::default();
     let mut demo = Example::default();
     let mut buttons = Buttons::default();
     let mut labels = Labels {
@@ -109,7 +131,7 @@ fn main() {
         }
         */
 
-        let events = ui.imgui_ext(&mut demo);
+        let events = ui.imgui_ext(&mut comment);
         /*
         if events.user {
             println!("New value: {:?}", demo.login_form.user);

@@ -39,9 +39,7 @@
 //!
 //! ## Input flags
 //!
-//! You can specify a local function from where to load any input flags.
-//!
-//! The only limitation is that these flags cannot be changed at runtime.
+//! You can specify a local function from where to load any input flags:
 //!
 //! ```
 //! use imgui_ext::prelude::*;

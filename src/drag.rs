@@ -6,6 +6,7 @@
 //! * `speed`
 //! * `power`
 //! * `format` (printf format)
+//! * `catch`
 use imgui::{
     DragFloat, DragFloat2, DragFloat3, DragFloat4, DragInt, DragInt2, DragInt3, DragInt4, ImStr, Ui,
 };

@@ -89,7 +89,7 @@ enum DisplayParam {
 ///                                                   ^---,
 ///                                                idents & literals
 #[derive(Default)]
-struct Label {
+struct Display {
     label: Option<Lit>,
     display: Option<Lit>,
     params: Vec<DisplayParam>,
@@ -212,7 +212,7 @@ tag! {
 }
 
 enum Tag {
-    Label(Label),
+    Display(Display),
     Checkbox(Checkbox),
     Input(Input),
     Slider(Slider),
@@ -341,7 +341,7 @@ fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
         // #[imgui = ...] Nope
         Meta::NameValue(named) => Err(Error::new(named.span(), INVALID_FORMAT)),
         // #[imgui], treated as an empty label
-        Meta::Word(_) => Ok(vec![Tag::Label(Label::default())]),
+        Meta::Word(_) => Ok(vec![Tag::Display(Display::default())]),
         // #[imgui(meta_list)] (general)
         Meta::List(meta_list) => parse_meta_list(meta_list),
     }
@@ -372,7 +372,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
             (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, .. })))
                 if ident.to_string() == "label" || ident.to_string() == "display" =>
             {
-                tags.push(Tag::Label(parse_label(&meta_list)?));
+                tags.push(Tag::Display(parse_label(&meta_list)?));
                 // any errors will have been reported by the previous call to `parse_label`.
                 // At this point I can break out of the loop.
                 break;
@@ -386,11 +386,20 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
 
                     "nested" => tags.push(Tag::Nested(Default::default())),
                     "text" => tags.push(Tag::Text(Default::default())),
-                    "label" => tags.push(Tag::Label(Default::default())),
+                    "display" => tags.push(Tag::Display(Default::default())),
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
                     "drag" => tags.push(Tag::Drag(Default::default())),
                     "bullet" => tags.push(Tag::Bullet(Default::default())),
+
+                    // errors
+                    "slider" => {
+                        Tag::Slider(Slider::from_meta_list(&meta_list)?);
+                    }
+                    "button" => {
+                        Tag::Button(Button::from_meta_list(&meta_list)?);
+                    }
+
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 }
                 state = State::Tags;
@@ -402,7 +411,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "separator" => Tag::Separator,
                     "new_line" => Tag::NewLine,
 
-                    "label" => Tag::Label(parse_label(&meta_list)?),
+                    "display" => Tag::Display(parse_label(&meta_list)?),
                     "nested" => Tag::Nested(Nested::from_meta_list(meta_list)?),
                     "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
@@ -441,7 +450,7 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
 
 /// Parse the contents of a label tag: `label(label = "...", display = "...", foo, bar)`
 /// Asumes that `params.ident` is equal to "label"
-fn parse_label(params: &MetaList) -> Result<Label, Error> {
+fn parse_label(params: &MetaList) -> Result<Display, Error> {
     #[derive(Clone, Copy)]
     enum State {
         Init,
@@ -449,7 +458,7 @@ fn parse_label(params: &MetaList) -> Result<Label, Error> {
     }
 
     let mut state = State::Init;
-    let mut display = Label::default();
+    let mut display = Display::default();
 
     for attr in params.nested.iter() {
         match (state, attr) {
@@ -484,7 +493,7 @@ fn parse_label(params: &MetaList) -> Result<Label, Error> {
 /// Output source code for a given field, a given attribute, and one of the parsed `Tag`s
 ///
 /// For example, the this annotation: `#[imgui(label(...), input(...))]`
-/// produces two tags: `Tag::Label` and `Tag::Input`.
+/// produces two tags: `Tag::Display` and `Tag::Input`.
 ///
 /// This function needs to be called twice (once per Tag)
 fn emmit_tag_tokens(
@@ -848,7 +857,7 @@ fn emmit_tag_tokens(
                 #catch
             }}
         }
-        Tag::Label(Label {
+        Tag::Display(Display {
             label,
             display,
             params,

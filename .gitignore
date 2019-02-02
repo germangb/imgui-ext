@@ -4,3 +4,4 @@ Cargo.lock
 .idea
 *.swp
 *.ini
+pages_deploy

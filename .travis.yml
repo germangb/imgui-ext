@@ -1,0 +1,14 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+script:
+  - cargo build --all-features --verbose --features ci
+  - cargo test --all-features --verbose --features ci
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+after_success:
+- test $TRAVIS_BRANCH = "stabilize" && bash ci/publish_docs.sh

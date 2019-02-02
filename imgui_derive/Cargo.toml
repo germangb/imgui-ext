@@ -1,5 +1,5 @@
 [package]
-name = "imgui_ext_derive"
+name = "imgui-ext-derive"
 version = "0.1.0"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
@@ -8,7 +8,6 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-imgui_ext_traits = { path = "../traits" }
 syn = {version = "0.15.18", features = ["derive"]}
 quote = "0.6.9"
 proc-macro2 = "0.4.20"

@@ -19,7 +19,7 @@ cat << EOF > $DOCS_DIR/index.html
 EOF
 
 git -C $DOCS_DIR init && \
-    git -C $DOCS_DIR remote add origin git@github.com:germangb/imgui-ext.git && \
+    git -C $DOCS_DIR remote add origin https://germangb:$TOKEN@github.com/germangb/imgui-ext.git && \
     git -C $DOCS_DIR checkout -b gh-pages && \
     git -C $DOCS_DIR add -A && \
     git -C $DOCS_DIR commit -m "Publish docs" && \

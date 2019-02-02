@@ -32,7 +32,7 @@
 //!
 //! In [this example] you can see what the generated code looks like.
 //!
-//! [this example]: #
+//! [this example]: https://github.com/germangb/imgui-ext/blob/master/CODEGEN.md
 //!
 //! ## Nested UIs
 //!

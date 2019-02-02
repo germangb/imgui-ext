@@ -1,3 +1,8 @@
+//!
+//! (Text input has its own module: [text])
+//!
+//! [text]: ../text/index.html
+//!
 //! ## Optional fields
 //!
 //! * `label`

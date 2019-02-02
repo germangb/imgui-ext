@@ -1,27 +1,23 @@
-# imgui-ext [![Build Status](https://travis-ci.org/germangb/imgui-ext.svg?branch=master)](https://travis-ci.org/germangb/imgui-ext) [![Cargo package](https://img.shields.io/crates/v/imgui-ext.svg)](https://crates.io/crates/imgui-ext) [![Documentation on docs.rs](https://docs.rs/imgui-ext/badge.svg)](https://docs.rs/imgui-ext)
+# imgui-ext
 
-***Warning: API from master is heavily subject to changes.***
+[![Build Status](https://img.shields.io/travis/germangb/imgui-ext/master.svg?style=flat-square)](https://travis-ci.org/germangb/imgui-ext)
+[![Cargo package](https://img.shields.io/crates/v/imgui-ext.svg?style=flat-square)](https://crates.io/crates/imgui-ext)
+[![docs.rs docs](https://docs.rs/imgui-ext/badge.svg?style=flat-square)](https://docs.rs/imgui-ext)
+[![Master docs](https://img.shields.io/badge/docs-master-blue.svg?style=flat-square)](https://germangb.github.io/imgui-ext/)
 
-A crate to quickly build **[imgui]** UIs using annotations and a custom Derive.
 
-[**Master docs**](http://germangb.github.io/imgui-ext/)
-
-```toml
-[dependencies]
-imgui-ext = "0.1"
-```
+A crate to quickly build [imgui] UIs using annotations and a custom Derive.
 
 [imgui]: https://github.com/Gekkio/imgui-rs
 
 ## Features
 
 * Encode UI directly on the types.
-* Static code generation (no heap allocations): [example].
-* Support for imgui's slider, input, checkbox, drag and button widgets.
-* Support for building nested UIs (see the [`imgui(nested)`] attribute).
+* Static code generation: [example].
+* Nested UIs (see the [`imgui(nested(...))`][nested] annotation).
 * Descriptive compiler errors.
 
-[`imgui(nested)`]: ./README.md
+[nested]: https://germangb.github.io/imgui-ext/imgui_ext/nested/index.html
 
 [example]: ./CODEGEN.md
 
@@ -49,7 +45,9 @@ struct Example {
 
 #### Result:
 
-![][result]
+![](assets/demo.png)
+
+[result]: assets/demo.png
 
 ## Limitations
 
@@ -58,8 +56,4 @@ struct Example {
 
 ## License
 
-[MIT]
-
-[**example**]: example/src/ui.rs
-[result]: assets/demo.png
-[MIT]: LICENSE.md
+[MIT](LICENSE.md)

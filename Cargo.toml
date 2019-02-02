@@ -17,5 +17,5 @@ travis-ci = { repository = "germangb/imgui-ext", branch = "master" }
 members = ["imgui_derive", "example"]
 
 [dependencies]
-imgui = "*"
+imgui = "^0.0"
 imgui-ext-derive = { version = "0.1.0-rc0", path = "imgui_derive" }

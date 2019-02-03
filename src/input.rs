@@ -6,11 +6,13 @@
 //! ## Optional fields
 //!
 //! * `label`
-//! * `precision`
+//! * `precision` Decimal precision.
 //! * `step`
 //! * `step_fast`
-//! * `flags` name of local function from where to get input flags
+//! * `flags` Name of a local function that returns the input [flags].
 //! * `catch`
+//!
+//! [flags]: https://docs.rs/imgui/0.0/imgui/struct.ImGuiInputTextFlags.html
 //!
 //! ## Example
 //!
@@ -18,7 +20,7 @@
 //! array types of up to 4 elements.
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -42,7 +44,7 @@
 //! You can specify a local function from where to load any input flags:
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //! use imgui::ImGuiInputTextFlags;
 //!
 //! #[derive(ImGuiExt)]
@@ -197,7 +199,7 @@ mod tests {
     #![allow(dead_code)]
 
     use crate as imgui_ext;
-    use crate::prelude::*;
+    use crate::ImGuiExt;
     use imgui::ImGuiInputTextFlags as Flags;
 
     fn flags() -> Flags {

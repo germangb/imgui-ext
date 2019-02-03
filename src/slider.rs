@@ -13,7 +13,7 @@
 //! ## Example
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Sliders {

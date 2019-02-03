@@ -24,8 +24,7 @@ A crate to quickly build [imgui] UIs using annotations and a custom Derive.
 ## Example
 
 ```rust
-// You need to import the prelude
-use imgui_ext::prelude::*;
+use imgui_ext::ImGuiExt;
 
 #[derive(ImGuiExt)]
 struct Example {

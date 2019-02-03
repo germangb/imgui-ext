@@ -6,7 +6,7 @@
 //! ## Example
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Checkboxes {
@@ -41,5 +41,15 @@ pub trait Checkbox {
 impl Checkbox for bool {
     fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
         ui.checkbox(params.label, elem)
+    }
+}
+
+impl Checkbox for Option<bool> {
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
+        if let Some(ref mut elem) = elem {
+            Checkbox::build(ui, elem, params)
+        } else {
+            false
+        }
     }
 }

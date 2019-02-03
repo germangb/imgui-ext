@@ -14,13 +14,14 @@ use syn::{
 
 // error messages
 const INVALID_FORMAT: &str = "Invalid annotation format.";
-const MULTIPLE_ANNOT: &str = "Found multiple `#[imgui(...)]` annotations in a single field.";
-const STRUCT_SUPPORT: &str = "`#[derive(ImGuiExt)]` only supports structs.";
-const UNRECOG_MODE: &str = "Unrecognized mode.";
+const MULTIPLE_ANNOT: &str = "Multiple `#[imgui(...)]` annotations on a single field.";
+const STRUCT_SUPPORT: &str = "`ImGuiExt` derive is only supported on structs.";
+const UNRECOG_MODE: &str = "Unexpected mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
-const FIELD_ALREADY_DEFINED: &str = "Field is already defined.";
-const NESTED_BULLET: &str = "Nested `bullet` is not yet implemented. See #0";
-const NESTED_INPUTS: &str = "Nested input is not yet implemented. See #0";
+const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
+
+// unimplemented things
+const NESTED_INPUTS: &str = "Nested input is not yet implemented (#0).";
 
 macro_rules! tag {
     (
@@ -223,6 +224,18 @@ tag! {
     }
 }
 
+tag! {
+    struct Image {
+        fields {
+            size: Lit,
+        },
+        optional {
+            border: Option<Lit>,
+            tint: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     Display(Display),
     Checkbox(Checkbox),
@@ -230,15 +243,18 @@ enum Tag {
     Slider(Slider),
     Drag(Drag),
     Button(Button),
-    Bullet(Bullet),
     Nested(Nested),
     Text(Text),
     Progress(Progress),
+    Image(Image),
 
     /// `#[imgui(separator)]`
     Separator,
     /// `#[imgui(new_line)]`
     NewLine,
+
+    BulletParent,
+    Bullet(Bullet),
 }
 
 fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
@@ -356,7 +372,7 @@ fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
         // #[imgui], treated as an empty label
         Meta::Word(_) => Ok(vec![Tag::Display(Display::default())]),
         // #[imgui(meta_list)] (general)
-        Meta::List(meta_list) => parse_meta_list(meta_list),
+        Meta::List(meta_list) => parse_meta_list(&meta_list),
     }
 }
 
@@ -367,8 +383,8 @@ fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
 ///   - `#[imgui(foo(...),)]`
 ///   - `#[imgui(foo(...))]`
 ///   - `#[imgui(label = "...", display = "...", foo, bar)]`
-fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
-    #[derive(Copy, Clone, Eq, PartialEq)]
+fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
+    #[derive(Copy, Clone, Eq, PartialEq, Debug)]
     enum State {
         Init,
         //Label,
@@ -413,6 +429,10 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "button" => {
                         Tag::Button(Button::from_meta_list(&meta_list)?);
                     }
+                    "image" => {
+                        Tag::Image(Image::from_meta_list(&meta_list)?);
+                    }
+
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 }
                 state = State::Tags;
@@ -433,16 +453,20 @@ fn parse_meta_list(meta_list: MetaList) -> Result<Vec<Tag>, Error> {
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list(meta_list)?),
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
+                    "image" => Tag::Image(Image::from_meta_list(meta_list)?),
 
-                    // TODO implement nested bullet
+                    // TODO refactor
                     "bullet" => {
                         if meta_list.nested.len() == 1 {
                             use syn::punctuated::Pair;
-                            let span = meta_list.span();
+                            //let span = meta_list.span();
+
+                            // TODO raise error if there is more than one
                             match meta_list.nested.first() {
-                                Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _))
-                                | Some(Pair::End(NestedMeta::Meta(Meta::List(_)))) => {
-                                    return Err(Error::new(span, NESTED_BULLET));
+                                Some(Pair::End(NestedMeta::Meta(Meta::List(_))))
+                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _)) => {
+                                    tags.push(Tag::BulletParent);
+                                    parse_meta_list(meta_list)?.pop().unwrap()
                                 }
                                 _ => Tag::Bullet(Bullet::from_meta_list(meta_list)?),
                             }
@@ -520,6 +544,46 @@ fn emmit_tag_tokens(
     let tokens = match tag {
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Image(Image { size, border, tint }) => {
+            let size = match size {
+                Lit::Str(size) => Ident::new(&size.value(), size.span()),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+
+            let mut params = quote! {
+                use imgui_ext::image::ImageParams as Params;
+                use imgui::{ImVec2, im_str};
+                let mut params = Params {
+                    size: ImVec2::from(#size()),
+                    border: None,
+                    tint: None,
+                };
+            };
+            match tint {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            match border {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.border = Some( imgui::ImVec4::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            quote! {{
+                use imgui_ext::image::Image;
+                Image::build(ui, ext.#ident, { #params ; params });
+            }}
+        }
         Tag::Progress(Progress { overlay, size }) => {
             let mut params = quote! {
                 use imgui_ext::progress::ProgressParams as Params;
@@ -801,6 +865,9 @@ fn emmit_tag_tokens(
                 }}
             }
         }
+        Tag::BulletParent => {
+            quote! { ui.bullet(); }
+        }
         Tag::Bullet(Bullet { text }) => {
             let text = match text {
                 Some(Lit::Str(text)) => Some(text),
@@ -953,6 +1020,7 @@ fn emmit_tag_tokens(
             quote!({
                 use imgui::im_str;
                 ui.label_text(im_str!(#label), im_str!(#display));
+                //if ui.is_item_hovered() { ui.tooltip_text("I'm a tooltip!") }
             })
         }
     };

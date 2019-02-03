@@ -23,7 +23,7 @@ struct FormExample {
     #[imgui(
         button(label = "Login", catch = "click"),
         button(label = "Clear", catch = "clear"),
-        separator,
+        separator(),
         checkbox(label = "Remember login?", catch = "mem")
     )]
     remember: bool,
@@ -59,9 +59,10 @@ struct Labels {
 #[derive(ImGuiExt, Default)]
 struct Bullet {
     #[imgui(
-        bullet(text = "Be Nice"),
-        bullet(text = "Kill all humans"),
-        slider(min = 0.0, max = 1.0)
+        bullet(text = "Be nice to others."),
+        bullet(text = "Don't repeat your password"),
+        bullet(text = "Kill all humans."),
+        bullet(slider(min = 0.0, max = 1.0))
     )]
     foo: f32,
 }
@@ -99,6 +100,25 @@ struct Progress {
 }
 
 #[derive(ImGuiExt, Default)]
+struct Image {
+    //#[imgui(image)] TODO getting the wrong error
+    #[imgui(image(size = "img_size"))]
+    texture: usize,
+    #[imgui(image(size = "img_size", tint = "img_tint", border = "img_border"))]
+    texture_tint: usize,
+}
+
+const fn img_size() -> (f32, f32) {
+    (512.0, 64.0)
+}
+const fn img_tint() -> (f32, f32, f32, f32) {
+    (1.0, 0.0, 1.0, 1.0)
+}
+const fn img_border() -> (f32, f32, f32, f32) {
+    (1.0, 1.0, 1.0, 1.0)
+}
+
+#[derive(ImGuiExt, Default)]
 struct ExampleDocs {
     #[imgui(slider(min = 0.0, max = 4.0))]
     x: f32,
@@ -111,6 +131,7 @@ struct ExampleDocs {
 }
 
 fn main() {
+    let mut image = Image::default();
     let mut sliders = Sliders::default();
     let mut example_docs = ExampleDocs::default();
     let mut progress = Progress::default();
@@ -124,7 +145,9 @@ fn main() {
         baz: "hello world".to_string(),
     };
     demo.login_form.user.reserve(64);
+    demo.login_form.user.push_str("admin");
     demo.login_form.passwd.reserve(64);
+    demo.login_form.passwd.push_str("p4ssw0rd");
     comment.name.reserve(64);
     comment.email.reserve(128);
     comment.comment.reserve(512);
@@ -141,7 +164,7 @@ fn main() {
         ui.window(im_str!("Progress")).build(|| {
             progress.count += 1;
             progress.progress = (progress.count % 60) as f32 / 60.0;
-            progress._progress = (progress.count % 120) as f32 / 120.0;
+            progress._progress = ((progress.count % 240) as f32 - 120.0).abs() / 120.0;
             ui.imgui_ext(&mut progress);
         });
 
@@ -169,5 +192,13 @@ fn main() {
         ui.window(im_str!("Labels")).build(|| {
             ui.imgui_ext(&mut labels);
         });
+
+        ui.window(im_str!("Image")).build(|| {
+            image.texture = 1;
+            image.texture_tint = 1;
+            ui.imgui_ext(&mut image);
+        })
+
+        //let mut texture = Texture { texture };
     });
 }

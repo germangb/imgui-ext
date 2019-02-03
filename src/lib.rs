@@ -2,28 +2,32 @@
 //!
 //! [imgui]: https://crates.io/crates/imgui
 //!
+//! ## Supported annotations
+//!
 //! Annotations map to a subset of imgui types and methods:
 //!
-//! | Annotation                    | Mapped Imgui Type |
+//! | Annotation                    | Mapped Imgui Types |
 //! | ----------------------------- | --- |
 //! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
 //! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
 //! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
 //! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
 //! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
+//! | [`image(...)`][image]         | [`Image`][ImImage] |
 //! | [`button(...)`][button]       | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
 //! | [`checkbox(...)`][checkbox]   | [`Ui::checkbox`][Ui::checkbox] |
 //! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
 //! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
 //! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
 //! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
-//! | [`nested(...)`][nested]       | See the [`nested` module](./nested/index.html) docs. |
+//! | [`nested(...)`][nested]       | |
 //!
 //! [slider]: ./slider/index.html
 //! [drag]: ./drag/index.html
 //! [input]: ./input/index.html
 //! [text]: ./text/index.html
 //! [progress]: ./progress/index.html
+//! [image]: ./image/index.html
 //! [button]: ./button/index.html
 //! [checkbox]: ./checkbox/index.html
 //! [separator]: ./separator/index.html
@@ -59,6 +63,7 @@
 //! [InputText]:https://docs.rs/imgui/0.0/imgui/struct.InputText.html
 //! [InputTextMultiline]:https://docs.rs/imgui/0.0/imgui/struct.InputTextMultiline.html
 //! [ProgressBar]:https://docs.rs/imgui/0.0/imgui/struct.ProgressBar.html
+//! [ImImage]:https://docs.rs/imgui/0.0/imgui/struct.Image.html
 //!
 //! [Ui::button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.button
 //! [Ui::small_button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.small_button
@@ -72,9 +77,10 @@
 //! ## Basic usage
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //!
-//! // Place annotations on the fields you want to include in the Ui.
+//! // Make your type derive ImGuiExt and place annotations on the fields you want
+//! // to include in the ui
 //! #[derive(ImGuiExt)]
 //! struct Example {
 //!     #[imgui(slider(min = 0.0, max = 4.0))]
@@ -89,6 +95,9 @@
 //!         display(label = "Is turbo enabled?"),
 //!     )]
 //!     turbo: bool,
+//!
+//!     // not every field has to be annotated
+//!     _not_in_ui: Vec<u8>
 //! }
 //! ```
 //!
@@ -102,7 +111,7 @@
 //! when a button is pressed, an input has changed, etc.., later on:
 //!
 //! ```ignore
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::ImGuiExt;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -120,23 +129,6 @@
 //! }
 //! if events.text {
 //!     println!("New text value: {:?}", example.text);
-//! }
-//! ```
-//!
-//! ## Combining UI and non-UI fields
-//!
-//! If a field is not annotated, it will be ignored in the UI.
-//!
-//! ```
-//! use imgui_ext::prelude::*;
-//!
-//! #[derive(ImGuiExt)]
-//! struct Example {
-//!     #[imgui(label = "Some i32")]
-//!     in_ui: u32,
-//!
-//!     // since this field is not annotated, it is ignored by the UI
-//!     not_in_ui: Vec<u8>,
 //! }
 //! ```
 //!
@@ -159,18 +151,29 @@
 //! 10 |     #[imgui(slider(min = 0.0))]
 //!    |             ^^^^^^
 //! ```
+//!
+//! ## Contributions
+//!
+//! Feedback, suggestions, and contributions, are very much welcome!
+//!
+//! Please file an issue or open a PR to [`germangb/imgui-ext`][repo] if you wish to do so.
+//!
+//! [repo]: https://github.com/germangb/imgui-ext
 use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 
 #[doc(hidden)]
 pub mod macros;
 pub mod prelude {
+    /*
     pub use super::checkbox::Checkbox;
     pub use super::drag::Drag;
+    pub use super::image::Image;
     pub use super::input::Input;
     pub use super::progress::Progress;
     pub use super::slider::Slider;
     pub use super::text::Text;
+    */
     pub use super::{ImGuiExt, UiExt};
 }
 
@@ -178,6 +181,8 @@ pub mod prelude {
 pub mod checkbox;
 /// `drag(...)` docs.
 pub mod drag;
+/// `image(...)` docs.
+pub mod image;
 /// `input(...)` docs.
 pub mod input;
 /// `progress(...)` docs.
@@ -213,7 +218,7 @@ pub mod display {
     //! ## Example
     //!
     //! ```
-    //! use imgui_ext::prelude::*;
+    //! use imgui_ext::ImGuiExt;
     //!
     //! #[derive(ImGuiExt)]
     //! struct Labels {
@@ -241,7 +246,7 @@ pub mod nested {
     //!
     //! ## Optional fields
     //!
-    //! * `catch` *currently unimplemented. See [#][issue]*
+    //! * `catch` *currently unimplemented ([#4][issue])*
     //!
     //! [issue]: #
     //!
@@ -249,7 +254,7 @@ pub mod nested {
     //!
     //! ```
     //! use imgui::{ImString, ImGuiInputTextFlags};
-    //! use imgui_ext::prelude::*;
+    //! use imgui_ext::ImGuiExt;
     //!
     //! #[derive(ImGuiExt)]
     //! struct Form {
@@ -267,7 +272,7 @@ pub mod nested {
     //!
     //! #[derive(ImGuiExt)]
     //! struct Example {
-    //!     #[imgui(nested)]
+    //!     #[imgui(nested, separator)]
     //!     login_form: Form,
     //!     #[imgui(checkbox(label = "Remember login?"))]
     //!     remember: bool,
@@ -331,7 +336,7 @@ pub mod bullet {
     //! Used to build bulleted lists. It has two variants:
     //!
     //! * `bullet(text = "...")`
-    //! * `bullet(...)` nests a UI element (currently unimplemented. See [#][issue])
+    //! * `bullet(...)` bullets a UI element.
     //!
     //! [issue]: #
     //!
@@ -354,7 +359,7 @@ pub mod bullet {
     //!
     //! ![][result]
     //!
-    //! [result]: https://i.imgur.com/pe4YstR.png
+    //! [result]: https://i.imgur.com/CLPl993.png
 }
 
 /// Trait implemented by the derive macro.
@@ -367,7 +372,7 @@ pub trait ImGuiExt {
 ///
 /// ```ignore
 /// use imgui::Ui;
-/// use imgui_ext::prelude::*;
+///! use imgui_ext::prelude::*;
 ///
 /// #[derive(ImGuiExt)]
 /// struct Example {
@@ -375,7 +380,7 @@ pub trait ImGuiExt {
 /// }
 ///
 /// // initialize imgui...
-/// let ui: Ui<_> = ...;
+/// let ui: &Ui = ...;
 /// // initialize Example...
 /// let mut example: Example = ...;
 ///
@@ -394,6 +399,11 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 
 /// Render imgui UI and collect all the events
 ///
+/// (If you [`use imgui_ext::prelude::*`][prelude], you might want to use the [`UiExt`][UiExt] trait to do the same thing).
+///
+/// [UiExt]: ./trait.UiExt.html
+/// [prelude]: ./prelude/index.html
+///
 /// ```ignore
 /// #[derive(ImGuiExt)]
 /// struct Example {
@@ -408,21 +418,6 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 ///     println!("New value: {}", example.check_box);
 /// }
 /// ```
-///
-/// Optionally you can call an extension method on the ui directly by using the [`UiExt`] trait.
-///
-/// [`UiExt`]: #
-///
-/// ```ignore
-/// // imports the UiExt trait
-/// use imgui_ext::prelude::*;
-///
-/// // initialize ui and example...
-///
-/// let events = ui.imgui_ext(&mut example);
-/// if events.click {
-///     // ...
-/// }
 #[inline]
 pub fn imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
     U::imgui_ext(ui, ext)

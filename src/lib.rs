@@ -65,14 +65,14 @@
 //! [ProgressBar]:https://docs.rs/imgui/0.0/imgui/struct.ProgressBar.html
 //! [ImImage]:https://docs.rs/imgui/0.0/imgui/struct.Image.html
 //!
-//! [Ui::button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.button
-//! [Ui::small_button]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.small_button
-//! [Ui::checkbox]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.checkbox
-//! [Ui::separator]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.separator
-//! [Ui::new_line]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.new_line
-//! [Ui::label_text]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.label_text
-//! [Ui::bullet_text]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.bullet_text
-//! [Ui::bullet]: https://docs.rs/imgui/0.0.21/imgui/struct.Ui.html#method.bullet
+//! [Ui::button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.button
+//! [Ui::small_button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.small_button
+//! [Ui::checkbox]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.checkbox
+//! [Ui::separator]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.separator
+//! [Ui::new_line]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.new_line
+//! [Ui::label_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.label_text
+//! [Ui::bullet_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet_text
+//! [Ui::bullet]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet
 //!
 //! ## Basic usage
 //!
@@ -162,18 +162,9 @@
 use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 
-#[doc(hidden)]
-pub mod macros;
+//#[doc(hidden)]
+mod macros;
 pub mod prelude {
-    /*
-    pub use super::checkbox::Checkbox;
-    pub use super::drag::Drag;
-    pub use super::image::Image;
-    pub use super::input::Input;
-    pub use super::progress::Progress;
-    pub use super::slider::Slider;
-    pub use super::text::Text;
-    */
     pub use super::{ImGuiExt, UiExt};
 }
 
@@ -342,7 +333,9 @@ pub mod bullet {
     //!
     //! ## Example
     //!
-    //! ```ignore
+    //! ```
+    //! use imgui_ext::ImGuiExt;
+    //!
     //! #[derive(ImGuiExt)]
     //! struct Bullet {
     //!     #[imgui(

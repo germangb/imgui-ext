@@ -3,5 +3,5 @@
 Cargo.lock
 .idea
 *.swp
-*.ini
+imgui.ini
 pages_deploy

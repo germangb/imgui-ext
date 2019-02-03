@@ -46,10 +46,10 @@ struct Example {
 
 ![](assets/demo.png)
 
-[**See more examples**](example/src/main.rs)
+[**See full example**](example/src/main.rs)
 
 ```bash
-cargo run -p example
+cargo run --package example
 ```
 
 [result]: assets/demo.png

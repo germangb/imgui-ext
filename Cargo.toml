@@ -1,6 +1,6 @@
 [package]
 name = "imgui-ext"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 description = "Define imgui UIs using a derive macro."
@@ -19,4 +19,4 @@ members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "^0.0"
-imgui-ext-derive = { version = "0.1.0", path = "imgui_derive" }
+imgui-ext-derive = { version = "0.1.1", path = "imgui_derive" }

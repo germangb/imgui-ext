@@ -464,7 +464,9 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                             // TODO raise error if there is more than one
                             match meta_list.nested.first() {
                                 Some(Pair::End(NestedMeta::Meta(Meta::List(_))))
-                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _)) => {
+                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _))
+                                | Some(Pair::End(NestedMeta::Meta(Meta::Word(_))))
+                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::Word(_)), _)) => {
                                     tags.push(Tag::BulletParent);
                                     parse_meta_list(meta_list)?.pop().unwrap()
                                 }

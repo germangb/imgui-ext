@@ -353,6 +353,23 @@ pub mod bullet {
     //! ![][result]
     //!
     //! [result]: https://i.imgur.com/CLPl993.png
+    #[cfg(test)]
+    mod tests {
+        #![allow(dead_code)]
+        use crate as imgui_ext;
+        use crate::ImGuiExt;
+
+        #[test]
+        fn bullet() {
+            #[derive(ImGuiExt)]
+            struct Foo {
+                #[imgui(bullet(checkbox))]
+                a: bool,
+                #[imgui(bullet(checkbox()))]
+                b: bool,
+            }
+        }
+    }
 }
 
 /// Trait implemented by the derive macro.

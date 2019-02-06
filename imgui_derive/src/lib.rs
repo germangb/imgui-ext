@@ -112,7 +112,7 @@ tag! {
 }
 
 tag! {
-    /// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0, precision = 3))]`
+    /// `#[imgui(input(label = "...", step = 1.0, step_fast = 1.0))]`
     #[derive(Default)]
     struct Input {
         fields {
@@ -123,7 +123,6 @@ tag! {
             flags: Option<Lit>,
             step: Option<Lit>,
             step_fast: Option<Lit>,
-            precision: Option<Lit>,
             catch: Option<Lit>,
         }
     }
@@ -689,7 +688,6 @@ fn emmit_tag_tokens(
             label,
             step,
             step_fast,
-            precision,
             flags,
             catch,
         }) => {
@@ -705,7 +703,6 @@ fn emmit_tag_tokens(
                 use imgui::im_str;
                 let mut params = Params {
                     label: im_str!( #label ),
-                    precision: None,
                     step: None,
                     step_fast: None,
                     flags: None,
@@ -722,12 +719,6 @@ fn emmit_tag_tokens(
             match step_fast {
                 Some(Lit::Float(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
                 Some(Lit::Int(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
-                None => {}
-                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-            }
-
-            match precision {
-                Some(Lit::Int(value)) => params.extend(quote! { params.precision = Some(#value); }),
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }

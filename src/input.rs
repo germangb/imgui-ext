@@ -6,7 +6,6 @@
 //! ## Optional fields
 //!
 //! * `label`
-//! * `precision` Decimal precision.
 //! * `step`
 //! * `step_fast`
 //! * `flags` Name of a local function that returns the input [flags].
@@ -27,7 +26,7 @@
 //!     #[imgui(input)]
 //!     input_0: f32,
 //!
-//!     #[imgui(input(precision = 2))]
+//!     #[imgui(input)]
 //!     input_1: [f32; 2],
 //!
 //!     #[imgui(input(step = 4, step_fast = 42))]
@@ -67,7 +66,6 @@ use imgui::{
 #[derive(Copy, Clone)]
 pub struct InputParams<'ui, T> {
     pub label: &'ui ImStr,
-    pub precision: Option<i32>,
     pub step: Option<T>,
     pub step_fast: Option<T>,
     pub flags: Option<ImGuiInputTextFlags>,
@@ -82,7 +80,6 @@ macro_rules! impl_f32_array {
         impl Input<f32> for $arr {
             fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
                 let mut input = $input::new(ui, params.label, elem);
-                if let Some(value) = params.precision { input = input.decimal_precision(value) }
                 if let Some(value) = params.flags { input = input.flags(value) }
                 input.build()
             }
@@ -92,7 +89,6 @@ macro_rules! impl_f32_array {
             fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
                 if let Some(ref mut elem) = elem {
                     let mut input = $input::new(ui, params.label, elem);
-                    if let Some(value) = params.precision { input = input.decimal_precision(value) }
                     if let Some(value) = params.flags { input = input.flags(value) }
                     input.build()
                 } else {
@@ -135,9 +131,6 @@ impl Input<f32> for f32 {
         }
         if let Some(value) = params.step_fast {
             input = input.step_fast(value)
-        }
-        if let Some(value) = params.precision {
-            input = input.decimal_precision(value)
         }
         if let Some(value) = params.flags {
             input = input.flags(value)

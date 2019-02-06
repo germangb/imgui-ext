@@ -20,6 +20,12 @@ struct Readme {
     turbo: bool,
 }
 
+impl Readme {
+    pub fn reset(&mut self) {
+        std::mem::replace(self, Default::default());
+    }
+}
+
 fn main() {
     let mut readme = Readme::default();
 
@@ -31,7 +37,7 @@ fn main() {
                 ui.columns(2, im_str!("columns"), true);
 
                 if ui.imgui_ext(&mut readme).reset {
-                    readme = Readme::default();
+                    readme.reset();
                 }
 
                 ui.next_column();

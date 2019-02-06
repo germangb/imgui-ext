@@ -380,6 +380,14 @@ pub trait ImGuiExt {
     fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
+impl<T: ImGuiExt> ImGuiExt for Box<T> {
+    type Events = T::Events;
+    #[inline]
+    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
+        ImGuiExt::imgui_ext(ui, ext.as_mut())
+    }
+}
+
 /// Extension trait for imgui Ui.
 ///
 /// ```ignore

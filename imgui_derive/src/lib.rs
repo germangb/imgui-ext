@@ -18,6 +18,7 @@ const MULTIPLE_ANNOT: &str = "Multiple `#[imgui(...)]` annotations on a single f
 const STRUCT_SUPPORT: &str = "`ImGuiExt` derive is only supported on structs.";
 const UNRECOG_MODE: &str = "Unexpected mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
+const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
 
 // unimplemented things
@@ -456,26 +457,26 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
 
                     // TODO refactor
-                    "bullet" => {
-                        if meta_list.nested.len() == 1 {
-                            use syn::punctuated::Pair;
-                            //let span = meta_list.span();
+                    // FIXME errors handling not clear enough
+                    // bullet(toxt = "..") raises the wrong error
+                    "bullet" => match Bullet::from_meta_list(meta_list) {
+                        Ok(bullet) => Tag::Bullet(bullet),
+                        Err(_err) => {
+                            let mut inner = parse_meta_list(meta_list)?.into_iter();
 
-                            // TODO raise error if there is more than one
-                            match meta_list.nested.first() {
-                                Some(Pair::End(NestedMeta::Meta(Meta::List(_))))
-                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::List(_)), _))
-                                | Some(Pair::End(NestedMeta::Meta(Meta::Word(_))))
-                                | Some(Pair::Punctuated(NestedMeta::Meta(Meta::Word(_)), _)) => {
+                            match (inner.next(), inner.next()) {
+                                (Some(first), None) => {
                                     tags.push(Tag::BulletParent);
-                                    parse_meta_list(meta_list)?.pop().unwrap()
+                                    Ok(first)
                                 }
-                                _ => Tag::Bullet(Bullet::from_meta_list(meta_list)?),
-                            }
-                        } else {
-                            Tag::Bullet(Bullet::from_meta_list(meta_list)?)
+                                (None, None) => Ok(Tag::BulletParent),
+                                (Some(_first), Some(_second)) => {
+                                    Err(Error::new(meta_list.span(), BULLET_MULTIPLE))
+                                }
+                                _ => Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+                            }?
                         }
-                    }
+                    },
                     _ => return Err(Error::new(meta_list.span(), UNRECOG_MODE)),
                 };
 

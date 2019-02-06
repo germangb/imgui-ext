@@ -367,6 +367,8 @@ pub mod bullet {
                 a: bool,
                 #[imgui(bullet(checkbox()))]
                 b: bool,
+                #[imgui(bullet())]
+                c: (),
             }
         }
     }

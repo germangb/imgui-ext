@@ -12,6 +12,8 @@ pub fn run<F: FnMut(&Ui)>(
     let window = video
         .window(title, w, h)
         .opengl()
+        .resizable()
+        .allow_highdpi()
         .position_centered()
         .build()?;
 
@@ -47,7 +49,7 @@ pub fn run<F: FnMut(&Ui)>(
         }
 
         unsafe {
-            gl::ClearColor(0.5, 0.5, 0.5, 1.0);
+            gl::ClearColor(0.2, 0.2, 0.2, 1.0);
             //gl::ClearColor(1.0, 1.0, 1.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }

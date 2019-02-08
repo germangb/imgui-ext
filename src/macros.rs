@@ -1,34 +1,30 @@
-/// A macro that expands to the type that contains the UI events.
+/// A macro that expands to the type that contains [catched][catched] input events.
 ///
-/// ## Notes
+/// [catched]: ./index.html#input-events
 ///
-/// * *Currently unimplemented. See [#][issue].*
-/// * Because this macro should use [`concat_idents!`][concat], it's only available in Rust nightly.
-///
-/// [issue]: #
-/// [concat]: https://doc.rust-lang.org/std/macro.concat_idents.html
+/// Basically this is equivalent to writing: `<Example as ImGuiExt>::Events`.
 ///
 /// ## Example
 ///
 /// ```ignore
+/// use imgui_ext::prelude::*;
+///
 /// #[derive(ImGuiExt)]
-/// struct Example {
+/// struct Example { /*...*/ }
+///
+/// let mut example = Example { /*...*/ };
+///
+/// // init imgui (ui)...
+///
+/// handle_events(ui.imgui_ext(&mut example));
+///
+/// fn handle_events(events: Events!(Example)) {
 ///     // ...
 /// }
-///
-/// fn handle_events(events: Event!(Example)) {
-///     // ...
-/// }
-///
-/// let mut my_ui = Example { /*..*/ };
-/// let ui: &Ui = ...;
-///
-/// handle_events(ui.imgui_ext(&mut my_ui));
 /// ```
 #[macro_export]
 macro_rules! Events {
-    ( $ui:ident ) => {
-        unimplemented!("`Events!` macro is not implemented yet. See issue #0")
-        //concat_idents!($ui, ImGuiExt)
+    ( $ui:ty ) => {
+        <$ui as $crate::ImGuiExt>::Events
     };
 }

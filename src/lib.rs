@@ -237,7 +237,7 @@ pub mod nested {
     //!
     //! ## Optional fields
     //!
-    //! * `catch` *currently unimplemented ([#4][issue])*
+    //! * `catch`
     //!
     //! [issue]: #
     //!
@@ -371,6 +371,18 @@ pub mod bullet {
                 c: (),
             }
         }
+    }
+}
+
+// Used in codegen.
+#[doc(hidden)]
+pub struct NestedCatch<T: ImGuiExt>(pub T::Events);
+
+impl<T: ImGuiExt> std::ops::Deref for NestedCatch<T> {
+    type Target = T::Events;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

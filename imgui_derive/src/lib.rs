@@ -4,7 +4,7 @@ extern crate proc_macro;
 use std::string::ToString;
 
 use proc_macro2::{Literal, TokenStream};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::parse::Error;
 use syn::spanned::Spanned;
 use syn::{
@@ -20,9 +20,6 @@ const UNRECOG_MODE: &str = "Unexpected mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
 const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
-
-// unimplemented things
-const NESTED_INPUTS: &str = "Nested input is not yet implemented (#0).";
 
 macro_rules! tag {
     (
@@ -271,14 +268,14 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
     let event_type = Ident::new(&format!("{}ImGuiExt", name.to_string()), input.span());
 
     Ok(quote! {
-        #[derive(Default)]
         pub struct #event_type {
             #catch_fields
         }
         impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
             type Events = #event_type;
             fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
-                let mut events: Self::Events = Default::default();
+                // Because all fields are bool, it should be OK to zero the memory (right...?)
+                let mut events: Self::Events = unsafe { std::mem::zeroed() };
                 #body
                 events
             }
@@ -959,25 +956,23 @@ fn emmit_tag_tokens(
                 #catch
             })
         }
-        Tag::Nested(Nested { catch }) => {
-            // TODO catch events
-            let catch = if let Some(_catch) = catch {
-                return Err(Error::new(attr.span(), NESTED_INPUTS));
-            /*
-            match ty {
-                Type::Path(path) => unimplemented!("Nested type input catch."),
-                _ => panic!("Invalid field type"),
+        Tag::Nested(Nested { catch }) => match catch {
+            Some(Lit::Str(catch)) => {
+                let id = Ident::new(&catch.value(), ident.span());
+                let tp = _ty.clone().into_token_stream();
+                input.push(quote! { #id: imgui_ext::NestedCatch<#tp> });
+
+                quote! {
+                    use imgui_ext::ImGuiExt;
+                    let _ev = imgui_ext::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
+                    events.#id = _ev;
+                }
             }
-            */
-            } else {
-                quote!()
-            };
-            quote! {{
-                use imgui_ext::ImGuiExt;
-                let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
-                #catch
-            }}
-        }
+            None => quote! {
+                ImGuiExt::imgui_ext(ui, &mut ext.#ident)
+            },
+            _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+        },
         Tag::Display(Display {
             label,
             display,

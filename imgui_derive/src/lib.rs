@@ -356,7 +356,7 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
         .collect::<Result<Vec<_>, Error>>()?;
 
     let catch_fields = quote! {
-        #( #input ),*
+        #( pub #input ),*
         //pub click: bool,
         //pub rem: bool,
     };

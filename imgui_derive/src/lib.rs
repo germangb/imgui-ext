@@ -233,17 +233,69 @@ tag! {
     }
 }
 
+tag! {
+    #[derive(Default)]
+    struct ColorButton {
+        fields {
+        },
+        optional {
+            label: Option<Lit>,
+            flags: Option<Lit>,
+            preview: Option<Lit>,
+            size: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
+tag! {
+    #[derive(Default)]
+    struct ColorPicker {
+        fields {
+        },
+        optional {
+            label: Option<Lit>,
+            flags: Option<Lit>,
+            preview: Option<Lit>,
+            mode: Option<Lit>,
+            format: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
+tag! {
+    #[derive(Default)]
+    struct ColorEdit {
+        fields {
+        },
+        optional {
+            label: Option<Lit>,
+            flags: Option<Lit>,
+            preview: Option<Lit>,
+            mode: Option<Lit>,
+            format: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
+    None,
     Display(Display),
     Checkbox(Checkbox),
     Input(Input),
     Slider(Slider),
     Drag(Drag),
-    Button(Button),
     Nested(Nested),
     Text(Text),
     Progress(Progress),
     Image(Image),
+    Button(Button),
+
+    ColorButton(ColorButton),
+    ColorPicker(ColorPicker),
+    ColorEdit(ColorEdit),
 
     /// `#[imgui(separator)]`
     Separator,
@@ -420,6 +472,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "progress" => tags.push(Tag::Progress(Default::default())),
 
                     // errors
+                    "color" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
                     "slider" => {
                         Tag::Slider(Slider::from_meta_list(&meta_list)?);
                     }
@@ -451,6 +504,57 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "text" => Tag::Text(Text::from_meta_list(meta_list)?),
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
+
+                    "color" => {
+                        for nested in meta_list.nested.iter() {
+                            match nested {
+                                // One of:
+                                //   - `color(edit)`
+                                //   - `color(picker)`
+                                //   - `color(button)`
+                                NestedMeta::Meta(Meta::Word(ident)) => {
+                                    match ident.to_string().as_str() {
+                                        "edit" => tags.push(Tag::ColorEdit(Default::default())),
+                                        "picker" => tags.push(Tag::ColorPicker(Default::default())),
+                                        "button" => tags.push(Tag::ColorButton(Default::default())),
+
+                                        // Compiler error
+                                        _ => return Err(Error::new(ident.span(), UNRECOG_MODE)),
+                                    }
+                                }
+
+                                // One of:
+                                //   - `color(edit(...))`
+                                //   - `color(picker(...))`
+                                //   - `color(button(...))`
+                                NestedMeta::Meta(Meta::List(color_meta_list)) => {
+                                    match color_meta_list.ident.to_string().as_str() {
+                                        "edit" => tags.push(Tag::ColorEdit(
+                                            ColorEdit::from_meta_list(color_meta_list)?,
+                                        )),
+                                        "picker" => tags.push(Tag::ColorPicker(
+                                            ColorPicker::from_meta_list(color_meta_list)?,
+                                        )),
+                                        "button" => tags.push(Tag::ColorButton(
+                                            ColorButton::from_meta_list(color_meta_list)?,
+                                        )),
+
+                                        // Compiler error
+                                        _ => {
+                                            return Err(Error::new(
+                                                color_meta_list.ident.span(),
+                                                UNRECOG_MODE,
+                                            ));
+                                        }
+                                    }
+                                }
+
+                                _ => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+                            }
+                        }
+
+                        Tag::None
+                    }
 
                     // TODO refactor
                     // FIXME errors handling not clear enough
@@ -541,6 +645,7 @@ fn emmit_tag_tokens(
     input: &mut Vec<TokenStream>,
 ) -> Result<TokenStream, Error> {
     let tokens = match tag {
+        Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
         Tag::Image(Image { size, border, tint }) => {
@@ -620,6 +725,244 @@ fn emmit_tag_tokens(
             quote! {{
                 use imgui_ext::progress::Progress;
                 Progress::build(ui, &ext.#ident, { #params; params });
+            }}
+        }
+        Tag::ColorEdit(ColorEdit {
+            label,
+            flags,
+            preview,
+            mode,
+            format,
+            catch,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                // TODO proper error span
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::color::ColorEditParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    flags: None,
+                    preview: None,
+                    mode: None,
+                    format: None,
+                };
+            };
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let ident = Ident::new(&flags.value(), flags.span());
+                    params.extend(quote! { params.flags = Some( #ident() ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
+
+            match preview {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.preview = Some( imgui::ColorPreview::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match mode {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.mode = Some( imgui::ColorEditMode::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match format {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.format = Some( imgui::ColorFormat::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            quote! {{
+                use imgui_ext::color::ColorEdit;
+                let _ev = ColorEdit::build(ui, &mut ext.#ident, { #params ; params });
+                #catch
+            }}
+        }
+        Tag::ColorPicker(ColorPicker {
+            label,
+            flags,
+            preview,
+            mode,
+            format,
+            catch,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                // TODO proper error span
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::color::ColorPickerParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    flags: None,
+                    preview: None,
+                    mode: None,
+                    format: None,
+                };
+            };
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    params.extend(quote! { params.flags = Some( #fn_ident() ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
+
+            match preview {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.preview = Some( imgui::ColorPreview::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match mode {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.mode = Some( imgui::ColorPickerMode::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match format {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.format = Some( imgui::ColorFormat::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            quote! {{
+                use imgui_ext::color::ColorPicker;
+                let _ev = ColorPicker::build(ui, &mut ext.#ident, { #params ; params });
+                #catch
+            }}
+        }
+        Tag::ColorButton(ColorButton {
+            label,
+            flags,
+            preview,
+            size,
+            catch,
+        }) => {
+            let label = match label {
+                Some(Lit::Str(stri)) => stri.value(),
+                None => ident.to_string(),
+                // TODO proper error span
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+            let mut params = quote! {
+                use imgui_ext::color::ColorButtonParams as Params;
+                use imgui::im_str;
+                let mut params = Params {
+                    label: im_str!( #label ),
+                    flags: None,
+                    size: None,
+                    preview: None,
+                };
+            };
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    params.extend(quote! { params.flags = Some( #fn_ident() ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match size {
+                Some(Lit::Str(size)) => {
+                    let ident = Ident::new(&size.value(), size.span());
+                    params.extend(quote! { params.size = Some( imgui::ImVec2::from(#ident()) ); });
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            let catch = if let Some(Lit::Str(c)) = catch {
+                let id = Ident::new(&c.value(), ident.span());
+                let q = quote! { events.#id = _ev; };
+                input.push(quote! { #id: bool });
+                q
+            } else {
+                quote!()
+            };
+
+            match preview {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        use imgui::ColorPreview;
+                        params.preview = Some( ColorPreview::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            quote! {{
+                use imgui_ext::color::ColorButton;
+                let _ev = ColorButton::build(ui, ext.#ident, { #params ; params });
+                #catch
             }}
         }
         Tag::Text(Text {
@@ -960,11 +1303,11 @@ fn emmit_tag_tokens(
             Some(Lit::Str(catch)) => {
                 let id = Ident::new(&catch.value(), ident.span());
                 let tp = _ty.clone().into_token_stream();
-                input.push(quote! { #id: imgui_ext::NestedCatch<#tp> });
+                input.push(quote! { #id: imgui_ext::nested::NestedCatch<#tp> });
 
                 quote! {
                     use imgui_ext::ImGuiExt;
-                    let _ev = imgui_ext::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
+                    let _ev = imgui_ext::nested::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
                     events.#id = _ev;
                 }
             }

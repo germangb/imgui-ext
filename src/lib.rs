@@ -7,13 +7,14 @@
 //! Annotations map to a subset of imgui types and methods:
 //!
 //! | Annotation                    | Mapped Imgui Types |
-//! | ----------------------------- | --- |
+//! | ------------------------------| --- |
 //! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
 //! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
 //! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
 //! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
 //! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
 //! | [`image(...)`][image]         | [`Image`][ImImage] |
+//! | [`color(...)`][color]         | [`ColorButton`][ColorButton], [`ColorPicker`][ColorPicker], [`ColorEdit`][ColorEdit] |
 //! | [`button(...)`][button]       | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
 //! | [`checkbox(...)`][checkbox]   | [`Ui::checkbox`][Ui::checkbox] |
 //! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
@@ -28,6 +29,7 @@
 //! [text]: ./text/index.html
 //! [progress]: ./progress/index.html
 //! [image]: ./image/index.html
+//! [color]: ./color/index.html
 //! [button]: ./button/index.html
 //! [checkbox]: ./checkbox/index.html
 //! [separator]: ./separator/index.html
@@ -64,6 +66,9 @@
 //! [InputTextMultiline]:https://docs.rs/imgui/0.0/imgui/struct.InputTextMultiline.html
 //! [ProgressBar]:https://docs.rs/imgui/0.0/imgui/struct.ProgressBar.html
 //! [ImImage]:https://docs.rs/imgui/0.0/imgui/struct.Image.html
+//! [ColorButton]:https://docs.rs/imgui/0.0/imgui/struct.ColorButton.html
+//! [ColorPicker]:https://docs.rs/imgui/0.0/imgui/struct.ColorPicker.html
+//! [ColorEdit]:https://docs.rs/imgui/0.0/imgui/struct.ColorEdit.html
 //!
 //! [Ui::button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.button
 //! [Ui::small_button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.small_button
@@ -170,6 +175,8 @@ pub mod prelude {
 
 /// `checkbox(...)` docs.
 pub mod checkbox;
+/// `color(...)` docs.
+pub mod color;
 /// `drag(...)` docs.
 pub mod drag;
 /// `image(...)` docs.
@@ -231,52 +238,7 @@ pub mod display {
     //! [result]: https://i.imgur.com/Wf4Uze7.png
 }
 /// `nested(...)` docs (used to build nested UIs).
-pub mod nested {
-    //!
-    //! Types that #[derive(ImGuiExt)] can be nested.
-    //!
-    //! ## Optional fields
-    //!
-    //! * `catch`
-    //!
-    //! [issue]: #
-    //!
-    //! ## Example
-    //!
-    //! ```
-    //! use imgui::{ImString, ImGuiInputTextFlags};
-    //! use imgui_ext::ImGuiExt;
-    //!
-    //! #[derive(ImGuiExt)]
-    //! struct Form {
-    //!     #[imgui(text)]
-    //!     user: ImString,
-    //!     #[imgui(text(flags = "passwd_flags"))]
-    //!     passwd: ImString,
-    //!     #[imgui(button(label = "Login"))]
-    //!     _btn: (),
-    //! }
-    //!
-    //! fn passwd_flags() -> ImGuiInputTextFlags {
-    //!     ImGuiInputTextFlags::Password
-    //! }
-    //!
-    //! #[derive(ImGuiExt)]
-    //! struct Example {
-    //!     #[imgui(nested, separator)]
-    //!     login_form: Form,
-    //!     #[imgui(checkbox(label = "Remember login?"))]
-    //!     remember: bool,
-    //! }
-    //! ```
-    //!
-    //! ### Result
-    //!
-    //! ![][result]
-    //!
-    //! [result]: https://i.imgur.com/l6omyf4.png
-    //!
-}
+pub mod nested;
 /// `button(...)` docs.
 pub mod button {
     //!
@@ -371,18 +333,6 @@ pub mod bullet {
                 c: (),
             }
         }
-    }
-}
-
-// Used in codegen.
-#[doc(hidden)]
-pub struct NestedCatch<T: ImGuiExt>(pub T::Events);
-
-impl<T: ImGuiExt> std::ops::Deref for NestedCatch<T> {
-    type Target = T::Events;
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 

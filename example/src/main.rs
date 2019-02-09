@@ -1,7 +1,6 @@
 use imgui::{im_str, ImGuiCond};
 
 use imgui_ext::prelude::*;
-use imgui_ext::Events;
 
 mod support;
 mod ui;
@@ -22,7 +21,7 @@ fn main() {
             .build(|| {
                 ui.columns(2, im_str!("columns"), true);
 
-                let events: Events!(ui::Readme) = ui.imgui_ext(&mut readme);
+                let events: Events<ui::Readme> = ui.imgui_ext(&mut readme);
 
                 if events.nested().reset() {
                     readme.reset();

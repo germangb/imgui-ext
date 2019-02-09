@@ -640,6 +640,7 @@ fn parse_label(params: &MetaList) -> Result<Display, Error> {
 }
 
 // TODO
+#[allow(unused_macros)]
 macro_rules! tag_match {
     (match $tag:ident {
         $(
@@ -1305,7 +1306,7 @@ fn emmit_tag_tokens(
 
             quote! {{
                 use imgui_ext::ImGuiExt;
-                let _ev = imgui_ext::nested::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
+                let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
                 events.#catch_ident = _ev;
             }}
         }
@@ -1402,8 +1403,10 @@ fn catch_ident_nested(
         Some(Lit::Str(lit)) => {
             let ident = Ident::new(&lit.value(), field.span());
 
-            fields.extend(quote! { pub #ident: imgui_ext::nested::NestedCatch<#tp> , });
-            methods.extend(quote! { pub fn #ident(&self) -> &imgui_ext::nested::NestedCatch<#tp> { &self.#ident } });
+            fields.extend(quote! { pub #ident: imgui_ext::Events<#tp> , });
+            methods.extend(
+                quote! { pub fn #ident(&self) -> &imgui_ext::Events<#tp> { &self.#ident } },
+            );
 
             Ok(ident)
         }
@@ -1411,8 +1414,10 @@ fn catch_ident_nested(
         // Use field identifier
         None => {
             if field_set.insert(field.to_string()) {
-                fields.extend(quote! { pub #field: imgui_ext::nested::NestedCatch<#tp> , });
-                methods.extend(quote! { pub fn #field(&self) -> &imgui_ext::nested::NestedCatch<#tp> { &self.#field } });
+                fields.extend(quote! { pub #field: imgui_ext::Events<#tp> , });
+                methods.extend(
+                    quote! { pub fn #field(&self) -> &imgui_ext::Events<#tp> { &self.#field } },
+                );
             }
 
             Ok(field.clone())

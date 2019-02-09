@@ -10,17 +10,10 @@ sdl2 = { version = "0.32.1", optional = true }
 gl = { version = "0.11.0", optional = true }
 
 imgui = "0.0.22"
-imgui-ext = { version = "0.1.5", path = "../" }
+imgui-ext = { version = "0.1.6", path = "../" }
 
-[dependencies.imgui-sdl2]
-git = "https://github.com/germangb/rust-imgui-sdl2.git"
-branch = "imgui-22"
-optional = true
-
-[dependencies.imgui-opengl-renderer]
-git = "https://github.com/germangb/rust-imgui-opengl-renderer.git"
-branch = "imgui-22"
-optional = true
+imgui-sdl2 = { version = "0.5.0", optional = true }
+imgui-opengl-renderer = { version = "0.4.0", optional = true }
 
 [features]
 default = ["sdl"]

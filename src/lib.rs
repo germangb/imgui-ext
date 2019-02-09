@@ -119,6 +119,7 @@
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
+//! use imgui_ext::Events;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -129,7 +130,7 @@
 //! // init imgui (ui)...
 //!
 //! // All events are stored as booleans in the returned type.
-//! let events: Events!(Example) = ui.imgui_ext(&mut example);
+//! let events: Events<Example> = ui.imgui_ext(&mut example);
 //!
 //! if events.check() {
 //!     // Checkbox value has changes.
@@ -143,6 +144,7 @@
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
+//! use imgui_ext::Events;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -152,7 +154,7 @@
 //!
 //! // init imgui (ui)...
 //!
-//! let events: Events!(Example) = ui.imgui_ext(&mut example);
+//! let events: Events<Example> = ui.imgui_ext(&mut example);
 //!
 //! if events.checkbox_event() {
 //!     // Do something...
@@ -190,12 +192,9 @@
 use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 
-//#[doc(hidden)]
-mod macros;
 pub mod prelude {
-    pub use super::{ImGuiExt, UiExt};
+    pub use super::{Events, ImGuiExt, UiExt};
 }
-
 /// `checkbox(...)` docs.
 pub mod checkbox;
 /// `color(...)` docs.
@@ -261,7 +260,71 @@ pub mod display {
     //! [result]: https://i.imgur.com/Wf4Uze7.png
 }
 /// `nested(...)` docs (used to build nested UIs).
-pub mod nested;
+pub mod nested {
+    //!
+    //! Types that #[derive(ImGuiExt)] can be nested.
+    //!
+    //! ## Optional fields
+    //!
+    //! * `catch`
+    //!
+    //! [issue]: #
+    //!
+    //! ## Example
+    //!
+    //! ```
+    //! use imgui::{ImString, ImGuiInputTextFlags};
+    //! use imgui_ext::ImGuiExt;
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Form {
+    //!     #[imgui(text)]
+    //!     user: ImString,
+    //!     #[imgui(
+    //!         text(flags = "passwd_flags"),
+    //!         button(label = "Login", catch = "login_btn"),
+    //!     )]
+    //!     passwd: ImString,
+    //! }
+    //!
+    //! fn passwd_flags() -> ImGuiInputTextFlags {
+    //!     ImGuiInputTextFlags::Password
+    //! }
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Example {
+    //!     #[imgui(nested, separator)]
+    //!     login_form: Form,
+    //!     #[imgui(checkbox(label = "Remember login?"))]
+    //!     remember: bool,
+    //! }
+    //! ```
+    //!
+    //! ### Result
+    //!
+    //! ![][result]
+    //!
+    //! [result]: https://i.imgur.com/l6omyf4.png
+    //!
+    //! ## Nested input events
+    //!
+    //! You can access input events from nested UIs:
+    //!
+    //! ```ignore
+    //! // initialize imgui (ui) ...
+    //!
+    //! let mut example = Example { ... };
+    //! let events: Events<Example> = ui.imgui_ext(&mut example);
+    //!
+    //! if events.login_form().login_btn() {
+    //!     validate_user(
+    //!         &example.login_form.user,
+    //!         &example.login_form.passwd,
+    //!     )
+    //! }
+    //! ```
+    //!
+}
 /// `button(...)` docs.
 pub mod button {
     //!
@@ -372,6 +435,29 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
         ImGuiExt::imgui_ext(ui, ext.as_mut())
     }
 }
+
+/// Alias for the `ImGuiExt::Events` associated type.
+///
+/// This type is included in the prelude.
+///
+/// ```ignore
+/// use imgui_ext::prelude::*;
+///
+/// #[derive(ImGuiExt)]
+/// struct Example { /*...*/ }
+///
+/// fn handle_events(e: &Events<Example>) {
+///     // ...
+/// }
+///
+/// let mut example = Example { */...*/ };
+///
+/// // init imgui (ui)...
+/// let events = ui.imgui_ext(&mut example);
+///
+/// handle_events(&events);
+/// ```
+pub type Events<T> = <T as ImGuiExt>::Events;
 
 /// Extension trait for imgui Ui.
 ///

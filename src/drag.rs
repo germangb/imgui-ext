@@ -25,6 +25,13 @@ pub trait Drag<T> {
     fn build(ui: &imgui::Ui, elem: &mut Self, params: DragParams<T>) -> bool;
 }
 
+impl<T, D: Drag<T>> Drag<T> for Box<D> {
+    #[inline]
+    fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>) -> bool {
+        D::build(ui, elem, params)
+    }
+}
+
 macro_rules! impl_drag {
     ( $( $t:ty , f32 => $fun:ident , )+ ) => {$(
         impl Drag<f32> for $t {

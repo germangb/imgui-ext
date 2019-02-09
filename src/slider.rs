@@ -47,6 +47,13 @@ pub trait Slider<T> {
     fn build(ui: &imgui::Ui, elem: &mut Self, params: SliderParams<T>) -> bool;
 }
 
+impl<T, S: Slider<T>> Slider<T> for Box<S> {
+    #[inline]
+    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>) -> bool {
+        S::build(ui, elem, params)
+    }
+}
+
 macro_rules! impl_f32_array {
     ($( $arr:ty => $slider:ident ),*) => {$(
         impl Slider<f32> for $arr {

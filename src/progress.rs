@@ -37,6 +37,13 @@ pub trait Progress {
     fn build(ui: &Ui, elem: &Self, params: ProgressParams);
 }
 
+impl<T: Progress> Progress for Box<T> {
+    #[inline]
+    fn build(ui: &Ui, elem: &Self, params: ProgressParams) {
+        T::build(ui, elem, params)
+    }
+}
+
 impl Progress for f32 {
     fn build(ui: &Ui, elem: &Self, params: ProgressParams) {
         let mut pro = ProgressBar::new(ui, *elem);

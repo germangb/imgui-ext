@@ -1,6 +1,7 @@
 #![recursion_limit = "128"]
 extern crate proc_macro;
 
+use std::collections::HashSet;
 use std::string::ToString;
 
 use proc_macro2::{Literal, TokenStream};
@@ -310,18 +311,21 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let (body, catch_fields) = match input.data {
+    let (body, catch_fields, catch_methods) = match input.data {
         Data::Struct(ref body) => struct_body(body.fields.clone()),
         _ => Err(Error::new(input.span(), STRUCT_SUPPORT)),
     }?;
 
     // crate a new type.
     // It should never generate a collision
-    let event_type = Ident::new(&format!("{}ImGuiExt", name.to_string()), input.span());
+    let event_type = Ident::new(&format!("{}ImGuiExtEvents", name.to_string()), input.span());
 
     Ok(quote! {
         pub struct #event_type {
             #catch_fields
+        }
+        impl #event_type {
+            #catch_methods
         }
         impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
             type Events = #event_type;
@@ -348,9 +352,11 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 ///     y: f32,
 /// }
 #[rustfmt::skip]
-fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
-    // TODO FIXME refactor the way input fields are collected
-    let mut input: Vec<TokenStream> = vec![];
+fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream), Error> {
+    let mut input_methods: TokenStream = TokenStream::new();
+
+    let mut input_fields: TokenStream = TokenStream::new();
+    let mut input_fields_set = HashSet::new();
 
     let field_body = fields
         .iter()
@@ -394,7 +400,15 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
                         Err(e) => vec![Err(e)],
                         Ok(tags) => tags
                             .into_iter()
-                            .map(|tag| emmit_tag_tokens(&ident, &ty, &attr, &tag, &mut input))
+                            .map(|tag| {
+                                emmit_tag_tokens(&ident,
+                                                 &ty,
+                                                 &attr,
+                                                 &tag,
+                                                 &mut input_fields,
+                                                 &mut input_methods,
+                                                 &mut input_fields_set)
+                            })
                             .collect()
                     }
                 },
@@ -404,13 +418,7 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream), Error> {
         })
         .collect::<Result<Vec<_>, Error>>()?;
 
-    let catch_fields = quote! {
-        #( pub #input ),*
-        //pub click: bool,
-        //pub rem: bool,
-    };
-
-    Ok((quote! { #( #field_body );*}, catch_fields))
+    Ok((quote! { #( #field_body );*}, input_fields, input_methods))
 }
 
 /// meta is the whole (parsed) tag: `#[imgui]` or `#[imgui(...)]`
@@ -631,6 +639,22 @@ fn parse_label(params: &MetaList) -> Result<Display, Error> {
     Ok(display)
 }
 
+// TODO
+macro_rules! tag_match {
+    (match $tag:ident {
+        $(
+            $ident:ident { $( $param:ident ),* }
+        ),*
+    }) => {
+        match $tag {
+            $(
+                Tag::$ident( $ident { $( $param , )* } ) => { quote!() },
+            )*
+            _ => quote!(),
+        }
+    }
+}
+
 /// Output source code for a given field, a given attribute, and one of the parsed `Tag`s
 ///
 /// For example, the this annotation: `#[imgui(label(...), input(...))]`
@@ -642,8 +666,17 @@ fn emmit_tag_tokens(
     _ty: &Type,
     attr: &Attribute,
     tag: &Tag,
-    input: &mut Vec<TokenStream>,
+    fields: &mut TokenStream,
+    methods: &mut TokenStream,
+    input_fields: &mut HashSet<String>,
 ) -> Result<TokenStream, Error> {
+    /*
+    let tokens = tag_match! {
+        match tag {
+            Progress { overlay, size }
+        }
+    };
+    */
     let tokens = match tag {
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
@@ -763,15 +796,6 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
-
             match preview {
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
@@ -805,10 +829,13 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote! {{
                 use imgui_ext::color::ColorEdit;
                 let _ev = ColorEdit::build(ui, &mut ext.#ident, { #params ; params });
-                #catch
+                events.#catch_ident |= _ev;
             }}
         }
         Tag::ColorPicker(ColorPicker {
@@ -847,15 +874,6 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
-
             match preview {
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
@@ -889,10 +907,13 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote! {{
                 use imgui_ext::color::ColorPicker;
                 let _ev = ColorPicker::build(ui, &mut ext.#ident, { #params ; params });
-                #catch
+                events.#catch_ident |= _ev;
             }}
         }
         Tag::ColorButton(ColorButton {
@@ -938,15 +959,6 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
-
             match preview {
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
@@ -959,10 +971,13 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote! {{
                 use imgui_ext::color::ColorButton;
                 let _ev = ColorButton::build(ui, ext.#ident, { #params ; params });
-                #catch
+                events.#catch_ident |= _ev;
             }}
         }
         Tag::Text(Text {
@@ -1010,18 +1025,14 @@ fn emmit_tag_tokens(
 
             // TODO ??????1
             params.extend(quote!(params));
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
+
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote!({
                 use imgui_ext::text::Text;
                 let _ev = Text::build(ui, &mut ext.#ident, { #params });
-                #catch
+                events.#catch_ident |= _ev;
             })
         }
         Tag::Input(Input {
@@ -1074,18 +1085,14 @@ fn emmit_tag_tokens(
 
             // TODO ????????
             params.extend(quote!(params));
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
+
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote!({
                 use imgui_ext::input::Input;
                 let _ev = Input::build(ui, &mut ext.#ident, { #params });
-                #catch
+                events.#catch_ident |= _ev;
             })
         }
         Tag::Drag(Drag {
@@ -1151,19 +1158,14 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             params.extend(quote!(params));
             quote!({
                 use imgui_ext::drag::Drag;
                 let _ev = Drag::build(ui, &mut ext.#ident, { #params });
-                #catch
+                events.#catch_ident |= _ev;
             })
         }
         Tag::Button(Button { label, size, catch }) => {
@@ -1175,7 +1177,8 @@ fn emmit_tag_tokens(
             let catch = if let Some(Lit::Str(c)) = catch {
                 let id = Ident::new(&c.value(), ident.span());
                 let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
+                fields.extend(quote! { pub #id: bool , });
+                methods.extend(quote! { pub fn #id(&self) -> bool { self.#id } });
                 q
             } else {
                 quote!()
@@ -1260,20 +1263,14 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
             params.extend(quote!(params));
             quote!({
                 use imgui_ext::slider::Slider;
                 let _ev = Slider::build(ui, &mut ext.#ident, { #params });
-                #catch
+                events.#catch_ident |= _ev;
             })
         }
         Tag::Checkbox(Checkbox { label, catch }) => {
@@ -1283,39 +1280,35 @@ fn emmit_tag_tokens(
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             };
             let label = Literal::string(&label);
-            let catch = if let Some(Lit::Str(c)) = catch {
-                let id = Ident::new(&c.value(), ident.span());
-                let q = quote! { events.#id = _ev; };
-                input.push(quote! { #id: bool });
-                q
-            } else {
-                quote!()
-            };
+
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
             quote!({
                 use imgui_ext::checkbox::Checkbox;
                 use imgui_ext::checkbox::CheckboxParams as Params;
                 use imgui::im_str;
                 let _ev = Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
-                #catch
+                events.#catch_ident |= _ev;
             })
         }
-        Tag::Nested(Nested { catch }) => match catch {
-            Some(Lit::Str(catch)) => {
-                let id = Ident::new(&catch.value(), ident.span());
-                let tp = _ty.clone().into_token_stream();
-                input.push(quote! { #id: imgui_ext::nested::NestedCatch<#tp> });
+        Tag::Nested(Nested { catch }) => {
+            let catch_ident = catch_ident_nested(
+                attr,
+                _ty,
+                ident,
+                catch.as_ref(),
+                input_fields,
+                fields,
+                methods,
+            )?;
 
-                quote! {
-                    use imgui_ext::ImGuiExt;
-                    let _ev = imgui_ext::nested::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
-                    events.#id = _ev;
-                }
-            }
-            None => quote! {
-                ImGuiExt::imgui_ext(ui, &mut ext.#ident)
-            },
-            _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-        },
+            quote! {{
+                use imgui_ext::ImGuiExt;
+                let _ev = imgui_ext::nested::NestedCatch(ImGuiExt::imgui_ext(ui, &mut ext.#ident));
+                events.#catch_ident = _ev;
+            }}
+        }
         Tag::Display(Display {
             label,
             display,
@@ -1352,10 +1345,79 @@ fn emmit_tag_tokens(
             quote!({
                 use imgui::im_str;
                 ui.label_text(im_str!(#label), im_str!(#display));
-                //if ui.is_item_hovered() { ui.tooltip_text("I'm a tooltip!") }
             })
         }
     };
 
     Ok(tokens)
+}
+
+fn catch_ident(
+    attr: &Attribute,
+    field: &Ident,
+    catch: Option<&Lit>,
+    field_set: &mut HashSet<String>,
+    fields: &mut TokenStream,
+    methods: &mut TokenStream,
+) -> Result<Ident, Error> {
+    match catch {
+        Some(Lit::Str(lit)) => {
+            let ident = Ident::new(&lit.value(), field.span());
+
+            fields.extend(quote! { pub #ident: bool , });
+            methods.extend(quote! { pub fn #ident(&self) -> bool { self.#ident } });
+
+            Ok(ident)
+        }
+
+        // Use field identifier
+        None => {
+            if field_set.insert(field.to_string()) {
+                fields.extend(quote! { pub #field: bool , });
+                methods.extend(
+                    quote! { #[inline(always)] pub fn #field(&self) -> bool { self.#field } },
+                );
+            }
+
+            Ok(field.clone())
+        }
+
+        _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+    }
+}
+
+// TODO code repetition bad nono FIXME naw
+fn catch_ident_nested(
+    attr: &Attribute,
+    _ty: &Type,
+    field: &Ident,
+    catch: Option<&Lit>,
+    field_set: &mut HashSet<String>,
+    fields: &mut TokenStream,
+    methods: &mut TokenStream,
+) -> Result<Ident, Error> {
+    let tp = _ty.clone().into_token_stream();
+
+    match catch {
+        Some(Lit::Str(lit)) => {
+            let ident = Ident::new(&lit.value(), field.span());
+
+            fields.extend(quote! { pub #ident: imgui_ext::nested::NestedCatch<#tp> , });
+            methods.extend(quote! { pub fn #ident(&self) -> &imgui_ext::nested::NestedCatch<#tp> { &self.#ident } });
+
+            Ok(ident)
+        }
+
+        // Use field identifier
+        None => {
+            if field_set.insert(field.to_string()) {
+                fields.extend(quote! { pub #field: imgui_ext::nested::NestedCatch<#tp> , });
+                methods.extend(quote! { pub fn #field(&self) -> &imgui_ext::nested::NestedCatch<#tp> { &self.#field } });
+            }
+
+            Ok(field.clone())
+        }
+
+        _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+    }
 }

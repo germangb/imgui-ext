@@ -75,6 +75,13 @@ pub trait Input<T> {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool;
 }
 
+impl<T, I: Input<T>> Input<T> for Box<I> {
+    #[inline]
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
+        I::build(ui, elem, params)
+    }
+}
+
 macro_rules! impl_f32_array {
     ( $($arr:ty => $input:ident),* ) => {$(
         impl Input<f32> for $arr {

@@ -2,7 +2,9 @@ use std::error::Error;
 
 use imgui::{ImGui, Ui};
 
-pub fn run<F: FnMut(&Ui)>(
+use super::Window;
+
+pub fn run<F: FnMut(&mut Window, &Ui)>(
     title: &str,
     (w, h): (u32, u32),
     mut user: F,
@@ -21,12 +23,15 @@ pub fn run<F: FnMut(&Ui)>(
     window.gl_make_current(&glctx)?;
 
     let mut imgui = ImGui::init();
-    //imgui.set_ini_filename(Some(imgui::ImString::new("example/imgui.ini")));
     let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui);
 
     let renderer =
         imgui_opengl_renderer::Renderer::new(&mut imgui, |s| video.gl_get_proc_address(s) as _);
     gl::load_with(|s| video.gl_get_proc_address(s) as _);
+
+    let mut window_params = Window {
+        color: [0.2, 0.2, 0.2, 1.0],
+    };
 
     let mut event_pump = sdl.event_pump()?;
     'mainloop: loop {
@@ -49,13 +54,13 @@ pub fn run<F: FnMut(&Ui)>(
         }
 
         unsafe {
-            gl::ClearColor(0.2, 0.2, 0.2, 1.0);
-            //gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+            let [r, g, b, a] = window_params.color;
+            gl::ClearColor(r, g, b, a);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
         let ui = imgui_sdl2.frame(&window, &mut imgui, &event_pump.mouse_state());
-        user(&ui);
+        user(&mut window_params, &ui);
         renderer.render(ui);
 
         window.gl_swap_window();

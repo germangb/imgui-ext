@@ -17,10 +17,11 @@
 //! struct Form {
 //!     #[imgui(text)]
 //!     user: ImString,
-//!     #[imgui(text(flags = "passwd_flags"))]
+//!     #[imgui(
+//!         text(flags = "passwd_flags"),
+//!         button(label = "Login", catch = "login_btn"),
+//!     )]
 //!     passwd: ImString,
-//!     #[imgui(button(label = "Login"))]
-//!     _btn: (),
 //! }
 //!
 //! fn passwd_flags() -> ImGuiInputTextFlags {
@@ -41,6 +42,24 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/l6omyf4.png
+//!
+//! ## Nested input events
+//!
+//! You can access input events from nested UIs:
+//!
+//! ```ignore
+//! // initialize imgui (ui) ...
+//!
+//! let mut example = Example { ... };
+//! let events: Events!(Example) = ui.imgui_ext(&mut example);
+//!
+//! if events.login_form().login_btn() {
+//!     validate_user(
+//!         &example.login_form.user,
+//!         &example.login_form.passwd,
+//!     )
+//! }
+//! ```
 //!
 use std::ops::Deref;
 

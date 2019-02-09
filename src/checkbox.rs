@@ -53,3 +53,10 @@ impl Checkbox for Option<bool> {
         }
     }
 }
+
+impl<T: Checkbox> Checkbox for Box<T> {
+    #[inline]
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
+        T::build(ui, elem, params)
+    }
+}

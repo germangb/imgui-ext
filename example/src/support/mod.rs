@@ -15,6 +15,11 @@ use dummy as backend;
 #[cfg(not(feature = "ci"))]
 use sdl as backend;
 
-pub fn run<F: FnMut(&Ui)>(title: &str, size: (u32, u32), ui: F) {
+#[derive(Debug, Clone)]
+pub struct Window {
+    pub color: [f32; 4],
+}
+
+pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str, size: (u32, u32), ui: F) {
     backend::run(title, size, ui).unwrap();
 }

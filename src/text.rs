@@ -48,6 +48,13 @@ pub trait Text {
     fn build(ui: &Ui, elem: &mut Self, params: TextParams) -> bool;
 }
 
+impl<T: Text> Text for Box<T> {
+    #[inline]
+    fn build(ui: &Ui, elem: &mut Self, params: TextParams) -> bool {
+        T::build(ui, elem, params)
+    }
+}
+
 impl Text for ImString {
     fn build(ui: &Ui, elem: &mut Self, params: TextParams) -> bool {
         if let Some(size) = params.size {

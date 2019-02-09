@@ -112,34 +112,57 @@
 //!
 //! ## Input events
 //!
-//! Most annotations can take an optional `catch = "..."` parameter which can be used to identify
-//! when a button is pressed, an input has changed, etc.., later on:
+//! In immediate mode UI, generally you respond to user inputs (button presses, value changes, etc...)
+//! at the same time that you render the UI.
+//!
+//! With `imgui-ext`, you have to first render the UI, and then check for these events:
 //!
 //! ```ignore
-//! use imgui_ext::ImGuiExt;
+//! use imgui_ext::prelude::*;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
-//!     #[imgui(checkbox(catch = "check"))]
-//!     input_check: bool,
-//!     #[imgui(text(catch = "text"))]
-//!     text: ImString,
+//!     #[imgui(checkbox(label = "Checkbox"))]
+//!     check: bool,
 //! }
 //!
 //! // init imgui (ui)...
 //!
-//! let events = ui.imgui_ext(&mut example);
-//! if events.check {
-//!     println!("New value: {}", example.input_check);
-//! }
-//! if events.text {
-//!     println!("New text value: {:?}", example.text);
+//! // All events are stored as booleans in the returned type.
+//! let events: Events!(Example) = ui.imgui_ext(&mut example);
+//!
+//! if events.check() {
+//!     // Checkbox value has changes.
+//!     // Do something...
 //! }
 //! ```
 //!
-//! ## Descriptive errors
+//! In the above example, the checkbox event is mapped to the method `check()` of the type returned by
+//! the call to `ui.imgui_ext(...)`. The name of the method is the same as the field. You can override
+//! this value by defining the `catch` parameter in the annotation:
 //!
-//! UI correctness is checked at compile time.
+//! ```ignore
+//! use imgui_ext::prelude::*;
+//!
+//! #[derive(ImGuiExt)]
+//! struct Example {
+//!     #[imgui(checkbox(label = "Checkbox", catch = "checkbox_event"))]
+//!     check: bool,
+//! }
+//!
+//! // init imgui (ui)...
+//!
+//! let events: Events!(Example) = ui.imgui_ext(&mut example);
+//!
+//! if events.checkbox_event() {
+//!     // Do something...
+//! }
+//! ```
+//!
+//! ## Nice compiler errors
+//!
+//! UI correctness is checked at compile time. If you mistype an annotation, the compiler will point
+//! you directly to the issue:
 //!
 //! ```ignore
 //! #[derive(ImGuiExt)]

@@ -25,6 +25,16 @@ pub trait Drag<T> {
     fn build(ui: &imgui::Ui, elem: &mut Self, params: DragParams<T>) -> bool;
 }
 
+impl<T, D: Drag<T>> Drag<T> for Option<D> {
+    fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>) -> bool {
+        if let Some(ref mut elem) = elem {
+            D::build(ui, elem, params)
+        } else {
+            false
+        }
+    }
+}
+
 impl<T, D: Drag<T>> Drag<T> for Box<D> {
     #[inline]
     fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>) -> bool {
@@ -45,21 +55,6 @@ macro_rules! impl_drag {
                 drag.build()
             }
         }
-        impl Drag<f32> for Option<$t> {
-            fn build(ui: &Ui, elem: &mut Self, params: DragParams<f32>) -> bool {
-                if let Some(ref mut elem) = elem {
-                    let mut drag = $fun::new(ui, params.label, elem);
-                    if let Some(val) = params.max { drag = drag.max(val); }
-                    if let Some(val) = params.min { drag = drag.min(val); }
-                    if let Some(val) = params.speed { drag = drag.speed(val); }
-                    if let Some(val) = params.power { drag = drag.power(val); }
-                    if let Some(disp) = params.format { drag = drag.display_format(disp); }
-                    drag.build()
-                } else {
-                    false
-                }
-            }
-        }
     )+};
 
     ( $( $t:ty , i32 => $fun:ident , )+ ) => {$(
@@ -71,20 +66,6 @@ macro_rules! impl_drag {
                 if let Some(val) = params.speed { drag = drag.speed(val); }
                 if let Some(disp) = params.format { drag = drag.display_format(disp); }
                 drag.build()
-            }
-        }
-        impl Drag<i32> for Option<$t> {
-            fn build(ui: &Ui, elem: &mut Self, params: DragParams<i32>) -> bool {
-                if let Some(ref mut elem) = elem {
-                    let mut drag = $fun::new(ui, params.label, elem);
-                    if let Some(val) = params.max { drag = drag.max(val); }
-                    if let Some(val) = params.min { drag = drag.min(val); }
-                    if let Some(val) = params.speed { drag = drag.speed(val); }
-                    if let Some(disp) = params.format { drag = drag.display_format(disp); }
-                    drag.build()
-                } else {
-                    false
-                }
             }
         }
     )+}

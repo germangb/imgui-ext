@@ -122,6 +122,7 @@ tag! {
             step: Option<Lit>,
             step_fast: Option<Lit>,
             catch: Option<Lit>,
+            size: Option<Lit>,
         }
     }
 }
@@ -198,20 +199,6 @@ tag! {
 
 tag! {
     #[derive(Default)]
-    struct Text {
-        fields {
-        },
-        optional {
-            label: Option<Lit>,
-            flags: Option<Lit>,
-            size: Option<Lit>,
-            catch: Option<Lit>,
-        }
-    }
-}
-
-tag! {
-    #[derive(Default)]
     struct Progress {
         fields {
         },
@@ -281,6 +268,17 @@ tag! {
     }
 }
 
+tag! {
+    #[derive(Default)]
+    struct Text {
+        fields {},
+        optional {
+            // literal
+            lit: Option<Lit>,
+        }
+    }
+}
+
 enum Tag {
     None,
     Display(Display),
@@ -289,7 +287,6 @@ enum Tag {
     Slider(Slider),
     Drag(Drag),
     Nested(Nested),
-    Text(Text),
     Progress(Progress),
     Image(Image),
     Button(Button),
@@ -302,6 +299,9 @@ enum Tag {
     Separator,
     /// `#[imgui(new_line)]`
     NewLine,
+    /// - Litaral`: #[text(literal = "...")]`
+    /// - Annotated field (AsRef<str>): `#[text(literal)]`
+    Text(Text),
 
     BulletParent,
     Bullet(Bullet),
@@ -453,7 +453,9 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
 
     for nested in meta_list.nested.iter() {
         match (state, nested) {
-            (_, NestedMeta::Literal(_)) => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+            (_, NestedMeta::Literal(_)) => {
+                return Err(Error::new(meta_list.span(), INVALID_FORMAT))
+            }
             // Parse as a label(...)
             (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, .. })))
                 if ident.to_string() == "label" || ident.to_string() == "display" =>
@@ -471,13 +473,13 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "new_line" => tags.push(Tag::NewLine),
 
                     "nested" => tags.push(Tag::Nested(Default::default())),
-                    "text" => tags.push(Tag::Text(Default::default())),
                     "display" => tags.push(Tag::Display(Default::default())),
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
                     "drag" => tags.push(Tag::Drag(Default::default())),
                     "bullet" => tags.push(Tag::Bullet(Default::default())),
                     "progress" => tags.push(Tag::Progress(Default::default())),
+                    "text" => tags.push(Tag::Text(Default::default())),
 
                     // errors
                     "color" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
@@ -509,9 +511,9 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
                     "slider" => Tag::Slider(Slider::from_meta_list(meta_list)?),
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
-                    "text" => Tag::Text(Text::from_meta_list(meta_list)?),
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
+                    "text" => Tag::Text(Text::from_meta_list(meta_list)?),
 
                     "color" => {
                         for nested in meta_list.nested.iter() {
@@ -662,15 +664,14 @@ macro_rules! tag_match {
 /// produces two tags: `Tag::Display` and `Tag::Input`.
 ///
 /// This function needs to be called twice (once per Tag)
-fn emmit_tag_tokens(
-    ident: &Ident,
-    _ty: &Type,
-    attr: &Attribute,
-    tag: &Tag,
-    fields: &mut TokenStream,
-    methods: &mut TokenStream,
-    input_fields: &mut HashSet<String>,
-) -> Result<TokenStream, Error> {
+fn emmit_tag_tokens(ident: &Ident,
+                    _ty: &Type,
+                    attr: &Attribute,
+                    tag: &Tag,
+                    fields: &mut TokenStream,
+                    methods: &mut TokenStream,
+                    input_fields: &mut HashSet<String>)
+                    -> Result<TokenStream, Error> {
     /*
     let tokens = tag_match! {
         match tag {
@@ -761,14 +762,18 @@ fn emmit_tag_tokens(
                 Progress::build(ui, &ext.#ident, { #params; params });
             }}
         }
-        Tag::ColorEdit(ColorEdit {
-            label,
-            flags,
-            preview,
-            mode,
-            format,
-            catch,
-        }) => {
+        Tag::Text(Text { lit }) => {
+            match lit {
+                Some(Lit::Str(lit)) => quote! { ui.text(#lit); },
+
+                // Field should implement the `Text` trait
+                None => quote! { imgui_ext::text::Text::build(ui, &ext.#ident); },
+
+                // Invalid format. Raise compiler error.
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+        }
+        Tag::ColorEdit(ColorEdit { label, flags, preview, mode, format, catch }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -801,8 +806,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.preview = Some( imgui::ColorPreview::#var );
-                    }});
+                                      params.preview = Some( imgui::ColorPreview::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -812,8 +817,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.mode = Some( imgui::ColorEditMode::#var );
-                    }});
+                                      params.mode = Some( imgui::ColorEditMode::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -823,8 +828,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.format = Some( imgui::ColorFormat::#var );
-                    }});
+                                      params.format = Some( imgui::ColorFormat::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -839,14 +844,7 @@ fn emmit_tag_tokens(
                 events.#catch_ident |= _ev;
             }}
         }
-        Tag::ColorPicker(ColorPicker {
-            label,
-            flags,
-            preview,
-            mode,
-            format,
-            catch,
-        }) => {
+        Tag::ColorPicker(ColorPicker { label, flags, preview, mode, format, catch }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -879,8 +877,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.preview = Some( imgui::ColorPreview::#var );
-                    }});
+                                      params.preview = Some( imgui::ColorPreview::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -890,8 +888,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.mode = Some( imgui::ColorPickerMode::#var );
-                    }});
+                                      params.mode = Some( imgui::ColorPickerMode::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -901,8 +899,8 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.format = Some( imgui::ColorFormat::#var );
-                    }});
+                                      params.format = Some( imgui::ColorFormat::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -917,13 +915,7 @@ fn emmit_tag_tokens(
                 events.#catch_ident |= _ev;
             }}
         }
-        Tag::ColorButton(ColorButton {
-            label,
-            flags,
-            preview,
-            size,
-            catch,
-        }) => {
+        Tag::ColorButton(ColorButton { label, flags, preview, size, catch }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -964,9 +956,9 @@ fn emmit_tag_tokens(
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        use imgui::ColorPreview;
-                        params.preview = Some( ColorPreview::#var );
-                    }});
+                                      use imgui::ColorPreview;
+                                      params.preview = Some( ColorPreview::#var );
+                                  }});
                 }
                 None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -981,68 +973,7 @@ fn emmit_tag_tokens(
                 events.#catch_ident |= _ev;
             }}
         }
-        Tag::Text(Text {
-            label,
-            size,
-            flags,
-            catch,
-        }) => {
-            let label = match label {
-                Some(Lit::Str(stri)) => stri.value(),
-                None => ident.to_string(),
-                // TODO proper error span
-                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-            };
-            let label = Literal::string(&label);
-            let mut params = quote! {
-                use imgui_ext::text::TextParams as Params;
-                use imgui::im_str;
-                let mut params = Params {
-                    label: im_str!( #label ),
-                    flags: None,
-                    size: None,
-                };
-            };
-
-            match flags {
-                Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), flags.span());
-                    params.extend(quote! { params.flags = Some( #fn_ident() ); });
-                }
-                None => {}
-                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-            }
-
-            match size {
-                Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
-                    params.extend(
-                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
-                }
-                None => {}
-                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
-            }
-
-            // TODO ??????1
-            params.extend(quote!(params));
-
-            let catch_ident =
-                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
-
-            quote!({
-                use imgui_ext::text::Text;
-                let _ev = Text::build(ui, &mut ext.#ident, { #params });
-                events.#catch_ident |= _ev;
-            })
-        }
-        Tag::Input(Input {
-            label,
-            step,
-            step_fast,
-            flags,
-            catch,
-        }) => {
+        Tag::Input(Input { label, step, step_fast, flags, catch, size }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -1058,8 +989,20 @@ fn emmit_tag_tokens(
                     step: None,
                     step_fast: None,
                     flags: None,
+                    size: None,
                 };
             };
+
+            match size {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
 
             match step {
                 Some(Lit::Float(step)) => params.extend(quote! { params.step = Some(#step); }),
@@ -1096,15 +1039,7 @@ fn emmit_tag_tokens(
                 events.#catch_ident |= _ev;
             })
         }
-        Tag::Drag(Drag {
-            label,
-            min,
-            max,
-            speed,
-            power,
-            format,
-            catch,
-        }) => {
+        Tag::Drag(Drag { label, min, max, speed, power, format, catch }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -1222,14 +1157,7 @@ fn emmit_tag_tokens(
                 quote! { ui.bullet(); }
             }
         }
-        Tag::Slider(Slider {
-            label,
-            min,
-            max,
-            format,
-            power,
-            catch,
-        }) => {
+        Tag::Slider(Slider { label, min, max, format, power, catch }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
                 None => ident.to_string(),
@@ -1294,15 +1222,13 @@ fn emmit_tag_tokens(
             })
         }
         Tag::Nested(Nested { catch }) => {
-            let catch_ident = catch_ident_nested(
-                attr,
-                _ty,
-                ident,
-                catch.as_ref(),
-                input_fields,
-                fields,
-                methods,
-            )?;
+            let catch_ident = catch_ident_nested(attr,
+                                                 _ty,
+                                                 ident,
+                                                 catch.as_ref(),
+                                                 input_fields,
+                                                 fields,
+                                                 methods)?;
 
             quote! {{
                 use imgui_ext::ImGuiExt;
@@ -1310,11 +1236,7 @@ fn emmit_tag_tokens(
                 events.#catch_ident = _ev;
             }}
         }
-        Tag::Display(Display {
-            label,
-            display,
-            params,
-        }) => {
+        Tag::Display(Display { label, display, params }) => {
             let label = match label {
                 Some(Lit::Str(lab)) => lab.value(),
                 None => ident.to_string(),
@@ -1330,13 +1252,13 @@ fn emmit_tag_tokens(
 
             let display = if let Some(display) = display {
                 let literal = Literal::string(display.as_str());
-                let params: Vec<_> = params
-                    .into_iter()
-                    .map(|field| match field {
-                        DisplayParam::Literal(lit) => quote!( ext.#ident.#lit ),
-                        DisplayParam::Ident(ident) => quote!( ext.#ident.#ident ),
-                    })
-                    .collect();
+                let params: Vec<_> =
+                    params.into_iter()
+                          .map(|field| match field {
+                              DisplayParam::Literal(lit) => quote!( ext.#ident.#lit ),
+                              DisplayParam::Ident(ident) => quote!( ext.#ident.#ident ),
+                          })
+                          .collect();
                 quote!(#literal , #( #params ),*)
             } else {
                 // display the variable using the Display trait
@@ -1353,14 +1275,13 @@ fn emmit_tag_tokens(
     Ok(tokens)
 }
 
-fn catch_ident(
-    attr: &Attribute,
-    field: &Ident,
-    catch: Option<&Lit>,
-    field_set: &mut HashSet<String>,
-    fields: &mut TokenStream,
-    methods: &mut TokenStream,
-) -> Result<Ident, Error> {
+fn catch_ident(attr: &Attribute,
+               field: &Ident,
+               catch: Option<&Lit>,
+               field_set: &mut HashSet<String>,
+               fields: &mut TokenStream,
+               methods: &mut TokenStream)
+               -> Result<Ident, Error> {
     match catch {
         Some(Lit::Str(lit)) => {
             let ident = Ident::new(&lit.value(), field.span());
@@ -1388,15 +1309,14 @@ fn catch_ident(
 }
 
 // TODO code repetition bad nono FIXME naw
-fn catch_ident_nested(
-    attr: &Attribute,
-    _ty: &Type,
-    field: &Ident,
-    catch: Option<&Lit>,
-    field_set: &mut HashSet<String>,
-    fields: &mut TokenStream,
-    methods: &mut TokenStream,
-) -> Result<Ident, Error> {
+fn catch_ident_nested(attr: &Attribute,
+                      _ty: &Type,
+                      field: &Ident,
+                      catch: Option<&Lit>,
+                      field_set: &mut HashSet<String>,
+                      fields: &mut TokenStream,
+                      methods: &mut TokenStream)
+                      -> Result<Ident, Error> {
     let tp = _ty.clone().into_token_stream();
 
     match catch {

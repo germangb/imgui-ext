@@ -18,6 +18,17 @@ use sdl as backend;
 #[derive(Debug, Clone)]
 pub struct Window {
     pub color: [f32; 4],
+    running: bool,
+}
+
+impl Window {
+    fn default() -> Self {
+        Self { color: [0.2, 0.2, 0.2, 1.0], running: true }
+    }
+
+    pub fn close(&mut self) {
+        self.running = false;
+    }
 }
 
 pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str, size: (u32, u32), ui: F) {

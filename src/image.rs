@@ -57,9 +57,7 @@ pub trait Image {
     fn build(ui: &Ui, elem: Self, params: ImageParams);
 }
 
-impl<T> Image for T
-where
-    T: Copy + Into<ImTexture>,
+impl<T> Image for T where T: Copy + Into<ImTexture>
 {
     fn build(ui: &Ui, elem: Self, params: ImageParams) {
         let mut image = ui.image(elem.into(), params.size);

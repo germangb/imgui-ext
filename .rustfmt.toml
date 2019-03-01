@@ -1,0 +1,3 @@
+unstable_features = true
+indent_style = "Visual"
+use_small_heuristics = "Max"

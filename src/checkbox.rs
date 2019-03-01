@@ -38,19 +38,19 @@ pub trait Checkbox {
     fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool;
 }
 
-impl Checkbox for bool {
-    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
-        ui.checkbox(params.label, elem)
-    }
-}
-
-impl Checkbox for Option<bool> {
+impl<C: Checkbox> Checkbox for Option<C> {
     fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
         if let Some(ref mut elem) = elem {
-            Checkbox::build(ui, elem, params)
+            C::build(ui, elem, params)
         } else {
             false
         }
+    }
+}
+
+impl Checkbox for bool {
+    fn build(ui: &Ui, elem: &mut Self, params: CheckboxParams) -> bool {
+        ui.checkbox(params.label, elem)
     }
 }
 

@@ -10,8 +10,8 @@
 //! | ------------------------------| --- |
 //! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
 //! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
-//! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4] |
-//! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
+//! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4], [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
+////! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
 //! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
 //! | [`image(...)`][image]         | [`Image`][ImImage] |
 //! | [`color(...)`][color]         | [`ColorButton`][ColorButton], [`ColorPicker`][ColorPicker], [`ColorEdit`][ColorEdit] |
@@ -20,13 +20,14 @@
 //! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
 //! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
 //! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
-//! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
+//! | [`bullet(...)`][bullet]       | [`Ui::text`][Ui::text] |
+//! | [`text(...)`][text]           | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
 //! | [`nested(...)`][nested]       | |
 //!
 //! [slider]: ./slider/index.html
 //! [drag]: ./drag/index.html
 //! [input]: ./input/index.html
-//! [text]: ./text/index.html
+////! [text]: ./text/index.html
 //! [progress]: ./progress/index.html
 //! [image]: ./image/index.html
 //! [color]: ./color/index.html
@@ -36,6 +37,7 @@
 //! [new_line]: ./new_line/index.html
 //! [display]: ./display/index.html
 //! [bullet]: ./bullet/index.html
+//! [text]: ./text/index.html
 //! [nested]: ./nested/index.html
 //!
 //! [SliderFloat]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat.html
@@ -78,6 +80,7 @@
 //! [Ui::label_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.label_text
 //! [Ui::bullet_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet_text
 //! [Ui::bullet]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet
+//! [Ui::text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.text
 //!
 //! ## Basic usage
 //!
@@ -281,7 +284,7 @@ pub mod nested {
     //!     #[imgui(text)]
     //!     user: ImString,
     //!     #[imgui(
-    //!         text(flags = "passwd_flags"),
+    //!         input(flags = "passwd_flags"),
     //!         button(label = "Login", catch = "login_btn"),
     //!     )]
     //!     passwd: ImString,
@@ -374,8 +377,8 @@ pub mod bullet {
     //!
     //! Used to build bulleted lists. It has two variants:
     //!
-    //! * `bullet(text = "...")`
-    //! * `bullet(...)` bullets a UI element.
+    //! * `bullet(text = "...")` Bullet text.
+    //! * `bullet(...)` Nested.
     //!
     //! [issue]: #
     //!
@@ -426,6 +429,19 @@ pub mod bullet {
 pub trait ImGuiExt {
     type Events;
     fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
+}
+
+impl<T: ImGuiExt> ImGuiExt for Option<T> {
+    type Events = T::Events;
+
+    // TODO remove unsafe
+    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
+        if let Some(ref mut ext) = ext {
+            T::imgui_ext(ui, ext)
+        } else {
+            unsafe { std::mem::zeroed() }
+        }
+    }
 }
 
 impl<T: ImGuiExt> ImGuiExt for Box<T> {

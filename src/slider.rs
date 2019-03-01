@@ -47,6 +47,16 @@ pub trait Slider<T> {
     fn build(ui: &imgui::Ui, elem: &mut Self, params: SliderParams<T>) -> bool;
 }
 
+impl<T, S: Slider<T>> Slider<T> for Option<S> {
+    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>) -> bool {
+        if let Some(ref mut elem) = elem {
+            S::build(ui, elem, params)
+        } else {
+            false
+        }
+    }
+}
+
 impl<T, S: Slider<T>> Slider<T> for Box<S> {
     #[inline]
     fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>) -> bool {
@@ -64,18 +74,6 @@ macro_rules! impl_f32_array {
                 s.build()
             }
         }
-        impl Slider<f32> for Option<$arr> {
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
-                if let Some(ref mut elem) = elem {
-                    let mut s = $slider::new(ui, params.label, elem, params.min, params.max);
-                    if let Some(disp) = params.format { s = s.display_format(disp); }
-                    if let Some(power) = params.power { s = s.power(power); }
-                    s.build()
-                } else {
-                    false
-                }
-            }
-        }
     )*};
 }
 
@@ -86,17 +84,6 @@ macro_rules! impl_i32_array {
                 let mut s = $slider::new(ui, params.label, elem, params.min, params.max);
                 if let Some(disp) = params.format { s = s.display_format(disp); }
                 s.build()
-            }
-        }
-        impl Slider<i32> for Option<$arr> {
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
-                if let Some(ref mut elem) = elem {
-                    let mut s = $slider::new(ui, params.label, elem, params.min, params.max);
-                    if let Some(disp) = params.format { s = s.display_format(disp); }
-                    s.build()
-                } else {
-                    false
-                }
             }
         }
     )*};
@@ -122,28 +109,6 @@ impl Slider<i32> for i32 {
             s = s.display_format(disp);
         }
         s.build()
-    }
-}
-
-impl Slider<f32> for Option<f32> {
-    #[inline]
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
-        if let Some(ref mut elem) = elem {
-            f32::build(ui, elem, params)
-        } else {
-            false
-        }
-    }
-}
-
-impl Slider<i32> for Option<i32> {
-    #[inline]
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
-        if let Some(ref mut elem) = elem {
-            i32::build(ui, elem, params)
-        } else {
-            false
-        }
     }
 }
 

@@ -281,7 +281,7 @@ pub mod nested {
     //!
     //! #[derive(ImGuiExt)]
     //! struct Form {
-    //!     #[imgui(text)]
+    //!     #[imgui(input)]
     //!     user: ImString,
     //!     #[imgui(
     //!         input(flags = "passwd_flags"),

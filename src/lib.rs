@@ -195,8 +195,12 @@
 use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 
+include!("macros/slider.rs");
+include!("macros/input.rs");
+include!("macros/drag.rs");
+
 pub mod prelude {
-    pub use super::{Events, ImGuiExt, UiExt};
+    pub use super::{ImGuiExt, UiExt};
 }
 /// `checkbox(...)` docs.
 pub mod checkbox;

@@ -1,98 +1,37 @@
+use imgui_ext::ImGuiExt;
 use std::mem;
 
-use imgui_ext::ImGuiExt;
-
-mod nested {
-    use imgui::{ImGuiInputTextFlags as Flags, ImString};
-    use imgui_ext::ImGuiExt;
-
-    #[derive(ImGuiExt, Debug)]
-    pub struct Nested {
-        #[imgui(input(catch = "foo", size = "size"))]
-        foo: ImString,
-        #[imgui(input(flags = "flags"), button(label = "Reset", catch = "reset"))]
-        bar: ImString,
-    }
-
-    fn size() -> (f32, f32) {
-        (100.0, 200.0)
-    }
-
-    impl Default for Nested {
-        fn default() -> Self {
-            Self { foo: ImString::with_capacity(64), bar: ImString::with_capacity(64) }
-        }
-    }
-
-    fn flags() -> Flags {
-        Flags::Password
-    }
-}
-
 #[derive(ImGuiExt, Debug, Default)]
-pub struct Readme {
-    #[imgui(slider(min = 0.0, max = 4.0))]
-    x: f32,
-    #[imgui(input(step = 2))]
-    y: i32,
-    #[imgui(drag(label = "Drag 2D"))]
-    drag_2d: [f32; 2],
-    #[imgui(checkbox(label = "Turbo mode"), display(label = "Is turbo enabled?"))]
-    turbo: bool,
+pub struct Demo {
+    #[imgui(text(lit = "f32 widgets"),
+            slider(min = 0.0, max = 1.0, label = "slider_f32_1##a"),
+            drag(min = 0.0, max = 1.0, label = "slider_f32_1##b"),
+            input(label = "slider_f32_1##c"))]
+    slider_f32_1: f32,
 
-    // Ui can have memory indirections
-    #[imgui(nested)]
-    nested: Box<nested::Nested>,
-    #[imgui(nested)]
-    window: Window,
-    #[imgui(nested)]
-    colors: Colors,
-}
+    #[imgui(new_line,
+            text(lit = "f32 widgets 2D"),
+            slider(min = 0.0, max = 1.0, label = "slider_f32_2##a"),
+            drag(min = 0.0, max = 1.0, label = "slider_f32_2##b"),
+            input(label = "slider_f32_2##c"))]
+    slider_f32_2: [f32; 2],
 
-#[derive(ImGuiExt, Debug)]
-pub struct Window {
-    #[imgui(color(button(preview = "HalfAlpha")),
-            color(edit(preview = "HalfAlpha")),
-            color(picker(mode = "HueWheel")))]
-    pub back: [f32; 4],
-}
+    #[imgui(new_line,
+            text(lit = "u32 widgets 3D"),
+            slider(min = 0, max = 64, label = "slider_u32_3##a"),
+            drag(min = 0, max = 64, label = "slider_u32_3##b"),
+            input(label = "slider_u32_3##c"))]
+    slider_u32_3: [u32; 3],
 
-#[derive(ImGuiExt, Debug)]
-pub struct Colors {
-    #[imgui(text(lit = "Colors"), color(button))]
-    pub ref0: [f32; 4],
-    #[imgui(color(button))]
-    pub ref1: [f32; 4],
-    #[imgui(color(button))]
-    pub ref2: [f32; 4],
-}
+    #[imgui(new_line,
+            slider(min = 0.0, max = 1.0, label = "slider_f32_4##a"),
+            drag(min = 0.0, max = 1.0, label = "slider_f32_4##b"),
+            input(label = "slider_f32_4##c"))]
+    slider_f32_4: [f32; 4],
 
-impl Default for Window {
-    fn default() -> Self {
-        Self { back: [0.2, 0.2, 0.2, 1.0] }
-    }
-}
-
-impl Default for Colors {
-    fn default() -> Self {
-        Self { ref0: [0.2, 0.2, 0.2, 1.0], ref1: [1.0, 0.0, 0.0, 1.0], ref2: [0.5, 0.5, 0.5, 1.0] }
-    }
-}
-
-impl Readme {
-    pub fn window(&self) -> &Window {
-        &self.window
-    }
-
-    pub fn window_mut(&mut self) -> &mut Window {
-        &mut self.window
-    }
-
-    pub fn colors_mut(&mut self) -> &mut Colors {
-        &mut self.colors
-    }
-
-    pub fn reset(&mut self) {
-        mem::replace(self, Default::default());
-    }
+    #[imgui(new_line,
+            slider(min = 0.0, max = 1.0, label = "slider_f32_5##a"),
+            drag(min = 0.0, max = 1.0, label = "slider_f32_5##b"),
+            input(label = "slider_f32_5##c"))]
+    slider_f32_5: (f32, f32, f32, f32, f32),
 }

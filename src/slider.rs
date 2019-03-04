@@ -29,10 +29,8 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/X2ue0dS.png
-use imgui::{
-    ImStr, SliderFloat, SliderFloat2, SliderFloat3, SliderFloat4, SliderInt, SliderInt2,
-    SliderInt3, SliderInt4, Ui,
-};
+use imgui::sys;
+use imgui::{ImStr, Ui};
 
 #[derive(Copy, Clone)]
 pub struct SliderParams<'ui, T> {
@@ -64,62 +62,7 @@ impl<T, S: Slider<T>> Slider<T> for Box<S> {
     }
 }
 
-macro_rules! impl_f32_array {
-    ($( $arr:ty => $slider:ident ),*) => {$(
-        impl Slider<f32> for $arr {
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
-                let mut s = $slider::new(ui, params.label, elem, params.min, params.max);
-                if let Some(disp) = params.format { s = s.display_format(disp); }
-                if let Some(power) = params.power { s = s.power(power); }
-                s.build()
-            }
-        }
-    )*};
-}
-
-macro_rules! impl_i32_array {
-    ($( $arr:ty => $slider:ident ),*) => {$(
-        impl Slider<i32> for $arr {
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
-                let mut s = $slider::new(ui, params.label, elem, params.min, params.max);
-                if let Some(disp) = params.format { s = s.display_format(disp); }
-                s.build()
-            }
-        }
-    )*};
-}
-
-impl Slider<f32> for f32 {
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<f32>) -> bool {
-        let mut s = SliderFloat::new(ui, params.label, elem, params.min, params.max);
-        if let Some(disp) = params.format {
-            s = s.display_format(disp);
-        }
-        if let Some(power) = params.power {
-            s = s.power(power);
-        }
-        s.build()
-    }
-}
-
-impl Slider<i32> for i32 {
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<i32>) -> bool {
-        let mut s = SliderInt::new(ui, params.label, elem, params.min, params.max);
-        if let Some(disp) = params.format {
-            s = s.display_format(disp);
-        }
-        s.build()
-    }
-}
-
-impl_f32_array! {
-    [f32; 2] => SliderFloat2,
-    [f32; 3] => SliderFloat3,
-    [f32; 4] => SliderFloat4
-}
-
-impl_i32_array! {
-    [i32; 2] => SliderInt2,
-    [i32; 3] => SliderInt3,
-    [i32; 4] => SliderInt4
-}
+imgui_slider_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, ), 16, sys::ImGuiDataType::Float }
+imgui_slider_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, ), 16, sys::ImGuiDataType::Double }
+imgui_slider_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, ), 16, sys::ImGuiDataType::U32 }
+imgui_slider_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, ), 16, sys::ImGuiDataType::S32 }

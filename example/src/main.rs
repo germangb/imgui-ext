@@ -1,49 +1,15 @@
 use imgui::{im_str, ImGuiCond};
 
 use imgui_ext::prelude::*;
+use imgui_ext::Events;
 
 mod support;
 mod ui;
 
 fn main() {
-    let mut readme = ui::Readme::default();
+    let mut demo = ui::Demo::default();
 
     support::run("Demo", (640, 480), |win, ui| {
-        ui.main_menu_bar(|| {
-              ui.menu(im_str!("App")).build(|| {
-                                         if ui.menu_item(im_str!("Close")).build() {
-                                             win.close();
-                                         }
-                                     })
-          });
-        ui.window(im_str!("Window")).build(|| {
-                                        if ui.imgui_ext(readme.window_mut()).back() {
-                                            win.color = readme.window().back;
-                                        }
-                                    });
-
-        ui.window(im_str!("Colors")).build(|| {
-                                        ui.imgui_ext(readme.colors_mut());
-                                    });
-
-        ui.window(im_str!("Example"))
-          .size((400.0, 200.0), ImGuiCond::FirstUseEver)
-          .position((50.0, 50.0), ImGuiCond::FirstUseEver)
-          .build(|| {
-              ui.columns(2, im_str!("columns"), true);
-
-              let events: Events<ui::Readme> = ui.imgui_ext(&mut readme);
-
-              if events.nested().reset() {
-                  readme.reset();
-              }
-
-              if events.window().back() {
-                  win.color = readme.window().back;
-              }
-
-              ui.next_column();
-              ui.text(format!("{:#?}", readme));
-          });
+        ui.imgui_ext(&mut demo);
     });
 }

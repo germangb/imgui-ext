@@ -57,10 +57,11 @@
 //! ```
 //!
 //! [result]: https://i.imgur.com/BPvMGAp.png
-use imgui::{
-    ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputFloat, InputFloat2, InputFloat3,
-    InputFloat4, InputInt, InputInt2, InputInt3, InputInt4, InputText, InputTextMultiline, Ui,
-};
+use std::mem;
+use std::ptr;
+
+use imgui::sys;
+use imgui::{ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputText, InputTextMultiline, Ui};
 
 #[derive(Copy, Clone)]
 pub struct InputParams<'ui, T> {
@@ -76,7 +77,6 @@ pub trait Input<T> {
 }
 
 impl<T, I: Input<T>> Input<T> for Box<I> {
-    #[inline]
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
         I::build(ui, elem, params)
     }
@@ -90,30 +90,6 @@ impl<T, I: Input<T>> Input<T> for Option<I> {
             false
         }
     }
-}
-
-macro_rules! impl_f32_array {
-    ( $($arr:ty => $input:ident),* ) => {$(
-        impl Input<f32> for $arr {
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
-                let mut input = $input::new(ui, params.label, elem);
-                if let Some(value) = params.flags { input = input.flags(value) }
-                input.build()
-            }
-        }
-    )*}
-}
-
-macro_rules! impl_i32_array {
-    ( $($arr:ty => $input:ident),* ) => {$(
-        impl Input<i32> for $arr {
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
-                let mut input = $input::new(ui, params.label, elem);
-                if let Some(value) = params.flags { input = input.flags(value) }
-                input.build()
-            }
-        }
-    )*}
 }
 
 impl Input<()> for ImString {
@@ -134,108 +110,7 @@ impl Input<()> for ImString {
     }
 }
 
-impl Input<f32> for f32 {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<f32>) -> bool {
-        let mut input = InputFloat::new(ui, params.label, elem);
-        if let Some(value) = params.step {
-            input = input.step(value)
-        }
-        if let Some(value) = params.step_fast {
-            input = input.step_fast(value)
-        }
-        if let Some(value) = params.flags {
-            input = input.flags(value)
-        }
-        input.build()
-    }
-}
-
-impl Input<i32> for i32 {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<i32>) -> bool {
-        let mut input = InputInt::new(ui, params.label, elem);
-        if let Some(value) = params.step {
-            input = input.step(value)
-        }
-        if let Some(value) = params.step_fast {
-            input = input.step_fast(value)
-        }
-        if let Some(value) = params.flags {
-            input = input.flags(value)
-        }
-        input.build()
-    }
-}
-
-impl_f32_array! {
-    [f32; 2] => InputFloat2,
-    [f32; 3] => InputFloat3,
-    [f32; 4] => InputFloat4
-}
-
-impl_i32_array! {
-    [i32; 2] => InputInt2,
-    [i32; 3] => InputInt3,
-    [i32; 4] => InputInt4
-}
-
-#[cfg(test)]
-mod tests {
-    #![allow(dead_code)]
-
-    use crate as imgui_ext;
-    use crate::ImGuiExt;
-    use imgui::ImGuiInputTextFlags as Flags;
-
-    fn flags() -> Flags {
-        Flags::Password
-    }
-
-    #[test]
-    fn input_text() {
-        #[derive(ImGuiExt)]
-        struct Foo {
-            #[imgui(input)]
-            a: i32,
-        }
-    }
-
-    #[test]
-    fn input_f32() {
-        #[derive(ImGuiExt)]
-        struct Foo {
-            #[imgui(input)]
-            a: f32,
-            #[imgui(input())]
-            b: [f32; 2],
-            #[imgui(input(flags = "flags"))]
-            c: [f32; 3],
-            #[imgui(input(step = 0.1, step_fast = 10.0, flags = "flags"))]
-            d: f32,
-            #[imgui(input(step = 0.1, step_fast = 2.0, flags = "flags"),
-                    input(step = 0.1, step_fast = 2.0, flags = "flags"),
-                    input(step = 0.1, step_fast = 2.0))]
-            e: f32,
-        }
-    }
-
-    #[test]
-    fn input_i32() {
-        #[derive(ImGuiExt)]
-        struct Foo {
-            #[imgui(input)]
-            a: i32,
-            #[imgui(input())]
-            b: [i32; 2],
-            #[imgui(input(flags = "flags"))]
-            c: [i32; 3],
-            #[imgui(input(step = 0, step_fast = 10, flags = "flags"))]
-            d: i32,
-            #[imgui(input(step = 0, step_fast = 2, flags = "flags"),
-                    input(step = 0, step_fast = 2, flags = "flags"),
-                    input(step = 0, step_fast = 2))]
-            e: i32,
-
-            _ignore: Vec<u8>,
-        }
-    }
-}
+imgui_input_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, ), 16, sys::ImGuiDataType::Float }
+imgui_input_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, ), 16, sys::ImGuiDataType::Double }
+imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, ), 16, sys::ImGuiDataType::U32 }
+imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, ), 16, sys::ImGuiDataType::S32 }

@@ -29,6 +29,8 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/X2ue0dS.png
+use std::borrow::BorrowMut;
+
 use imgui::sys;
 use imgui::{ImStr, Ui};
 

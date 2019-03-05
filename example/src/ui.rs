@@ -4,10 +4,10 @@ use std::mem;
 #[derive(ImGuiExt, Debug, Default)]
 pub struct Demo {
     #[imgui(text(lit = "f32 widgets"),
-            slider(min = 0.0, max = 1.0, label = "slider_f32_1##a"),
+            slider(min = "-1.0", max = 1.0, label = "slider_f32_1##a"),
             drag(min = 0.0, max = 1.0, label = "slider_f32_1##b"),
             input(label = "slider_f32_1##c"))]
-    slider_f32_1: f32,
+    slider_f32_1: Box<f32>,
 
     #[imgui(new_line,
             text(lit = "f32 widgets 2D"),
@@ -15,6 +15,9 @@ pub struct Demo {
             drag(min = 0.0, max = 1.0, label = "slider_f32_2##b"),
             input(label = "slider_f32_2##c"))]
     slider_f32_2: [f32; 2],
+
+    #[imgui(slider(min = "-4", max = 4))]
+    i32_1: i32,
 
     #[imgui(new_line,
             text(lit = "u32 widgets 3D"),
@@ -33,5 +36,22 @@ pub struct Demo {
             slider(min = 0.0, max = 1.0, label = "slider_f32_5##a"),
             drag(min = 0.0, max = 1.0, label = "slider_f32_5##b"),
             input(label = "slider_f32_5##c"))]
-    slider_f32_5: (f32, f32, f32, f32, f32),
+    slider_f32_5: Box<(f32, f32, f32, f32, f32)>,
+
+    // text input
+    #[imgui(input)]
+    text: imgui::ImString,
+
+    #[imgui(color(edit))]
+    color: [f32; 3],
+}
+
+impl Demo {
+    pub fn new() -> Self {
+        Self { text: imgui::ImString::with_capacity(1024), ..Default::default() }
+    }
+
+    pub fn len(&self) -> usize {
+        self.text.to_str().len()
+    }
 }

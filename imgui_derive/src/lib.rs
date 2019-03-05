@@ -21,6 +21,7 @@ const UNRECOG_MODE: &str = "Unexpected mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
 const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
+const PARSE_STRING_NUMERIC: &str = "Can't parse string literal as int literal.";
 
 macro_rules! tag {
     (
@@ -1059,20 +1060,35 @@ fn emmit_tag_tokens(ident: &Ident,
                 };
             };
 
-            match (min, max) {
-                (Some(Lit::Float(min)), Some(Lit::Float(max))) => {
-                    params.extend(quote!(params.min = Some(#min);));
-                    params.extend(quote!(params.max = Some(#max);));
+            match min {
+                Some(Lit::Float(min)) => params.extend(quote!(params.min = Some(#min);)),
+                Some(Lit::Int(min)) => params.extend(quote!(params.min = Some(#min);)),
+                Some(Lit::Str(min)) => {
+                    let min_i64 = min.value().parse().map(Literal::i64_unsuffixed);
+                    let min_f64 = min.value().parse().map(Literal::f64_unsuffixed);
+                    match (min_i64, min_f64) {
+                        (Err(_), Ok(min)) => params.extend(quote!(params.min = Some(#min);)),
+                        (Ok(min), _) => params.extend(quote!(params.min = Some(#min);)),
+                        _ => return Err(Error::new(min.span(), PARSE_STRING_NUMERIC)),
+                    }
                 }
-                (Some(Lit::Int(min)), Some(Lit::Int(max))) => {
-                    params.extend(quote!(params.min = Some(#min);));
-                    params.extend(quote!(params.max = Some(#max);));
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match max {
+                Some(Lit::Float(max)) => params.extend(quote!(params.max = Some(#max);)),
+                Some(Lit::Int(max)) => params.extend(quote!(params.max = Some(#max);)),
+                Some(Lit::Str(max)) => {
+                    let max_i64 = max.value().parse().map(Literal::i64_unsuffixed);
+                    let max_f64 = max.value().parse().map(Literal::f64_unsuffixed);
+                    match (max_i64, max_f64) {
+                        (Err(_), Ok(max)) => params.extend(quote!(params.max = Some(#max);)),
+                        (Ok(max), _) => params.extend(quote!(params.max = Some(#max);)),
+                        _ => return Err(Error::new(max.span(), PARSE_STRING_NUMERIC)),
+                    }
                 }
-                (Some(Lit::Float(min)), None) => params.extend(quote!(params.min = Some(#min);)),
-                (Some(Lit::Int(min)), None) => params.extend(quote!(params.min = Some(#min);)),
-                (None, Some(Lit::Float(max))) => params.extend(quote!(params.max = Some(#max);)),
-                (None, Some(Lit::Int(max))) => params.extend(quote!(params.max = Some(#max);)),
-                (None, None) => {}
+                None => {}
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             }
 
@@ -1167,6 +1183,52 @@ fn emmit_tag_tokens(ident: &Ident,
             let min_max = match (min, max) {
                 (Lit::Int(min), Lit::Int(max)) => quote! { min: #min, max: #max },
                 (Lit::Float(min), Lit::Float(max)) => quote! { min: #min, max: #max },
+                (Lit::Str(min), Lit::Int(max)) => {
+                    let min = min.value()
+                                 .parse()
+                                 .map(Literal::i64_unsuffixed)
+                                 .map_err(|_| Error::new(min.span(), PARSE_STRING_NUMERIC))?;
+
+                    quote! { min: #min, max: #max }
+                }
+                (Lit::Str(min), Lit::Float(max)) => {
+                    let min = min.value()
+                                 .parse()
+                                 .map(Literal::f64_unsuffixed)
+                                 .map_err(|_| Error::new(min.span(), PARSE_STRING_NUMERIC))?;
+
+                    quote! { min: #min, max: #max }
+                }
+                (Lit::Int(min), Lit::Str(max)) => {
+                    let max = max.value()
+                                 .parse()
+                                 .map(Literal::i64_unsuffixed)
+                                 .map_err(|_| Error::new(max.span(), PARSE_STRING_NUMERIC))?;
+
+                    quote! { min: #min, max: #max }
+                }
+                (Lit::Float(min), Lit::Str(max)) => {
+                    let max = max.value()
+                                 .parse()
+                                 .map(Literal::f64_unsuffixed)
+                                 .map_err(|_| Error::new(max.span(), PARSE_STRING_NUMERIC))?;
+
+                    quote! { min: #min, max: #max }
+                }
+                (Lit::Str(min), Lit::Str(max)) => {
+                    let min_f64 = max.value().parse().map(Literal::f64_unsuffixed);
+                    let max_f64 = max.value().parse().map(Literal::f64_unsuffixed);
+                    let min_i32 = max.value().parse().map(Literal::i64_unsuffixed);
+                    let max_i32 = max.value().parse().map(Literal::i64_unsuffixed);
+
+                    match (min_f64, max_f64, min_i32, max_i32) {
+                        (_, _, Ok(min), Ok(max)) => quote! { min: #min, max: #max },
+                        (Ok(min), Ok(max), _, _) => quote! { min: #min, max: #max },
+
+                        // Nope
+                        _ => return Err(Error::new(max.span(), PARSE_STRING_NUMERIC)),
+                    }
+                }
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
             };
             let mut params = quote! {

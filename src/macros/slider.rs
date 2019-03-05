@@ -10,13 +10,7 @@ macro_rules! imgui_slider_scalar {
                 let power = params.power.unwrap_or(1.0);
                 let data_type = $variant;
                 unsafe {
-                    sys::igSliderScalar(label,
-                                        data_type,
-                                        elem as *const Self as _,
-                                        mem::transmute(min),
-                                        mem::transmute(max),
-                                        format,
-                                        power)
+                    sys::igSliderScalar(label, data_type, elem as *const Self as _, mem::transmute(min), mem::transmute(max), format, power)
                 }
             }
         }
@@ -33,14 +27,7 @@ macro_rules! imgui_slider_scalar {
                 let power = params.power.unwrap_or(1.0);
                 let data_type = $variant;
                 unsafe {
-                    sys::igSliderScalarN(label,
-                                         data_type,
-                                         elem as *const Self as _,
-                                         $len,
-                                         mem::transmute(min),
-                                         mem::transmute(max),
-                                         format,
-                                         power)
+                    sys::igSliderScalarN(label, data_type, elem as *const Self as _, $len, mem::transmute(min), mem::transmute(max), format, power)
                 }
             }
         }

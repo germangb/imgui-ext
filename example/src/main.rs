@@ -7,7 +7,7 @@ mod support;
 mod ui;
 
 fn main() {
-    let mut demo = ui::Demo::default();
+    let mut demo = ui::Demo::new();
 
     support::run("Demo", (640, 480), |win, ui| {
         ui.imgui_ext(&mut demo);

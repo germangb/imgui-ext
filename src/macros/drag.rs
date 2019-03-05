@@ -11,14 +11,7 @@ macro_rules! imgui_drag_scalar {
                 let power = params.power.unwrap_or(1.0);
                 let data_type = $variant;
                 unsafe {
-                    sys::igDragScalar(label,
-                                      data_type,
-                                      elem as *const Self as _,
-                                      speed,
-                                      mem::transmute(min),
-                                      mem::transmute(max),
-                                      format,
-                                      power)
+                    sys::igDragScalar(label, data_type, elem as *const Self as _, speed, mem::transmute(min), mem::transmute(max), format, power)
                 }
             }
         }
@@ -36,15 +29,7 @@ macro_rules! imgui_drag_scalar {
                 let power = params.power.unwrap_or(1.0);
                 let data_type = $variant;
                 unsafe {
-                    sys::igDragScalarN(label,
-                                       data_type,
-                                       elem as *const Self as _,
-                                       $len,
-                                       speed,
-                                       mem::transmute(min),
-                                       mem::transmute(max),
-                                       format,
-                                       power)
+                    sys::igDragScalarN(label, data_type, elem as *const Self as _, $len, speed, mem::transmute(min), mem::transmute(max), format, power)
                 }
             }
         }

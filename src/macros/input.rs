@@ -10,13 +10,7 @@ macro_rules! imgui_input_scalar {
                 let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
                 let data_type = $variant;
                 unsafe {
-                    sys::igInputScalar(label,
-                                       data_type,
-                                       elem as *const Self as _,
-                                       mem::transmute(step),
-                                       mem::transmute(step_fast),
-                                       format,
-                                       flags)
+                    sys::igInputScalar(label, data_type, elem as *const Self as _, mem::transmute(step), mem::transmute(step_fast), format, flags)
                 }
             }
         }
@@ -33,14 +27,7 @@ macro_rules! imgui_input_scalar {
                 let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
                 let data_type = $variant;
                 unsafe {
-                    sys::igInputScalarN(label,
-                                        data_type,
-                                        elem as *const Self as _,
-                                        $len,
-                                        mem::transmute(step),
-                                        mem::transmute(step_fast),
-                                        format,
-                                        flags)
+                    sys::igInputScalarN(label, data_type, elem as *const Self as _, $len, mem::transmute(step), mem::transmute(step_fast), format, flags)
                 }
             }
         }

@@ -23,6 +23,25 @@ const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
 const PARSE_STRING_NUMERIC: &str = "Can't parse string literal as int literal.";
 
+impl Text {
+    /// allows parsing:
+    /// - text("...") -> literal form
+    /// - text(lit = "...") -> regular form
+    fn from_meta_list2(list: &MetaList) -> Result<Self, Error> {
+        let mut iter = list.nested.iter();
+        let first = iter.next();
+        let second = iter.next();
+
+        match (first, second) {
+            // text("...")
+            (Some(NestedMeta::Literal(Lit::Str(s))), None) => {
+                Ok(Self { lit: Some(Lit::Str(s.clone())) })
+            }
+            _ => Self::from_meta_list(list),
+        }
+    }
+}
+
 macro_rules! tag {
     (
         $(#[$meta:meta])*
@@ -514,7 +533,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
-                    "text" => Tag::Text(Text::from_meta_list(meta_list)?),
+                    "text" => Tag::Text(Text::from_meta_list2(meta_list)?),
 
                     "color" => {
                         for nested in meta_list.nested.iter() {

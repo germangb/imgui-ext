@@ -1,9 +1,15 @@
 use imgui_ext::ImGuiExt;
 use std::mem;
 
+#[derive(ImGuiExt, Default)]
+pub struct Example {
+    #[imgui(text("Input num:"), slider(min = "-1.0", max = 1.0), button(label = "Submit"))]
+    number: f32,
+}
+
 #[derive(ImGuiExt, Debug, Default)]
 pub struct Demo {
-    #[imgui(text(lit = "f32 widgets"),
+    #[imgui(text("f32 widgets"),
             slider(min = "-1.0", max = 1.0, label = "slider_f32_1##a"),
             drag(min = 0.0, max = 1.0, label = "slider_f32_1##b"),
             input(label = "slider_f32_1##c"))]

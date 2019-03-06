@@ -23,25 +23,6 @@ const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
 const PARSE_STRING_NUMERIC: &str = "Can't parse string literal as int literal.";
 
-impl Text {
-    /// allows parsing:
-    /// - text("...") -> literal form
-    /// - text(lit = "...") -> regular form
-    fn from_meta_list2(list: &MetaList) -> Result<Self, Error> {
-        let mut iter = list.nested.iter();
-        let first = iter.next();
-        let second = iter.next();
-
-        match (first, second) {
-            // text("...")
-            (Some(NestedMeta::Literal(Lit::Str(s))), None) => {
-                Ok(Self { lit: Some(Lit::Str(s.clone())) })
-            }
-            _ => Self::from_meta_list(list),
-        }
-    }
-}
-
 macro_rules! tag {
     (
         $(#[$meta:meta])*
@@ -237,6 +218,8 @@ tag! {
         optional {
             border: Option<Lit>,
             tint: Option<Lit>,
+            uv0: Option<Lit>,
+            uv1: Option<Lit>,
         }
     }
 }
@@ -295,6 +278,25 @@ tag! {
         optional {
             // literal
             lit: Option<Lit>,
+        }
+    }
+}
+
+impl Text {
+    /// allows parsing:
+    /// - text("...") -> literal form
+    /// - text(lit = "...") -> regular form
+    fn from_meta_list2(list: &MetaList) -> Result<Self, Error> {
+        let mut iter = list.nested.iter();
+        let first = iter.next();
+        let second = iter.next();
+
+        match (first, second) {
+            // text("...")
+            (Some(NestedMeta::Literal(Lit::Str(s))), None) => {
+                Ok(Self { lit: Some(Lit::Str(s.clone())) })
+            }
+            _ => Self::from_meta_list(list),
         }
     }
 }
@@ -703,7 +705,7 @@ fn emmit_tag_tokens(ident: &Ident,
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
-        Tag::Image(Image { size, border, tint }) => {
+        Tag::Image(Image { size, border, tint, uv0, uv1 }) => {
             let size = match size {
                 Lit::Str(size) => Ident::new(&size.value(), size.span()),
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
@@ -716,8 +718,30 @@ fn emmit_tag_tokens(ident: &Ident,
                     size: ImVec2::from(#size()),
                     border: None,
                     tint: None,
+                    uv0: None,
+                    uv1: None,
                 };
             };
+            match uv0 {
+                Some(Lit::Str(uv0)) => {
+                    let fn_ident = Ident::new(&uv0.value(), uv0.span());
+                    params.extend(
+                        quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+            match uv1 {
+                Some(Lit::Str(uv1)) => {
+                    let fn_ident = Ident::new(&uv1.value(), uv1.span());
+                    params.extend(
+                        quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
             match tint {
                 Some(Lit::Str(size)) => {
                     let fn_ident = Ident::new(&size.value(), size.span());

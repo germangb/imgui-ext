@@ -6,11 +6,12 @@
 //!
 //! * `border` local function returning the border color
 //! * `tint` local function returning tint color
+//! * `uv0` local function returning the first uv coordinate. The default value is `[0.0, 0.0]`.
+//! * `uv0` local function returning the second uv coordinate. The default value is `[1.0, 1.0]`.
 //!
 //! ## Limitations
 //!
-//! * `border`, `tint` and `size` cannot be set at runtime.
-//! * No support to edit UVs yet.
+//! * Parameters cannot be set at runtime (including `uv`s). This may be a deal breaker for most applications that deal with texture atlases.
 //!
 //! ## Example
 //!
@@ -19,22 +20,30 @@
 //!
 //! #[derive(ImGuiExt)]
 //! struct Image {
-//!     #[imgui(image(size = "img_size"))]
+//!     #[imgui(image(size = "size", uv0 = "uv0", uv1 = "uv1"))]
 //!     texture: usize,
-//!     #[imgui(image(size = "img_size", tint = "img_tint", border = "img_border"))]
+//!     #[imgui(image(size = "size", tint = "tint", border = "border"))]
 //!     texture_tint: usize,
 //! }
 //!
-//! const fn img_size() -> (f32, f32) {
-//!     (512.0, 64.0)
+//! fn size() -> [f32; 2] {
+//!     [512.0, 64.0]
 //! }
 //!
-//! const fn img_tint() -> (f32, f32, f32, f32) {
-//!     (1.0, 0.0, 1.0, 1.0)
+//! fn tint() -> [f32; 4] {
+//!     [1.0, 0.0, 1.0, 1.0]
 //! }
 //!
-//! const fn img_border() -> (f32, f32, f32, f32) {
-//!     (1.0, 1.0, 1.0, 1.0)
+//! fn border() -> [f32; 4] {
+//!     [1.0, 1.0, 1.0, 1.0]
+//! }
+//!
+//! fn uv0() -> [f32; 2] {
+//!     [0.0, 0.0]
+//! }
+//!
+//! fn uv1() -> [f32; 2] {
+//!     [1.0, 1.0]
 //! }
 //! ```
 //!
@@ -51,6 +60,8 @@ pub struct ImageParams {
     pub size: ImVec2,
     pub border: Option<ImVec4>,
     pub tint: Option<ImVec4>,
+    pub uv0: Option<ImVec2>,
+    pub uv1: Option<ImVec2>,
 }
 
 pub trait Image {
@@ -66,6 +77,12 @@ impl<T> Image for T where T: Copy + Into<ImTexture>
         }
         if let Some(border) = params.border {
             image = image.border_col(border);
+        }
+        if let Some(uv0) = params.uv0 {
+            image = image.uv0(uv0);
+        }
+        if let Some(uv1) = params.uv1 {
+            image = image.uv1(uv1);
         }
         image.build();
     }

@@ -42,6 +42,6 @@ macro_rules! imgui_slider_scalar {
         }
 
         // tail recurse
-        imgui_slider_scalar! { ( $( $scalar , )* ), ($len - 1), $variant }
+        imgui_slider_scalar! { ( $($scalar ,)* ), ($len - 1), $variant }
     };
 }

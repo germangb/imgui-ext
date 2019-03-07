@@ -301,6 +301,65 @@ impl Text {
     }
 }
 
+/// Allowed formats:
+/// - `#[imgui(tree(label = "...", node(...))]`
+/// - `#[imgui(tree(label = "...")]`
+#[derive(Default)]
+struct Tree {
+    label: Option<Lit>,
+    node: Option<Box<Tag>>,
+}
+
+impl Tree {
+    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+        let mut label: Option<Lit> = None;
+        let mut node: Option<Box<Tag>> = None;
+
+        for meta in list.nested.iter() {
+            match meta {
+                // label = "..."
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. }))
+                    if ident.to_string() == "label" =>
+                {
+                    if label.is_some() {
+                        return Err(Error::new(ident.span(),
+                                              "The \"label\" item is already defined."));
+                    }
+
+                    label = Some(lit.clone());
+                }
+
+                // node(...)
+                // we need to validate that the nested list contains a single item.
+                NestedMeta::Meta(Meta::List(list)) if list.ident.to_string() == "node" => {
+                    if node.is_some() {
+                        return Err(Error::new(list.span(),
+                                              "The \"node\" item is already defined."));
+                    }
+
+                    let mut inner = parse_meta_list(&list)?.into_iter().take(2);
+
+                    match (inner.next(), inner.next()) {
+                        (Some(_), Some(_)) | (None, None) => {
+                            return Err(Error::new(
+                                list.span(),
+                                "List \"node\" must contain exactly one (1) value.",
+                            ));
+                        }
+                        (Some(tag), None) => node = Some(Box::new(tag)),
+                        (None, Some(_)) => unreachable!(),
+                    }
+                }
+
+                // Nope
+                _ => return Err(Error::new(list.span(), "fuck")),
+            }
+        }
+
+        Ok(Self { label, node })
+    }
+}
+
 enum Tag {
     None,
     Display(Display),
@@ -327,6 +386,8 @@ enum Tag {
 
     BulletParent,
     Bullet(Bullet),
+
+    Tree(Tree),
 }
 
 fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
@@ -502,6 +563,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "bullet" => tags.push(Tag::Bullet(Default::default())),
                     "progress" => tags.push(Tag::Progress(Default::default())),
                     "text" => tags.push(Tag::Text(Default::default())),
+                    "tree" => tags.push(Tag::Tree(Default::default())),
 
                     // errors
                     "color" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
@@ -536,6 +598,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list2(meta_list)?),
+                    "tree" => Tag::Tree(Tree::from_meta_list(meta_list)?),
 
                     "color" => {
                         for nested in meta_list.nested.iter() {
@@ -705,6 +768,7 @@ fn emmit_tag_tokens(ident: &Ident,
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Tree(Tree { label, node }) => quote!(),
         Tag::Image(Image { size, border, tint, uv0, uv1 }) => {
             let size = match size {
                 Lit::Str(size) => Ident::new(&size.value(), size.span()),

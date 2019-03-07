@@ -202,6 +202,26 @@ include!("macros/drag.rs");
 pub mod prelude {
     pub use super::{ImGuiExt, UiExt};
 }
+/// `tree(...)` docs.
+pub mod tree {
+    //!
+    //! ```
+    //! use imgui_ext::ImGuiExt;
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Example {
+    //!     #[imgui(
+    //!         tree(label = "Foo", node(input)),
+    //!         tree(node(input), label = "Foo##two"),
+    //!         tree(node(input)),
+    //!         tree(node(slider(min = 0.0, max = 2.0))),
+    //!         tree(),
+    //!         tree,
+    //!     )]
+    //!     foo: f32,
+    //! }
+    //! ```
+}
 /// `checkbox(...)` docs.
 pub mod checkbox;
 /// `color(...)` docs.

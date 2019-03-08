@@ -8,6 +8,7 @@ mod ui;
 
 fn main() {
     let mut demo = ui::Demo::new();
+    let mut tree = ui::Tree::default();
 
     demo.set_progress(0.24);
 
@@ -15,8 +16,9 @@ fn main() {
     let mut b = 0;
 
     support::run("Demo", (640, 480), |win, ui| {
-        ui.imgui_ext(&mut demo);
-
-        //ui.drag_int_range2(im_str!("range"), &mut a, &mut b).build();
+        //if ui.imgui_ext(&mut demo).color() {
+        //    win.color = demo.color();
+        //}
+        ui.imgui_ext(&mut tree);
     });
 }

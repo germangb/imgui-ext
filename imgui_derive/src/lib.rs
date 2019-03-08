@@ -326,8 +326,7 @@ impl Tree {
                     match &ident.to_string()[..] {
                         "label" => {
                             if label.is_some() {
-                                return Err(Error::new(ident.span(),
-                                                      "The \"label\" item is already defined."));
+                                return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
                             } else {
                                 label = Some(lit.clone());
                             }
@@ -335,8 +334,7 @@ impl Tree {
 
                         "flags" => {
                             if flags.is_some() {
-                                return Err(Error::new(ident.span(),
-                                                      "The \"flags\" item is already defined."));
+                                return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
                             } else {
                                 flags = Some(lit.clone());
                             }
@@ -344,8 +342,7 @@ impl Tree {
 
                         "cond" => {
                             if cond.is_some() {
-                                return Err(Error::new(ident.span(),
-                                                      "The \"cond\" item is already defined."));
+                                return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
                             } else {
                                 cond = Some(lit.clone());
                             }
@@ -805,11 +802,30 @@ fn emmit_tag_tokens(ident: &Ident,
                 }
             }
 
+            let mut tree_tokens = TokenStream::default();
+
+            match flags {
+                Some(Lit::Str(flags)) => {
+                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    tree_tokens.extend(quote! {tree = tree.flags(#fn_ident());});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
+            match cond {
+                Some(Lit::Str(cond)) => {
+                    let ident = Ident::new(&cond.value(), flags.span());
+                    tree_tokens.extend(quote! {tree = tree.opened(true, imgui::ImGuiCond::#ident);});
+                }
+                None => {}
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+
             quote! {{
-                use imgui::{im_str, TreeNode};
-                TreeNode::new(ui, im_str!(#label)).build(|| {
-                    #node_tokens
-                });
+                let mut tree = imgui::TreeNode::new(ui, imgui::im_str!(#label));
+                { #tree_tokens }
+                tree.build(|| { #node_tokens })
             }}
         }
         Tag::Image(Image { size, border, tint, uv0, uv1 }) => {

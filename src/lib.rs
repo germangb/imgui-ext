@@ -205,22 +205,58 @@ pub mod prelude {
 /// `tree(...)` docs.
 pub mod tree {
     //!
+    //! ## Optional params
+    //!
+    //! - `label = ".."` Give the tree node a label.
+    //! - `node(..)` Nested content (any of the supported annotations).
+    //! - `cond` One of the [`ImGuiCond`] variants.
+    //!
+    //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.ImGuiCond.html
+    //!
+    //! ## Example
+    //!
     //! ```
+    //! use imgui::{ImString, ImGuiTreeNodeFlags};
     //! use imgui_ext::ImGuiExt;
     //!
     //! #[derive(ImGuiExt)]
-    //! struct Example {
-    //!     #[imgui(
-    //!         tree(label = "Foo", node(input, input, input)),
-    //!         tree(node(input), label = "Foo##two"),
-    //!         tree(node(input)),
-    //!         tree(node(slider(min = 0.0, max = 2.0))),
-    //!         tree(node(tree(node(tree())))),
-    //!         tree,
-    //!     )]
-    //!     foo: f32,
+    //! pub struct Tree {
+    //!     #[imgui(tree(label = "Sliders", cond = "FirstUseEver", flags = "flags", node(nested)))]
+    //!     sliders: Sliders,
+    //!     #[imgui(tree(label = "Inputs", flags = "flags", node(nested)))]
+    //!     inputs: Inputs,
+    //!     #[imgui(tree(label = "Color picker", flags = "flags", node(color(picker))))]
+    //!     color: [f32; 3],
+    //! }
+    //!
+    //! fn flags() -> ImGuiTreeNodeFlags {
+    //!     ImGuiTreeNodeFlags::Framed
+    //! }
+    //!
+    //! #[derive(ImGuiExt)]
+    //! pub struct Sliders {
+    //!     #[imgui(text("Slider widgets:"), slider(min = 0.0, max = 3.0))]
+    //!     s1: f32,
+    //!     #[imgui(slider(min = "-4", max = 4))]
+    //!     s2: [i32; 3],
+    //!     #[imgui(slider(min = "-1.0", max = 1.0))]
+    //!     s3: [f64; 2],
+    //! }
+    //!
+    //! #[derive(ImGuiExt)]
+    //! pub struct Inputs {
+    //!     #[imgui(text("Input widgets:"), input)]
+    //!     i1: f32,
+    //!     #[imgui(input)]
+    //!     i2: imgui::ImString,
+    //!     #[imgui(input)]
+    //!     i3: [f32; 8],
     //! }
     //! ```
+    //!
+    //! ## Result
+    //!
+    //! ![](https://i.imgur.com/Rn2RJJG.png)
 }
 /// `checkbox(...)` docs.
 pub mod checkbox;

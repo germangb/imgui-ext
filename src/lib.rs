@@ -11,26 +11,26 @@
 //! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
 //! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
 //! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4], [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
-////! | [`text(...)`][text]           | [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
 //! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
 //! | [`image(...)`][image]         | [`Image`][ImImage] |
 //! | [`color(...)`][color]         | [`ColorButton`][ColorButton], [`ColorPicker`][ColorPicker], [`ColorEdit`][ColorEdit] |
+//! | [`tree(...)`][tree]           | [`TreeNode`][TreeNode] |
 //! | [`button(...)`][button]       | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
 //! | [`checkbox(...)`][checkbox]   | [`Ui::checkbox`][Ui::checkbox] |
 //! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
 //! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
 //! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
-//! | [`bullet(...)`][bullet]       | [`Ui::text`][Ui::text] |
-//! | [`text(...)`][text]           | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
+//! | [`text(...)`][text]           | [`Ui::text`][Ui::text] |
+//! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
 //! | [`nested(...)`][nested]       | |
 //!
 //! [slider]: ./slider/index.html
 //! [drag]: ./drag/index.html
 //! [input]: ./input/index.html
-////! [text]: ./text/index.html
 //! [progress]: ./progress/index.html
 //! [image]: ./image/index.html
 //! [color]: ./color/index.html
+//! [tree]: ./tree/index.html
 //! [button]: ./button/index.html
 //! [checkbox]: ./checkbox/index.html
 //! [separator]: ./separator/index.html
@@ -71,6 +71,7 @@
 //! [ColorButton]:https://docs.rs/imgui/0.0/imgui/struct.ColorButton.html
 //! [ColorPicker]:https://docs.rs/imgui/0.0/imgui/struct.ColorPicker.html
 //! [ColorEdit]:https://docs.rs/imgui/0.0/imgui/struct.ColorEdit.html
+//! [TreeNode]:https://docs.rs/imgui/0.0/imgui/struct.TreeNode.html
 //!
 //! [Ui::button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.button
 //! [Ui::small_button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.small_button

@@ -9,17 +9,21 @@ pub struct Example {
 
 #[derive(ImGuiExt, Debug, Default)]
 pub struct Demo {
+    //#[imgui(tree(label = "Tree Node", node(progress)))]
+    #[imgui(tree(label = "tree0", node(progress)))]
+    _progress: Box<f32>,
+
     #[imgui(text("f32 widgets"),
             slider(min = "-1.0", max = 1.0, label = "slider_f32_1##a"),
             drag(min = 0.0, max = 1.0, label = "slider_f32_1##b"),
             input(label = "slider_f32_1##c"))]
     slider_f32_1: Box<f32>,
 
-    #[imgui(new_line,
-            text(lit = "f32 widgets 2D"),
-            slider(min = 0.0, max = 1.0, label = "slider_f32_2##a"),
-            drag(min = 0.0, max = 1.0, label = "slider_f32_2##b"),
-            input(label = "slider_f32_2##c"))]
+    #[imgui(tree(node(new_line,
+                      text(lit = "f32 widgets 2D"),
+                      slider(min = 0.0, max = 1.0, label = "slider_f32_2##a"),
+                      drag(min = 0.0, max = 1.0, label = "slider_f32_2##b"),
+                      input(label = "slider_f32_2##c"))))]
     slider_f32_2: [f32; 2],
 
     #[imgui(slider(min = "-4", max = 4))]
@@ -44,7 +48,6 @@ pub struct Demo {
             input(label = "slider_f32_5##c"))]
     slider_f32_5: Box<(f32, f32, f32, f32, f32)>,
 
-    // text input
     #[imgui(input)]
     text: imgui::ImString,
 
@@ -55,6 +58,10 @@ pub struct Demo {
 impl Demo {
     pub fn new() -> Self {
         Self { text: imgui::ImString::with_capacity(1024), ..Default::default() }
+    }
+
+    pub fn set_progress(&mut self, p: f32) {
+        *self._progress = p;
     }
 
     pub fn len(&self) -> usize {

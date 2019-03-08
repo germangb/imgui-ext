@@ -211,11 +211,11 @@ pub mod tree {
     //! #[derive(ImGuiExt)]
     //! struct Example {
     //!     #[imgui(
-    //!         tree(label = "Foo", node(input)),
+    //!         tree(label = "Foo", node(input, input, input)),
     //!         tree(node(input), label = "Foo##two"),
     //!         tree(node(input)),
     //!         tree(node(slider(min = 0.0, max = 2.0))),
-    //!         tree(),
+    //!         tree(node(tree(node(tree())))),
     //!         tree,
     //!     )]
     //!     foo: f32,

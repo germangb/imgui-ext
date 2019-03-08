@@ -307,26 +307,52 @@ impl Text {
 #[derive(Default)]
 struct Tree {
     label: Option<Lit>,
-    node: Option<Box<Tag>>,
+    cond: Option<Lit>,
+    flags: Option<Lit>,
+    node: Option<Vec<Tag>>,
 }
 
 impl Tree {
     fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
         let mut label: Option<Lit> = None;
-        let mut node: Option<Box<Tag>> = None;
+        let mut cond: Option<Lit> = None;
+        let mut flags: Option<Lit> = None;
+        let mut node: Option<Vec<Tag>> = None;
 
         for meta in list.nested.iter() {
             match meta {
                 // label = "..."
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. }))
-                    if ident.to_string() == "label" =>
-                {
-                    if label.is_some() {
-                        return Err(Error::new(ident.span(),
-                                              "The \"label\" item is already defined."));
-                    }
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => {
+                    match &ident.to_string()[..] {
+                        "label" => {
+                            if label.is_some() {
+                                return Err(Error::new(ident.span(),
+                                                      "The \"label\" item is already defined."));
+                            } else {
+                                label = Some(lit.clone());
+                            }
+                        }
 
-                    label = Some(lit.clone());
+                        "flags" => {
+                            if flags.is_some() {
+                                return Err(Error::new(ident.span(),
+                                                      "The \"flags\" item is already defined."));
+                            } else {
+                                flags = Some(lit.clone());
+                            }
+                        }
+
+                        "cond" => {
+                            if cond.is_some() {
+                                return Err(Error::new(ident.span(),
+                                                      "The \"cond\" item is already defined."));
+                            } else {
+                                cond = Some(lit.clone());
+                            }
+                        }
+
+                        _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                    }
                 }
 
                 // node(...)
@@ -335,19 +361,8 @@ impl Tree {
                     if node.is_some() {
                         return Err(Error::new(list.span(),
                                               "The \"node\" item is already defined."));
-                    }
-
-                    let mut inner = parse_meta_list(&list)?.into_iter().take(2);
-
-                    match (inner.next(), inner.next()) {
-                        (Some(_), Some(_)) | (None, None) => {
-                            return Err(Error::new(
-                                list.span(),
-                                "List \"node\" must contain exactly one (1) value.",
-                            ));
-                        }
-                        (Some(tag), None) => node = Some(Box::new(tag)),
-                        (None, Some(_)) => unreachable!(),
+                    } else {
+                        node = Some(parse_meta_list(&list)?);
                     }
                 }
 
@@ -356,7 +371,7 @@ impl Tree {
             }
         }
 
-        Ok(Self { label, node })
+        Ok(Self { label, node, cond, flags })
     }
 }
 
@@ -768,7 +783,35 @@ fn emmit_tag_tokens(ident: &Ident,
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
-        Tag::Tree(Tree { label, node }) => quote!(),
+        Tag::Tree(Tree { label, node, cond, flags }) => {
+            let label = match label {
+                Some(Lit::Str(s)) => s.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+            let label = Literal::string(&label);
+
+            // node contents
+            let mut node_tokens = TokenStream::new();
+            if let Some(tags) = node.as_ref() {
+                for tag in tags.iter() {
+                    node_tokens.extend(emmit_tag_tokens(ident,
+                                                        _ty,
+                                                        attr,
+                                                        tag,
+                                                        fields,
+                                                        methods,
+                                                        input_fields)?);
+                }
+            }
+
+            quote! {{
+                use imgui::{im_str, TreeNode};
+                TreeNode::new(ui, im_str!(#label)).build(|| {
+                    #node_tokens
+                });
+            }}
+        }
         Tag::Image(Image { size, border, tint, uv0, uv1 }) => {
             let size = match size {
                 Lit::Str(size) => Ident::new(&size.value(), size.span()),

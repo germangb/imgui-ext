@@ -7,18 +7,9 @@ mod support;
 mod ui;
 
 fn main() {
-    let mut demo = ui::Demo::new();
-    let mut tree = ui::Tree::default();
+    let mut demo = ui::Demo::default();
 
-    demo.set_progress(0.24);
-
-    let mut a = 1;
-    let mut b = 0;
-
-    support::run("Demo", (640, 480), |win, ui| {
-        //if ui.imgui_ext(&mut demo).color() {
-        //    win.color = demo.color();
-        //}
-        ui.imgui_ext(&mut tree);
+    support::run("Demo", (800, 600), |win, ui| {
+        ui.imgui_ext(&mut demo);
     });
 }

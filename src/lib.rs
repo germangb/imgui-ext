@@ -193,7 +193,11 @@
 //! Please file an issue or open a PR to [`germangb/imgui-ext`][repo] if you wish to do so.
 //!
 //! [repo]: https://github.com/germangb/imgui-ext
-use imgui::Ui;
+use std::ops::DerefMut;
+use std::pin::Pin;
+
+use imgui::{ImGui, Ui};
+
 pub use imgui_ext_derive::ImGuiExt;
 
 include!("macros/slider.rs");
@@ -509,7 +513,15 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
     type Events = T::Events;
     #[inline]
     fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
-        ImGuiExt::imgui_ext(ui, ext.as_mut())
+        T::imgui_ext(ui, ext.as_mut())
+    }
+}
+
+impl<T: ImGuiExt + Unpin> ImGuiExt for Pin<Box<T>> {
+    type Events = T::Events;
+    #[inline]
+    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
+        T::imgui_ext(ui, ext.as_mut().get_mut())
     }
 }
 

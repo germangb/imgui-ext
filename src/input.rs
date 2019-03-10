@@ -57,8 +57,8 @@
 //! ```
 //!
 //! [result]: https://i.imgur.com/BPvMGAp.png
-use std::mem;
-use std::ptr;
+use std::pin::Pin;
+use std::{mem, ptr};
 
 use imgui::sys;
 use imgui::{ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputText, InputTextMultiline, Ui};
@@ -79,6 +79,12 @@ pub trait Input<T> {
 impl<T, I: Input<T>> Input<T> for Box<I> {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
         I::build(ui, elem, params)
+    }
+}
+
+impl<T, I: Input<T> + Unpin> Input<T> for Pin<Box<I>> {
+    fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
+        I::build(ui, elem.as_mut().get_mut(), params)
     }
 }
 

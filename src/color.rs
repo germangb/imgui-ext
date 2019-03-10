@@ -66,11 +66,13 @@
 //! [ColorFormat]: https://docs.rs/imgui/0.0/imgui/enum.ColorFormat.html
 //! [ColorEditMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorEditMode.html
 //! [ColorPickerMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorPickerMode.html
+use crate::ImGuiExt;
 use imgui::{
     ColorButton as ImColorButton, ColorEdit as ImColorEdit, ColorEditMode, ColorFormat,
     ColorPicker as ImColorPicker, ColorPickerMode, ColorPreview, EditableColor,
     ImGuiColorEditFlags, ImStr, ImVec2, ImVec4, Ui,
 };
+use std::pin::Pin;
 
 #[derive(Copy, Clone)]
 pub struct ColorButtonParams<'p> {

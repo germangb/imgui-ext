@@ -47,7 +47,7 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str,
 
         unsafe {
             let [r, g, b, a] = window_params.color;
-            gl::ClearColor(1.0, 1.0, 1.0, 1.0);
+            gl::ClearColor(r, g, b, a);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 

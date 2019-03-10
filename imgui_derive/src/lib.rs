@@ -413,7 +413,8 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 
     // crate a new type.
     // It should never generate a collision
-    let event_type = Ident::new(&format!("{}ImGuiExtEvents", name.to_string()), input.span());
+    let event_type =
+        Ident::new(&format!("____{}____ImGuiExtEvents", name.to_string()), input.span());
 
     Ok(quote! {
         pub struct #event_type {
@@ -455,10 +456,10 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream)
 
     let field_body = fields
         .iter()
-        .flat_map(|field| {
-
-            // TODO add support for unnamed attributes
-            let ident = field.ident.clone().expect("Named field");
+        .enumerate()
+        .flat_map(|(i, field)| {
+            // TODO support for unnamed attributes
+            let ident = field.ident.clone().expect("Unnamed fields not yet supported.");
             let ty = &field.ty;
 
             // collect all the imgui attributes

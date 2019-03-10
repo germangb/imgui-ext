@@ -26,6 +26,7 @@
 //!
 //! [result]: https://i.imgur.com/SyaN1Nt.png
 use imgui::{ImStr, ImVec2, ProgressBar, Ui};
+use std::pin::Pin;
 
 #[derive(Copy, Clone)]
 pub struct ProgressParams<'p> {
@@ -54,6 +55,13 @@ impl<T: Progress> Progress for Box<T> {
     #[inline]
     fn build(ui: &Ui, elem: &Self, params: ProgressParams) {
         T::build(ui, elem, params)
+    }
+}
+
+impl<T: Progress + Unpin> Progress for Pin<Box<T>> {
+    #[inline]
+    fn build(ui: &Ui, elem: &Self, params: ProgressParams) {
+        T::build(ui, elem.as_ref().get_ref(), params)
     }
 }
 

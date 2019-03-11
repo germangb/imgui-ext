@@ -7,9 +7,19 @@ mod support;
 mod ui;
 
 fn main() {
+    let mut vars_example = ui::VarsExample::default();
     let mut demo = ui::Demo::default();
 
     support::run("Demo", (800, 600), |win, ui| {
-        ui.imgui_ext(&mut demo);
+        ui.window(im_str!("##1")).build(|| {
+                                     ui.imgui_ext(&mut vars_example);
+                                 });
+
+        ui.window(im_str!("##2")).build(|| {
+                                     let event = ui.imgui_ext(&mut demo);
+                                     if event.color().background() {
+                                         win.color = demo.background_color()
+                                     }
+                                 });
     });
 }

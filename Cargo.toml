@@ -20,3 +20,6 @@ members = ["imgui_derive", "example"]
 [dependencies]
 imgui = "0.0.22"
 imgui-ext-derive = { version = "0.1.7", path = "imgui_derive" }
+
+[patch.crates-io]
+sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2.git" }

@@ -301,6 +301,65 @@ impl Text {
     }
 }
 
+/// Render ui with the given style and color vars.
+/// - vars(style = "...", color = "...", content(...))
+#[derive(Default)]
+struct Vars {
+    /// An identifier to a local function returning the style variables to be pushed into the styles stack.
+    style: Option<Lit>,
+    /// An identifier to a local function returning the color variables to be pushed into the color stack.
+    color: Option<Lit>,
+    /// List of ui widgets that the pushed style and colors vars will be applied to.
+    content: Option<Vec<Tag>>,
+}
+
+impl Vars {
+    fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
+        let mut style: Option<Lit> = None;
+        let mut color: Option<Lit> = None;
+        let mut content: Option<Vec<Tag>> = None;
+
+        for meta in list.nested.iter() {
+            match meta {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => {
+                    match &ident.to_string()[..] {
+                        "color" => {
+                            if color.is_some() {
+                                return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
+                            } else {
+                                color = Some(lit.clone());
+                            }
+                        }
+
+                        "style" => {
+                            if style.is_some() {
+                                return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
+                            } else {
+                                style = Some(lit.clone());
+                            }
+                        }
+
+                        _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
+                    }
+                }
+
+                NestedMeta::Meta(Meta::List(list)) if list.ident.to_string() == "content" => {
+                    if content.is_some() {
+                        return Err(Error::new(list.span(), FIELD_ALREADY_DEFINED));
+                    } else {
+                        content = Some(parse_meta_list(&list)?);
+                    }
+                }
+
+                // Nope
+                _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
+            }
+        }
+
+        Ok(Self { content, style, color })
+    }
+}
+
 /// Allowed formats:
 /// - `#[imgui(tree(label = "...", node(...))]`
 /// - `#[imgui(tree(label = "...")]`
@@ -312,6 +371,7 @@ struct Tree {
     node: Option<Vec<Tag>>,
 }
 
+/// TODO define a macro to parse this kind of annotation
 impl Tree {
     fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
         let mut label: Option<Lit> = None;
@@ -356,8 +416,7 @@ impl Tree {
                 // we need to validate that the nested list contains a single item.
                 NestedMeta::Meta(Meta::List(list)) if list.ident.to_string() == "node" => {
                     if node.is_some() {
-                        return Err(Error::new(list.span(),
-                                              "The \"node\" item is already defined."));
+                        return Err(Error::new(list.span(), FIELD_ALREADY_DEFINED));
                     } else {
                         node = Some(parse_meta_list(&list)?);
                     }
@@ -400,6 +459,7 @@ enum Tag {
     Bullet(Bullet),
 
     Tree(Tree),
+    Vars(Vars),
 }
 
 fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
@@ -577,6 +637,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "progress" => tags.push(Tag::Progress(Default::default())),
                     "text" => tags.push(Tag::Text(Default::default())),
                     "tree" => tags.push(Tag::Tree(Default::default())),
+                    "vars" => tags.push(Tag::Vars(Default::default())),
 
                     // errors
                     "color" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
@@ -612,6 +673,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list2(meta_list)?),
                     "tree" => Tag::Tree(Tree::from_meta_list(meta_list)?),
+                    "vars" => Tag::Vars(Vars::from_meta_list(meta_list)?),
 
                     "color" => {
                         for nested in meta_list.nested.iter() {
@@ -781,6 +843,44 @@ fn emmit_tag_tokens(ident: &Ident,
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),
         Tag::NewLine => quote!({ ui.new_line() }),
+        Tag::Vars(Vars { color, style, content }) => {
+            let mut tokens = TokenStream::new();
+            if let Some(tags) = content.as_ref() {
+                for tag in tags.iter() {
+                    tokens.extend(emmit_tag_tokens(ident,
+                                                   _ty,
+                                                   attr,
+                                                   tag,
+                                                   fields,
+                                                   methods,
+                                                   input_fields)?);
+                }
+            }
+
+            let tokens = match color {
+                Some(Lit::Str(color)) => {
+                    let ident = Ident::new(&color.value(), color.span());
+                    quote! {
+                        ui.with_color_vars(#ident(), || { #tokens });
+                    }
+                }
+                None => tokens,
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+
+            let tokens = match style {
+                Some(Lit::Str(style)) => {
+                    let ident = Ident::new(&style.value(), style.span());
+                    quote! {
+                        ui.with_style_vars(#ident(), || { #tokens });
+                    }
+                }
+                None => tokens,
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            };
+
+            quote!( #tokens )
+        }
         Tag::Tree(Tree { label, node, cond, flags }) => {
             let label = match label {
                 Some(Lit::Str(s)) => s.value(),
@@ -932,6 +1032,7 @@ fn emmit_tag_tokens(ident: &Ident,
         }
         Tag::Text(Text { lit }) => {
             match lit {
+                //Some(Lit::Str(lit)) => quote! { ui.text_wrapped(imgui::im_str!(#lit)); },
                 Some(Lit::Str(lit)) => quote! { ui.text(#lit); },
 
                 // Field should implement the `Text` trait
@@ -1383,9 +1484,9 @@ fn emmit_tag_tokens(ident: &Ident,
                     quote! { min: #min, max: #max }
                 }
                 (Lit::Str(min), Lit::Str(max)) => {
-                    let min_f64 = max.value().parse().map(Literal::f64_unsuffixed);
+                    let min_f64 = min.value().parse().map(Literal::f64_unsuffixed);
                     let max_f64 = max.value().parse().map(Literal::f64_unsuffixed);
-                    let min_i32 = max.value().parse().map(Literal::i64_unsuffixed);
+                    let min_i32 = min.value().parse().map(Literal::i64_unsuffixed);
                     let max_i32 = max.value().parse().map(Literal::i64_unsuffixed);
 
                     match (min_f64, max_f64, min_i32, max_i32) {

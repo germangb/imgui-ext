@@ -10,12 +10,12 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str,
                                        -> Result<(), Box<dyn Error>> {
     let sdl = sdl2::init()?;
     let video = sdl.video()?;
-    let window = video.window(title, w, h)
-                      .opengl()
-                      .resizable()
-                      .allow_highdpi()
-                      .position_centered()
-                      .build()?;
+    let mut window = video.window(title, w, h)
+                          .opengl()
+                          .resizable()
+                          .allow_highdpi()
+                          .position_centered()
+                          .build()?;
 
     let glctx = window.gl_create_context()?;
     window.gl_make_current(&glctx)?;
@@ -45,8 +45,10 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str,
             }
         }
 
+        let [r, g, b, a] = window_params.color;
+        let _ = window.set_opacity(a);
+
         unsafe {
-            let [r, g, b, a] = window_params.color;
             gl::ClearColor(r, g, b, a);
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }

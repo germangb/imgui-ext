@@ -207,6 +207,55 @@ include!("macros/drag.rs");
 pub mod prelude {
     pub use super::{ImGuiExt, UiExt};
 }
+/// `vars(...)` docs.
+pub mod vars {
+    //!
+    //! ## Optional params
+    //!
+    //! - `style = "..."` identifier of a local function returning style params.
+    //! - `color = "..."` identifier of a local function returning color params.
+    //!
+    //! ## Limitations
+    //!
+    //! - If the functions return a slice, its lifetime must be `'static`.
+    //!
+    //! ## Remarks
+    //!
+    //! The types returned by the `style` and `color` must match the types of [`with_color_vars`]
+    //! and [`with_style_vars`]. The following example uses `[f32; 4]` to represent color.
+    //!
+    //! [`with_color_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_color_vars
+    //! [`with_style_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_style_vars
+    //!
+    //! ## Example
+    //!
+    //! ```
+    //! use imgui::{ImGuiCol, StyleVar};
+    //! use imgui_ext::ImGuiExt;
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Example {
+    //!    #[imgui(vars(style = "example_style",
+    //!                 color = "example_color",
+    //!                 content(input(label = "foo##input"),
+    //!                         drag(label = "foo##drag"),
+    //!                         slider(label = "foo##slider", min = "-1.0", max = "1.0"))))]
+    //!     foo: f32,
+    //! }
+    //!
+    //! fn example_style() -> &'static [StyleVar] {
+    //!     &[StyleVar::FrameRounding(4.0)]
+    //! }
+    //!
+    //! fn example_color() -> &'static [(ImGuiCol, [f32; 4])] {
+    //!     &[(ImGuiCol::Button, [1.0, 0.0, 1.0, 1.0])]
+    //! }
+    //! ```
+    //!
+    //! ### Result
+    //!
+    //! ![](https://i.imgur.com/TMmjOUg.png)
+}
 /// `tree(...)` docs.
 pub mod tree {
     //!

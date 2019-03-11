@@ -110,3 +110,13 @@ fn example_style() -> &'static [StyleVar] {
 fn example_color() -> &'static [(ImGuiCol, [f32; 4])] {
     &[(ImGuiCol::Button, [1.0, 0.0, 1.0, 1.0])]
 }
+
+#[derive(ImGuiExt, Default)]
+pub struct ExampleText {
+    #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
+            separator(),
+            text("Input num:"),
+            slider(min = "-1.0", max = 1.0),
+            button(label = "Submit"))]
+    number: f32,
+}

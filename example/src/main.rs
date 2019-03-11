@@ -7,7 +7,7 @@ mod support;
 mod ui;
 
 fn main() {
-    let mut vars_example = ui::VarsExample::default();
+    let mut vars_example = ui::ExampleText::default();
     let mut demo = ui::Demo::default();
 
     support::run("Demo", (800, 600), |win, ui| {

@@ -327,7 +327,43 @@ pub mod progress;
 /// `slider(...)` docs.
 pub mod slider;
 /// `text(...)` docs.
-pub mod text;
+pub mod text {
+    //!
+    //! ## Variants
+    //!
+    //! - `text(...)`
+    //! - `text_wrap(...)` Same as `text(...)`, but the text content wraps
+    //!
+    //! ## Params
+    //!
+    //! * `lit` Literal text. If this value is set, this value is displayed instead of the annotated type.
+    //!
+    //! You can also write this annotation as:
+    //!
+    //! * `#[imgui(text("literal..."))]`
+    //!
+    //! which is a shorthand form for `text(lit = "literal...")`.
+    //!
+    //! ## Example
+    //!
+    //! ```
+    //! use imgui_ext::ImGuiExt;
+    //!
+    //! #[derive(ImGuiExt)]
+    //! struct Example {
+    //!     #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
+    //!             separator(),
+    //!             text("Input num:"),
+    //!             slider(min = "-1.0", max = 1.0),
+    //!             button(label = "Submit"))]
+    //!     number: f32,
+    //! }
+    //! ```
+    //!
+    //! ### Result
+    //!
+    //! ![](https://i.imgur.com/0uvMFIm.png)
+}
 /// Support for some (basic) layout annotations.
 pub mod layout {
     //!

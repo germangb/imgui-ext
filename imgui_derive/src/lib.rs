@@ -272,12 +272,11 @@ tag! {
 }
 
 tag! {
-    #[derive(Default)]
     struct Text {
-        fields {},
+        fields {
+            lit: Lit,
+        },
         optional {
-            // literal
-            lit: Option<Lit>,
         }
     }
 }
@@ -294,7 +293,7 @@ impl Text {
         match (first, second) {
             // text("...")
             (Some(NestedMeta::Literal(Lit::Str(s))), None) => {
-                Ok(Self { lit: Some(Lit::Str(s.clone())) })
+                Ok(Self { lit: Lit::Str(s.clone()) })
             }
             _ => Self::from_meta_list(list),
         }
@@ -454,6 +453,7 @@ enum Tag {
     /// - Litaral`: #[text(literal = "...")]`
     /// - Annotated field (AsRef<str>): `#[text(literal)]`
     Text(Text),
+    TextWrap(Text),
 
     BulletParent,
     Bullet(Bullet),
@@ -477,6 +477,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
         Ident::new(&format!("____{}____ImGuiExtEvents", name.to_string()), input.span());
 
     Ok(quote! {
+        #[allow(non_camel_case_types)]
         pub struct #event_type {
             #catch_fields
         }
@@ -635,12 +636,15 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "drag" => tags.push(Tag::Drag(Default::default())),
                     "bullet" => tags.push(Tag::Bullet(Default::default())),
                     "progress" => tags.push(Tag::Progress(Default::default())),
-                    "text" => tags.push(Tag::Text(Default::default())),
+                    //"text" => tags.push(Tag::Text(Default::default())),
+                    //"text_wrap" => tags.push(Tag::TextWrap(Default::default())),
                     "tree" => tags.push(Tag::Tree(Default::default())),
                     "vars" => tags.push(Tag::Vars(Default::default())),
 
                     // errors
                     "color" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+                    "text" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
+                    "text_wrap" => return Err(Error::new(meta_list.span(), INVALID_FORMAT)),
                     "slider" => {
                         Tag::Slider(Slider::from_meta_list(&meta_list)?);
                     }
@@ -672,6 +676,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list2(meta_list)?),
+                    "text_wrap" => Tag::TextWrap(Text::from_meta_list2(meta_list)?),
                     "tree" => Tag::Tree(Tree::from_meta_list(meta_list)?),
                     "vars" => Tag::Vars(Vars::from_meta_list(meta_list)?),
 
@@ -1033,10 +1038,15 @@ fn emmit_tag_tokens(ident: &Ident,
         Tag::Text(Text { lit }) => {
             match lit {
                 //Some(Lit::Str(lit)) => quote! { ui.text_wrapped(imgui::im_str!(#lit)); },
-                Some(Lit::Str(lit)) => quote! { ui.text(#lit); },
+                Lit::Str(lit) => quote! { ui.text(#lit); },
 
-                // Field should implement the `Text` trait
-                None => quote! { imgui_ext::text::Text::build(ui, &ext.#ident); },
+                // Invalid format. Raise compiler error.
+                _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),
+            }
+        }
+        Tag::TextWrap(Text { lit }) => {
+            match lit {
+                Lit::Str(lit) => quote! { ui.text_wrapped(imgui::im_str!(#lit)); },
 
                 // Invalid format. Raise compiler error.
                 _ => return Err(Error::new(attr.span(), INVALID_FORMAT)),

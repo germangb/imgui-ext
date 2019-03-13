@@ -866,7 +866,7 @@ fn emmit_tag_tokens(ident: &Ident,
                 Some(Lit::Str(color)) => {
                     let ident = Ident::new(&color.value(), color.span());
                     quote! {
-                        ui.with_color_vars(#ident(), || { #tokens });
+                        ui.with_color_vars(&#ident(), || { #tokens });
                     }
                 }
                 None => tokens,
@@ -877,7 +877,7 @@ fn emmit_tag_tokens(ident: &Ident,
                 Some(Lit::Str(style)) => {
                     let ident = Ident::new(&style.value(), style.span());
                     quote! {
-                        ui.with_style_vars(#ident(), || { #tokens });
+                        ui.with_style_vars(&#ident(), || { #tokens });
                     }
                 }
                 None => tokens,

@@ -20,7 +20,7 @@
 //! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
 //! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
 //! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
-//! | [`text(...)`][text]           | [`Ui::text`][Ui::text] |
+//! | [`text(...)`][text]           | [`Ui::text`][Ui::text], [`Ui::text_wrapped`][Ui::text_wrapped] |
 //! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
 //! | [`nested(...)`][nested]       | |
 //!
@@ -82,6 +82,7 @@
 //! [Ui::bullet_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet_text
 //! [Ui::bullet]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet
 //! [Ui::text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.text
+//! [Ui::text_wrapped]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.text_wrapped
 //!
 //! ## Basic usage
 //!
@@ -210,19 +211,18 @@ pub mod prelude {
 /// `vars(...)` docs.
 pub mod vars {
     //!
+    //! Adds support for pushing style and color parameters to the stack, to be applid to an
+    //! arbitrary number of nested widgets.
+    //!
     //! ## Optional params
     //!
-    //! - `style = "..."` identifier of a local function returning style params.
-    //! - `color = "..."` identifier of a local function returning color params.
-    //!
-    //! ## Limitations
-    //!
-    //! - If the functions return a slice, its lifetime must be `'static`.
+    //! - `style = "..."` identifier of a local function that returns the style parameters.
+    //! - `color = "..."` identifier of a local function that returns the color parameters.
     //!
     //! ## Remarks
     //!
-    //! The types returned by the `style` and `color` must match the types of [`with_color_vars`]
-    //! and [`with_style_vars`]. The following example uses `[f32; 4]` to represent color.
+    //! The types returned by the `style` and `color` must match the types consumed by [`with_color_vars`]
+    //! and [`with_style_vars`]. In the following example, `[f32; 4]` is used for color.
     //!
     //! [`with_color_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_color_vars
     //! [`with_style_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_style_vars
@@ -326,7 +326,7 @@ pub mod input;
 pub mod progress;
 /// `slider(...)` docs.
 pub mod slider;
-/// `text(...)` docs.
+/// `text(...)` and `text_wrap(...)` docs.
 pub mod text {
     //!
     //! ## Variants

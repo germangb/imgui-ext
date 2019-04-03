@@ -46,7 +46,7 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(title: &str,
         }
 
         let [r, g, b, a] = window_params.color;
-        let _ = window.set_opacity(a);
+        //let _ = window.set_opacity(a);
 
         unsafe {
             gl::ClearColor(r, g, b, a);

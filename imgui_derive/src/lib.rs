@@ -13,64 +13,17 @@ use syn::{
     MetaNameValue, NestedMeta, Type,
 };
 
+include!("macros.rs");
+
 // error messages
 const INVALID_FORMAT: &str = "Invalid annotation format.";
 const MULTIPLE_ANNOT: &str = "Multiple `#[imgui(...)]` annotations on a single field.";
-const STRUCT_SUPPORT: &str = "`ImGuiExt` derive is only supported on structs.";
+const STRUCT_SUPPORT: &str = "The ImGuiExt macro is only supported on structs with names fields.";
 const UNRECOG_MODE: &str = "Unexpected mode.";
 const UNEXPECTED_PARAM: &str = "Unexpected parameter.";
-const BULLET_MULTIPLE: &str = "bullet can't nest multiple things.";
+const BULLET_MULTIPLE: &str = "bullet(..) can't nest multiple things.";
 const FIELD_ALREADY_DEFINED: &str = "Field already defined.";
 const PARSE_STRING_NUMERIC: &str = "Can't parse string literal as int literal.";
-
-macro_rules! tag {
-    (
-        $(#[$meta:meta])*
-        struct $tag:ident {
-            fields { $( $field:ident : Lit ,)* },
-            optional { $( $opt_field:ident : Option<Lit> ,)* }
-        }
-    ) => {
-        $(#[$meta])*
-        struct $tag {
-            $( $field : Lit ,)*
-            $( $opt_field : Option<Lit> ,)*
-        }
-        impl $tag {
-            fn from_meta_list(list: &MetaList) -> Result<Self, Error> {
-                $( let mut $field = None; )*
-                $( let mut $opt_field = None; )*
-                for param in list.nested.iter() {
-                    match param {
-                        NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
-                            //"label" => widget.label = Some(lit.clone()),
-                            $( stringify!($opt_field) => {
-                                if $opt_field.is_some() {
-                                    return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
-                                }
-                                $opt_field = Some(lit.clone());
-                            },)*
-                            $( stringify!($field) => {
-                                if $field.is_some() {
-                                    return Err(Error::new(ident.span(), FIELD_ALREADY_DEFINED));
-                                }
-                                $field = Some(lit.clone());
-                            },)*
-                            _ => return Err(Error::new(ident.span(), UNEXPECTED_PARAM)),
-                        }
-                        // TODO use proper span
-                        _ => return Err(Error::new(list.span(), INVALID_FORMAT)),
-                    }
-                }
-                Ok(Self {
-                    $( $field : $field.ok_or(Error::new(list.span(), format!("Parameter `{}` missing.", stringify!($field) )))?,)*
-                    $( $opt_field,)*
-                })
-            }
-        }
-
-    }
-}
 
 #[proc_macro_derive(ImGuiExt, attributes(imgui))]
 pub fn imgui_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -94,6 +47,52 @@ struct Display {
     label: Option<Lit>,
     display: Option<Lit>,
     params: Vec<DisplayParam>,
+}
+
+impl Display {
+    /// Parse the contents of a label tag: `label(label = "...", display = "...", foo, bar)`
+    /// Asumes that `params.ident` is equal to "label"
+    fn from_meta_list(params: &MetaList) -> Result<Self, Error> {
+        #[derive(Clone, Copy)]
+        enum State {
+            Init,
+            Display,
+        }
+
+        let mut state = State::Init;
+        let mut display = Display::default();
+
+        for attr in params.nested.iter() {
+            match (state, attr) {
+                (State::Display, NestedMeta::Literal(lit)) => {
+                    display.params.push(DisplayParam::Literal(lit.clone()));
+                }
+
+                (State::Display, NestedMeta::Meta(Meta::Word(ident))) => {
+                    display.params.push(DisplayParam::Ident(ident.clone()));
+                }
+
+                (State::Init,
+                 NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
+                    if ident.to_string() == "label" =>
+                {
+                    display.label = Some(lit.clone());
+                }
+
+                (State::Init,
+                 NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
+                    if ident.to_string() == "display" =>
+                {
+                    display.display = Some(lit.clone());
+                    state = State::Display;
+                }
+
+                _ => return Err(Error::new(params.span(), INVALID_FORMAT)),
+            }
+        }
+
+        Ok(display)
+    }
 }
 
 tag! {
@@ -617,7 +616,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
             (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, .. })))
                 if ident.to_string() == "label" || ident.to_string() == "display" =>
             {
-                tags.push(Tag::Display(parse_label(&meta_list)?));
+                tags.push(Tag::Display(Display::from_meta_list(&meta_list)?));
                 // any errors will have been reported by the previous call to `parse_label`.
                 // At this point I can break out of the loop.
                 break;
@@ -666,7 +665,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "separator" => Tag::Separator,
                     "new_line" => Tag::NewLine,
 
-                    "display" => Tag::Display(parse_label(&meta_list)?),
+                    "display" => Tag::Display(Display::from_meta_list(&meta_list)?),
                     "nested" => Tag::Nested(Nested::from_meta_list(meta_list)?),
                     "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
@@ -764,65 +763,6 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
     Ok(tags)
 }
 
-/// Parse the contents of a label tag: `label(label = "...", display = "...", foo, bar)`
-/// Asumes that `params.ident` is equal to "label"
-fn parse_label(params: &MetaList) -> Result<Display, Error> {
-    #[derive(Clone, Copy)]
-    enum State {
-        Init,
-        Display,
-    }
-
-    let mut state = State::Init;
-    let mut display = Display::default();
-
-    for attr in params.nested.iter() {
-        match (state, attr) {
-            (State::Display, NestedMeta::Literal(lit)) => {
-                display.params.push(DisplayParam::Literal(lit.clone()));
-            }
-
-            (State::Display, NestedMeta::Meta(Meta::Word(ident))) => {
-                display.params.push(DisplayParam::Ident(ident.clone()));
-            }
-
-            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
-                if ident.to_string() == "label" =>
-            {
-                display.label = Some(lit.clone());
-            }
-
-            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })))
-                if ident.to_string() == "display" =>
-            {
-                display.display = Some(lit.clone());
-                state = State::Display;
-            }
-
-            _ => return Err(Error::new(params.span(), INVALID_FORMAT)),
-        }
-    }
-
-    Ok(display)
-}
-
-// TODO
-#[allow(unused_macros)]
-macro_rules! tag_match {
-    (match $tag:ident {
-        $(
-            $ident:ident { $( $param:ident ),* }
-        ),*
-    }) => {
-        match $tag {
-            $(
-                Tag::$ident( $ident { $( $param , )* } ) => { quote!() },
-            )*
-            _ => quote!(),
-        }
-    }
-}
-
 /// Output source code for a given field, a given attribute, and one of the parsed `Tag`s
 ///
 /// For example, the this annotation: `#[imgui(label(...), input(...))]`
@@ -837,13 +777,6 @@ fn emmit_tag_tokens(ident: &Ident,
                     methods: &mut TokenStream,
                     input_fields: &mut HashSet<String>)
                     -> Result<TokenStream, Error> {
-    /*
-    let tokens = tag_match! {
-        match tag {
-            Progress { overlay, size }
-        }
-    };
-    */
     let tokens = match tag {
         Tag::None => quote!(),
         Tag::Separator => quote!({ ui.separator() }),

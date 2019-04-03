@@ -1,88 +1,6 @@
-//! A crate to quickly build [imgui] GUIs using a `#[derive]` macro.
+//! Derive macro that allows you to quickly build immediate mode UIs (based on the [imgui] crate).
 //!
 //! [imgui]: https://crates.io/crates/imgui
-//!
-//! ## Supported annotations
-//!
-//! Annotations map to a subset of imgui types and methods:
-//!
-//! | Annotation                    | Mapped Imgui Types |
-//! | ------------------------------| --- |
-//! | [`slider(...)`][slider]       | [`SliderFloat`][SliderFloat], [`SliderFloat2`][SliderFloat2], [`SliderFloat3`][SliderFloat3], [`SliderFloat4`][SliderFloat4], [`SliderInt`][SliderInt], [`SliderInt2`][SliderInt2], [`SliderInt3`][SliderInt3], [`SliderInt4`][SliderInt4] |
-//! | [`drag(...)`][drag]           | [`DragFloat`][DragFloat], [`DragFloat2`][DragFloat2], [`DragFloat3`][DragFloat3], [`DragFloat4`][DragFloat4], [`DragInt`][DragInt], [`DragInt2`][DragInt2], [`DragInt3`][DragInt3], [`DragInt4`][DragInt4] |
-//! | [`input(...)`][input]         | [`InputFloat`][InputFloat], [`InputFloat2`][InputFloat2], [`InputFloat3`][InputFloat3], [`InputFloat4`][InputFloat4], [`InputInt`][InputInt], [`InputInt2`][InputInt2], [`InputInt3`][InputInt3], [`InputInt4`][InputInt4], [`InputText`][InputText], [`InputTextMultiline`][InputTextMultiline] |
-//! | [`progress(...)`][progress]   | [`ProgressBar`][ProgressBar] |
-//! | [`image(...)`][image]         | [`Image`][ImImage] |
-//! | [`color(...)`][color]         | [`ColorButton`][ColorButton], [`ColorPicker`][ColorPicker], [`ColorEdit`][ColorEdit] |
-//! | [`tree(...)`][tree]           | [`TreeNode`][TreeNode] |
-//! | [`button(...)`][button]       | [`Ui::button`][Ui::button], [`Ui::small_button`][Ui::small_button] |
-//! | [`checkbox(...)`][checkbox]   | [`Ui::checkbox`][Ui::checkbox] |
-//! | [`separator(...)`][separator] | [`Ui::separator`][Ui::separator] |
-//! | [`new_line(...)`][new_line]   | [`Ui::new_line`][Ui::new_line] |
-//! | [`display(...)`][display]     | [`Ui::label_text`][Ui::label_text] |
-//! | [`text(...)`][text]           | [`Ui::text`][Ui::text], [`Ui::text_wrapped`][Ui::text_wrapped] |
-//! | [`bullet(...)`][bullet]       | [`Ui::bullet_text`][Ui::bullet_text], [`Ui::bullet`][Ui::bullet] |
-//! | [`nested(...)`][nested]       | |
-//!
-//! [slider]: ./slider/index.html
-//! [drag]: ./drag/index.html
-//! [input]: ./input/index.html
-//! [progress]: ./progress/index.html
-//! [image]: ./image/index.html
-//! [color]: ./color/index.html
-//! [tree]: ./tree/index.html
-//! [button]: ./button/index.html
-//! [checkbox]: ./checkbox/index.html
-//! [separator]: ./separator/index.html
-//! [new_line]: ./new_line/index.html
-//! [display]: ./display/index.html
-//! [bullet]: ./bullet/index.html
-//! [text]: ./text/index.html
-//! [nested]: ./nested/index.html
-//!
-//! [SliderFloat]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat.html
-//! [SliderFloat2]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat2.html
-//! [SliderFloat3]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat3.html
-//! [SliderFloat4]:https://docs.rs/imgui/0.0/imgui/struct.SliderFloat4.html
-//! [SliderInt]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt.html
-//! [SliderInt2]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt2.html
-//! [SliderInt3]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt3.html
-//! [SliderInt4]:https://docs.rs/imgui/0.0/imgui/struct.SliderInt4.html
-//! [DragFloat]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat.html
-//! [DragFloat2]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat2.html
-//! [DragFloat3]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat3.html
-//! [DragFloat4]:https://docs.rs/imgui/0.0/imgui/struct.DragFloat4.html
-//! [DragInt]:https://docs.rs/imgui/0.0/imgui/struct.DragInt.html
-//! [DragInt2]:https://docs.rs/imgui/0.0/imgui/struct.DragInt2.html
-//! [DragInt3]:https://docs.rs/imgui/0.0/imgui/struct.DragInt3.html
-//! [DragInt4]:https://docs.rs/imgui/0.0/imgui/struct.DragInt4.html
-//! [InputFloat]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat.html
-//! [InputFloat2]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat2.html
-//! [InputFloat3]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat3.html
-//! [InputFloat4]:https://docs.rs/imgui/0.0/imgui/struct.InputFloat4.html
-//! [InputInt]:https://docs.rs/imgui/0.0/imgui/struct.InputInt.html
-//! [InputInt2]:https://docs.rs/imgui/0.0/imgui/struct.InputInt2.html
-//! [InputInt3]:https://docs.rs/imgui/0.0/imgui/struct.InputInt3.html
-//! [InputInt4]:https://docs.rs/imgui/0.0/imgui/struct.InputInt4.html
-//! [InputText]:https://docs.rs/imgui/0.0/imgui/struct.InputText.html
-//! [InputTextMultiline]:https://docs.rs/imgui/0.0/imgui/struct.InputTextMultiline.html
-//! [ProgressBar]:https://docs.rs/imgui/0.0/imgui/struct.ProgressBar.html
-//! [ImImage]:https://docs.rs/imgui/0.0/imgui/struct.Image.html
-//! [ColorButton]:https://docs.rs/imgui/0.0/imgui/struct.ColorButton.html
-//! [ColorPicker]:https://docs.rs/imgui/0.0/imgui/struct.ColorPicker.html
-//! [ColorEdit]:https://docs.rs/imgui/0.0/imgui/struct.ColorEdit.html
-//! [TreeNode]:https://docs.rs/imgui/0.0/imgui/struct.TreeNode.html
-//!
-//! [Ui::button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.button
-//! [Ui::small_button]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.small_button
-//! [Ui::checkbox]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.checkbox
-//! [Ui::separator]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.separator
-//! [Ui::new_line]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.new_line
-//! [Ui::label_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.label_text
-//! [Ui::bullet_text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet_text
-//! [Ui::bullet]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.bullet
-//! [Ui::text]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.text
-//! [Ui::text_wrapped]: https://docs.rs/imgui/0.0/imgui/struct.Ui.html#method.text_wrapped
 //!
 //! ## Basic usage
 //!
@@ -105,9 +23,6 @@
 //!         display(label = "Is turbo enabled?"),
 //!     )]
 //!     turbo: bool,
-//!
-//!     // not every field has to be annotated
-//!     _not_in_ui: Vec<u8>
 //! }
 //! ```
 //!
@@ -124,7 +39,6 @@
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
-//! use imgui_ext::Events;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -135,7 +49,7 @@
 //! // init imgui (ui)...
 //!
 //! // All events are stored as booleans in the returned type.
-//! let events: Events<Example> = ui.imgui_ext(&mut example);
+//! let events = ui.imgui_ext(&mut example);
 //!
 //! if events.check() {
 //!     // Checkbox value has changes.
@@ -149,7 +63,6 @@
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
-//! use imgui_ext::Events;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -159,7 +72,7 @@
 //!
 //! // init imgui (ui)...
 //!
-//! let events: Events<Example> = ui.imgui_ext(&mut example);
+//! let events = ui.imgui_ext(&mut example);
 //!
 //! if events.checkbox_event() {
 //!     // Do something...
@@ -211,21 +124,19 @@ pub mod prelude {
 /// `vars(...)` docs.
 pub mod vars {
     //!
-    //! Adds support for pushing style and color parameters to the stack, to be applid to an
-    //! arbitrary number of nested widgets.
+    //! Pushes style and color parameters to the stack, so they can be applied to the widgets contained
+    //! in the annotation.
+    //!
+    //! This is a rather complex annotation. It's not meant to be used extensively though..
+    //!
+    //! ## Params
+    //!
+    //! - `content(...)` widgets inside this annotation will have the style and color params applied.
     //!
     //! ## Optional params
     //!
     //! - `style = "..."` identifier of a local function that returns the style parameters.
     //! - `color = "..."` identifier of a local function that returns the color parameters.
-    //!
-    //! ## Remarks
-    //!
-    //! The types returned by the `style` and `color` must match the types consumed by [`with_color_vars`]
-    //! and [`with_style_vars`]. In the following example, `[f32; 4]` is used for color.
-    //!
-    //! [`with_color_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_color_vars
-    //! [`with_style_vars`]: https://docs.rs/imgui/*/imgui/struct.Ui.html#method.with_style_vars
     //!
     //! ## Example
     //!
@@ -259,13 +170,19 @@ pub mod vars {
 /// `tree(...)` docs.
 pub mod tree {
     //!
+    //! Annotation to build static Tree UIs.
+    //!
+    //! This is a rather complex annotation. It's not meant to be used extensively though..
+    //!
     //! ## Optional params
     //!
-    //! - `label = ".."` Give the tree node a label.
+    //! - `label = ".."` Node label
+    //! - `flags = ".."` Local function returning [`ImGuiTreeNodeFlags`]
     //! - `node(..)` Nested content (any of the supported annotations).
     //! - `cond` One of the [`ImGuiCond`] variants.
     //!
     //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.ImGuiCond.html
+    //! [`ImGuiTreeNodeFlags`]: https://docs.rs/imgui/*/imgui/struct.ImGuiTreeNodeFlags.html
     //!
     //! ## Example
     //!

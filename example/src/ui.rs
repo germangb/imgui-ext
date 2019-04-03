@@ -59,7 +59,10 @@ pub struct Drag {
 }
 
 #[derive(ImGuiExt, Default)]
-pub struct Slider {}
+pub struct Slider {
+    #[imgui(slider(min = "-1.0", max = "1.0"))]
+    slider_1: f32,
+}
 
 #[derive(ImGuiExt)]
 pub struct Color {

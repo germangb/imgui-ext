@@ -1,9 +1,9 @@
 [package]
 name = "imgui-ext"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
-description = "Define imgui UIs using a derive macro."
+description = "A crate to build debug UIs on structs using a derive macro (based on the imgui crate)"
 repository = "https://github.com/germangb/imgui-ext"
 readme = "README.md"
 keywords = ["gui", "imgui", "macro"]
@@ -19,7 +19,7 @@ members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "0.0.22"
-imgui-ext-derive = { version = "0.1.7", path = "imgui_derive" }
+imgui-ext-derive = { version = "0.1.8", path = "imgui_derive" }
 
 [patch.crates-io]
 sdl2 = { git = "https://github.com/Rust-SDL2/rust-sdl2.git" }

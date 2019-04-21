@@ -254,6 +254,21 @@ tag! {
 }
 
 tag! {
+    pub struct ImageButton {
+        fields {
+            size: Lit,
+        },
+        optional {
+            background: Option<Lit>,
+            frame_padding: Option<Lit>,
+            tint: Option<Lit>,
+            uv0: Option<Lit>,
+            uv1: Option<Lit>,
+        }
+    }
+}
+
+tag! {
     #[derive(Default)]
     pub struct ColorButton {
         fields {
@@ -470,6 +485,7 @@ pub enum Tag {
     Nested(Nested),
     Progress(Progress),
     Image(Image),
+    ImageButton(ImageButton),
     Button(Button),
 
     ColorButton(ColorButton),
@@ -587,6 +603,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                     "button" => Tag::Button(Button::from_meta_list(meta_list)?),
                     "progress" => Tag::Progress(Progress::from_meta_list(meta_list)?),
                     "image" => Tag::Image(Image::from_meta_list(meta_list)?),
+                    "image_button" => Tag::ImageButton(ImageButton::from_meta_list(meta_list)?),
                     "text" => Tag::Text(Text::from_meta_list2(meta_list)?),
                     "text_wrap" => Tag::TextWrap(Text::from_meta_list2(meta_list)?),
                     "tree" => Tag::Tree(Tree::from_meta_list(meta_list)?),
@@ -775,6 +792,83 @@ pub fn emmit_tag_tokens(ident: &Ident,
                 let mut tree = imgui::TreeNode::new(ui, imgui::im_str!(#label));
                 { #tree_tokens }
                 tree.build(|| { #node_tokens })
+            }}
+        }
+        Tag::ImageButton(ImageButton { size, background, frame_padding, uv0, uv1, tint }) => {
+            let size = match size {
+                Lit::Str(size) => Ident::new(&size.value(), size.span()),
+                _ => return Err(Error::invalid_format(attr.span())),
+            };
+
+            let mut params = quote! {
+                use imgui_ext::image_button::ImageButtonParams as Params;
+                use imgui::{ImVec2, im_str};
+                let mut params = Params {
+                    size: ImVec2::from(#size()),
+                    background: None,
+                    frame_padding: None,
+                    tint: None,
+                    uv0: None,
+                    uv1: None,
+                };
+            };
+            match frame_padding {
+                Some(Lit::Str(value_str)) => {
+                    let value = value_str.value()
+                                         .parse()
+                                         .map(Literal::i32_unsuffixed)
+                                         .expect("frame_padding expected to be numeric (i32).");
+                    params.extend(quote!(params.frame_padding = Some(#value);));
+                }
+                Some(Lit::Int(value)) => {
+                    params.extend(quote!(params.frame_padding = Some(#value);));
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+            match uv0 {
+                Some(Lit::Str(uv0)) => {
+                    let fn_ident = Ident::new(&uv0.value(), uv0.span());
+                    params.extend(
+                        quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+            match uv1 {
+                Some(Lit::Str(uv1)) => {
+                    let fn_ident = Ident::new(&uv1.value(), uv1.span());
+                    params.extend(
+                        quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+            match tint {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+            match background {
+                Some(Lit::Str(size)) => {
+                    let fn_ident = Ident::new(&size.value(), size.span());
+                    params.extend(
+                        quote! {{ params.background = Some( imgui::ImVec4::from(#fn_ident()) ); }},
+                    );
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+            quote! {{
+                use imgui_ext::image::Image;
+                Image::build(ui, ext.#ident, { #params ; params });
             }}
         }
         Tag::Image(Image { size, border, tint, uv0, uv1 }) => {

@@ -237,6 +237,8 @@ pub mod color;
 pub mod drag;
 /// `image(...)` docs.
 pub mod image;
+/// `image_button(...)` docs.
+pub mod image_button;
 /// `input(...)` docs.
 pub mod input;
 /// `progress(...)` docs.
@@ -533,6 +535,7 @@ impl<T: ImGuiExt + Unpin> ImGuiExt for Pin<Box<T>> {
 ///
 /// ```ignore
 /// use imgui_ext::prelude::*;
+/// use imgui_ext::{ImGuiExt, Events};
 ///
 /// #[derive(ImGuiExt)]
 /// struct Example { /*...*/ }
@@ -541,7 +544,7 @@ impl<T: ImGuiExt + Unpin> ImGuiExt for Pin<Box<T>> {
 ///     // ...
 /// }
 ///
-/// let mut example = Example { */...*/ };
+/// let mut example = Example { /*...*/ };
 ///
 /// // init imgui (ui)...
 /// let events = ui.imgui_ext(&mut example);
@@ -587,6 +590,8 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 /// [prelude]: ./prelude/index.html
 ///
 /// ```ignore
+/// use imgui_ext::ImGuiExt;
+///
 /// #[derive(ImGuiExt)]
 /// struct Example {
 ///     #[derive(checkbox(catch = "click"))]

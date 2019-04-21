@@ -1,6 +1,6 @@
 [package]
 name = "imgui-ext"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 description = "A crate to build debug UIs on structs using a derive macro (based on the imgui crate)"
@@ -19,4 +19,8 @@ members = ["imgui_derive", "example"]
 
 [dependencies]
 imgui = "0.0.23"
-imgui-ext-derive = { version = "0.1.8", path = "imgui_derive" }
+imgui-ext-derive = { version = "0.1.9", path = "imgui_derive" }
+
+[patch.crates-io]
+imgui-sdl2 = { git = "https://github.com/germangb/rust-imgui-sdl2.git", branch = "imgui_23"}
+imgui-opengl-renderer = { git = "https://github.com/germangb/rust-imgui-opengl-renderer.git", branch = "imgui_23"}

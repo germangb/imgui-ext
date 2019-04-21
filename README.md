@@ -6,14 +6,14 @@
 [![Master docs](https://img.shields.io/badge/docs-master-blue.svg?style=flat-square)](https://germangb.github.io/imgui-ext/)
 
 
-A crate to quickly build [imgui] UIs using annotations and a custom Derive.
+A crate to quickly build [imgui] UIs using annotations and a `derive` macro.
 
 [imgui]: https://github.com/Gekkio/imgui-rs
 
 ## Features
 
 * Encode UI directly on the types.
-* Static code generation: [example].
+* Static code generation.
 * Nested UIs (see the [`imgui(nested(...))`][nested] annotation).
 * Descriptive compiler errors.
 

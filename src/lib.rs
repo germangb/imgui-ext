@@ -6,11 +6,7 @@
 //! ## Basic usage
 //!
 //! ```
-//! use imgui_ext::ImGuiExt;
-//!
-//! // Make your type derive ImGuiExt and place annotations on the fields you want
-//! // to include in the ui
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::ImGuiExt)]
 //! struct Example {
 //!     #[imgui(slider(min = 0.0, max = 4.0))]
 //!     x: f32,
@@ -29,52 +25,59 @@
 //!
 //! ## Input events
 //!
-//! In immediate mode UI, generally you respond to user inputs (button presses,
-//! value changes, etc...) at the same time that you render the UI.
+//! Rendering a UI with `imgui` & `imgui-ext` returns a type with all the
+//! triggered input events (which are generally stored as booleans):
 //!
-//! With `imgui-ext`, you have to first render the UI, and then check for these
-//! events:
-//!
-//! ```ignore
+//! ```
 //! use imgui_ext::prelude::*;
 //!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::ImGuiExt)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox"))]
 //!     check: bool,
 //! }
 //!
-//! // init imgui (ui)...
+//! # struct A;
+//! # struct B;
+//! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+//! # impl B { fn check(&self) -> bool { true } }
+//! # let ui = A;
+//! let mut example = Example { check: false };
 //!
-//! // All events are stored as booleans in the returned type.
 //! let events = ui.imgui_ext(&mut example);
 //!
 //! if events.check() {
-//!     // Checkbox value has changes.
-//!     // Do something...
+//!     println!("checkbox state changed.");
 //! }
 //! ```
 //!
-//! In the above example, the checkbox event is mapped to the method `check()`
-//! of the type returned by the call to `ui.imgui_ext(...)`. The name of the
-//! method is the same as the field. You can override this value by defining the
-//! `catch` parameter in the annotation:
+//! The checkbox event is mapped to the method `check` on the returned type. The
+//! name of the field & method on the returned type matches the name of the
+//! field from the UI type.
 //!
-//! ```ignore
+//! You can override this default naming by defining the "catch" attribute on
+//! the annotation (all widgets support this attribute, not just checkbox):
+//!
+//! ```no_run
 //! use imgui_ext::prelude::*;
 //!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::ImGuiExt)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox", catch = "checkbox_event"))]
 //!     check: bool,
 //! }
 //!
-//! // init imgui (ui)...
+//! # struct A;
+//! # struct B;
+//! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+//! # impl B { fn checkbox_event(&self) -> bool { true } }
+//! # let ui = A;
+//! let mut example = Example { check: false };
 //!
 //! let events = ui.imgui_ext(&mut example);
 //!
 //! if events.checkbox_event() {
-//!     // Do something...
+//!     println!("checkbox state changed.");
 //! }
 //! ```
 //!
@@ -167,9 +170,8 @@ pub mod tree {
     //!
     //! ```
     //! use imgui::{ImGuiTreeNodeFlags, ImString};
-    //! use imgui_ext::ImGuiExt;
     //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! pub struct Tree {
     //!     #[imgui(tree(
     //!         label = "Sliders",
@@ -188,7 +190,7 @@ pub mod tree {
     //!     ImGuiTreeNodeFlags::Framed
     //! }
     //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! pub struct Sliders {
     //!     #[imgui(text("Slider widgets:"), slider(min = 0.0, max = 3.0))]
     //!     s1: f32,
@@ -198,7 +200,7 @@ pub mod tree {
     //!     s3: [f64; 2],
     //! }
     //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! pub struct Inputs {
     //!     #[imgui(text("Input widgets:"), input)]
     //!     i1: f32,
@@ -296,9 +298,7 @@ pub mod display {
     //! ## Example
     //!
     //! ```
-    //! use imgui_ext::ImGuiExt;
-    //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! struct Labels {
     //!     #[imgui(display)]
     //!     foo: f32,
@@ -331,25 +331,22 @@ pub mod nested {
     //! ## Example
     //!
     //! ```
-    //! use imgui::{ImGuiInputTextFlags, ImString};
-    //! use imgui_ext::ImGuiExt;
-    //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! struct Form {
     //!     #[imgui(input)]
-    //!     user: ImString,
+    //!     user: imgui::ImString,
     //!     #[imgui(
     //!         input(flags = "passwd_flags"),
     //!         button(label = "Login", catch = "login_btn")
     //!     )]
-    //!     passwd: ImString,
+    //!     passwd: imgui::ImString,
     //! }
     //!
-    //! fn passwd_flags() -> ImGuiInputTextFlags {
-    //!     ImGuiInputTextFlags::Password
+    //! fn passwd_flags() -> imgui::ImGuiInputTextFlags {
+    //!     imgui::ImGuiInputTextFlags::Password
     //! }
     //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::ImGuiExt)]
     //! struct Example {
     //!     #[imgui(nested, separator)]
     //!     login_form: Form,
@@ -427,6 +424,7 @@ pub mod button {
     //! [image]: https://i.imgur.com/PpOcZK8.png
 }
 /// `bullet(...)` docs.
+
 pub mod bullet {
     //!
     //! Used to build bulleted lists. It has two variants:

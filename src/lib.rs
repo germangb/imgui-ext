@@ -1,4 +1,5 @@
-//! Derive macro that allows you to quickly build immediate mode UIs (based on the [imgui] crate).
+//! Derive macro that allows you to quickly build immediate mode UIs (based on
+//! the [imgui] crate).
 //!
 //! [imgui]: https://crates.io/crates/imgui
 //!
@@ -17,11 +18,7 @@
 //!     y: i32,
 //!     #[imgui(drag(label = "Drag 2D"))]
 //!     drag_2d: [f32; 2],
-//!
-//!     #[imgui(
-//!         checkbox(label = "Turbo mode"),
-//!         display(label = "Is turbo enabled?"),
-//!     )]
+//!     #[imgui(checkbox(label = "Turbo mode"), display(label = "Is turbo enabled?"))]
 //!     turbo: bool,
 //! }
 //! ```
@@ -32,10 +29,11 @@
 //!
 //! ## Input events
 //!
-//! In immediate mode UI, generally you respond to user inputs (button presses, value changes, etc...)
-//! at the same time that you render the UI.
+//! In immediate mode UI, generally you respond to user inputs (button presses,
+//! value changes, etc...) at the same time that you render the UI.
 //!
-//! With `imgui-ext`, you have to first render the UI, and then check for these events:
+//! With `imgui-ext`, you have to first render the UI, and then check for these
+//! events:
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
@@ -57,9 +55,10 @@
 //! }
 //! ```
 //!
-//! In the above example, the checkbox event is mapped to the method `check()` of the type returned by
-//! the call to `ui.imgui_ext(...)`. The name of the method is the same as the field. You can override
-//! this value by defining the `catch` parameter in the annotation:
+//! In the above example, the checkbox event is mapped to the method `check()`
+//! of the type returned by the call to `ui.imgui_ext(...)`. The name of the
+//! method is the same as the field. You can override this value by defining the
+//! `catch` parameter in the annotation:
 //!
 //! ```ignore
 //! use imgui_ext::prelude::*;
@@ -79,38 +78,9 @@
 //! }
 //! ```
 //!
-//! ## Nice compiler errors
-//!
-//! UI correctness is checked at compile time. If you mistype an annotation, the compiler will point
-//! you directly to the issue:
-//!
-//! ```ignore
-//! #[derive(ImGuiExt)]
-//! struct Example {
-//!     #[imgui(slider(min = 0.0))]
-//!     foo: f32,
-//! }
-//! ```
-//!
-//! ```nonrust
-//! error: Parameter `max` missing.
-//!   --> example/src/main.rs:10:13
-//!    |
-//! 10 |     #[imgui(slider(min = 0.0))]
-//!    |             ^^^^^^
-//! ```
-//!
-//! ## Contributions
-//!
-//! Feedback, suggestions, and contributions, are very much welcome!
-//!
-//! Please file an issue or open a PR to [`germangb/imgui-ext`][repo] if you wish to do so.
-//!
 //! [repo]: https://github.com/germangb/imgui-ext
-use std::ops::DerefMut;
-use std::pin::Pin;
-
-use imgui::{ImGui, Ui};
+#![deny(warnings)]
+use imgui::Ui;
 
 pub use imgui_ext_derive::ImGuiExt;
 
@@ -124,19 +94,23 @@ pub mod prelude {
 /// `vars(...)` docs.
 pub mod vars {
     //!
-    //! Pushes style and color parameters to the stack, so they can be applied to the widgets contained
-    //! in the annotation.
+    //! Pushes style and color parameters to the stack, so they can be applied
+    //! to the widgets contained in the annotation.
     //!
-    //! This is a rather complex annotation. It's not meant to be used extensively though..
+    //! This is a rather complex annotation. It's not meant to be used
+    //! extensively though..
     //!
     //! ## Params
     //!
-    //! - `content(...)` widgets inside this annotation will have the style and color params applied.
+    //! - `content(...)` widgets inside this annotation will have the style and
+    //!   color params applied.
     //!
     //! ## Optional params
     //!
-    //! - `style = "..."` identifier of a local function that returns the style parameters.
-    //! - `color = "..."` identifier of a local function that returns the color parameters.
+    //! - `style = "..."` identifier of a local function that returns the style
+    //!   parameters.
+    //! - `color = "..."` identifier of a local function that returns the color
+    //!   parameters.
     //!
     //! ## Example
     //!
@@ -146,11 +120,15 @@ pub mod vars {
     //!
     //! #[derive(ImGuiExt)]
     //! struct Example {
-    //!    #[imgui(vars(style = "example_style",
-    //!                 color = "example_color",
-    //!                 content(input(label = "foo##input"),
-    //!                         drag(label = "foo##drag"),
-    //!                         slider(label = "foo##slider", min = "-1.0", max = "1.0"))))]
+    //!     #[imgui(vars(
+    //!         style = "example_style",
+    //!         color = "example_color",
+    //!         content(
+    //!             input(label = "foo##input"),
+    //!             drag(label = "foo##drag"),
+    //!             slider(label = "foo##slider", min = "-1.0", max = "1.0")
+    //!         )
+    //!     ))]
     //!     foo: f32,
     //! }
     //!
@@ -172,7 +150,8 @@ pub mod tree {
     //!
     //! Annotation to build static Tree UIs.
     //!
-    //! This is a rather complex annotation. It's not meant to be used extensively though..
+    //! This is a rather complex annotation. It's not meant to be used
+    //! extensively though..
     //!
     //! ## Optional params
     //!
@@ -187,12 +166,17 @@ pub mod tree {
     //! ## Example
     //!
     //! ```
-    //! use imgui::{ImString, ImGuiTreeNodeFlags};
+    //! use imgui::{ImGuiTreeNodeFlags, ImString};
     //! use imgui_ext::ImGuiExt;
     //!
     //! #[derive(ImGuiExt)]
     //! pub struct Tree {
-    //!     #[imgui(tree(label = "Sliders", cond = "FirstUseEver", flags = "flags", node(nested)))]
+    //!     #[imgui(tree(
+    //!         label = "Sliders",
+    //!         cond = "FirstUseEver",
+    //!         flags = "flags",
+    //!         node(nested)
+    //!     ))]
     //!     sliders: Sliders,
     //!     #[imgui(tree(label = "Inputs", flags = "flags", node(nested)))]
     //!     inputs: Inputs,
@@ -255,7 +239,8 @@ pub mod text {
     //!
     //! ## Params
     //!
-    //! * `lit` Literal text. If this value is set, this value is displayed instead of the annotated type.
+    //! * `lit` Literal text. If this value is set, this value is displayed
+    //!   instead of the annotated type.
     //!
     //! You can also write this annotation as:
     //!
@@ -286,7 +271,8 @@ pub mod text {
 /// Support for some (basic) layout annotations.
 pub mod layout {
     //!
-    //! This module is mostly a work in progress. Any suggestions or contributions are very welcome.
+    //! This module is mostly a work in progress. Any suggestions or
+    //! contributions are very welcome.
     //!
     //! Please file [an issue] if you wish contribute.
     //!
@@ -345,7 +331,7 @@ pub mod nested {
     //! ## Example
     //!
     //! ```
-    //! use imgui::{ImString, ImGuiInputTextFlags};
+    //! use imgui::{ImGuiInputTextFlags, ImString};
     //! use imgui_ext::ImGuiExt;
     //!
     //! #[derive(ImGuiExt)]
@@ -354,7 +340,7 @@ pub mod nested {
     //!     user: ImString,
     //!     #[imgui(
     //!         input(flags = "passwd_flags"),
-    //!         button(label = "Login", catch = "login_btn"),
+    //!         button(label = "Login", catch = "login_btn")
     //!     )]
     //!     passwd: ImString,
     //! }
@@ -395,13 +381,13 @@ pub mod nested {
     //!     )
     //! }
     //! ```
-    //!
 }
 /// `button(...)` docs.
 pub mod button {
     //!
-    //! `button(...)` is not associated to any particular type, but its position within an annotation
-    //! will determine where it is rendered in the final UI.
+    //! `button(...)` is not associated to any particular type, but its position
+    //! within an annotation will determine where it is rendered in the
+    //! final UI.
     //!
     //! ## Fields
     //!
@@ -434,7 +420,6 @@ pub mod button {
     //! if events.click {
     //!     buttons.count += 1;
     //! }
-    //!
     //! ```
     //!
     //! ![][image]
@@ -462,7 +447,7 @@ pub mod bullet {
     //!         bullet(text = "Be nice to others."),
     //!         bullet(text = "Don't repeat your password"),
     //!         bullet(text = "Kill all humans."),
-    //!         bullet(slider(min = 0.0, max = 1.0)),
+    //!         bullet(slider(min = 0.0, max = 1.0))
     //!     )]
     //!     foo: f32,
     //! }
@@ -521,14 +506,6 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
     }
 }
 
-impl<T: ImGuiExt + Unpin> ImGuiExt for Pin<Box<T>> {
-    type Events = T::Events;
-    #[inline]
-    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
-        T::imgui_ext(ui, ext.as_mut().get_mut())
-    }
-}
-
 /// Alias for the `ImGuiExt::Events` associated type.
 ///
 /// This type is included in the prelude.
@@ -557,7 +534,7 @@ pub type Events<T> = <T as ImGuiExt>::Events;
 ///
 /// ```ignore
 /// use imgui::Ui;
-///! use imgui_ext::prelude::*;
+/// ! use imgui_ext::prelude::*;
 ///
 /// #[derive(ImGuiExt)]
 /// struct Example {
@@ -584,7 +561,8 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 
 /// Render imgui UI and collect all the events
 ///
-/// (If you [`use imgui_ext::prelude::*`][prelude], you might want to use the [`UiExt`][UiExt] trait to do the same thing).
+/// (If you [`use imgui_ext::prelude::*`][prelude], you might want to use the
+/// [`UiExt`][UiExt] trait to do the same thing).
 ///
 /// [UiExt]: ./trait.UiExt.html
 /// [prelude]: ./prelude/index.html

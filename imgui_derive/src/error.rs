@@ -1,8 +1,6 @@
-use crate::error::ErrorKind::MissingParam;
 use proc_macro2::TokenStream;
 use std::fmt;
 use syn::export::Span;
-use syn::token::Token;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
@@ -22,14 +20,16 @@ impl fmt::Display for ErrorKind {
         match self {
             ErrorKind::InvalidFormat => write!(fmt, "Invalid annotation format."),
             ErrorKind::Multiple => write!(fmt, "Multiple annotations per field."),
-            ErrorKind::NonStruct => {
-                write!(fmt, "ImGuiExt macro is only supported for structs with named fields.")
-            }
+            ErrorKind::NonStruct => write!(
+                fmt,
+                "ImGuiExt macro is only supported for structs with named fields."
+            ),
             ErrorKind::UnexpectedMode => write!(fmt, "Unexpected annotation."),
             ErrorKind::UnexpectedParam => write!(fmt, "Unexpected parameter."),
-            ErrorKind::Bullet => {
-                write!(fmt, "Multiple nested annotations inside of a bullet list element.")
-            }
+            ErrorKind::Bullet => write!(
+                fmt,
+                "Multiple nested annotations inside of a bullet list element."
+            ),
             ErrorKind::AlreadyDefined => write!(fmt, "Field is defined already."),
             ErrorKind::ParseError => write!(fmt, "String parsing error."),
             ErrorKind::MissingParam(p) => write!(fmt, "Parameter `{}` missing.", p),
@@ -59,42 +59,69 @@ impl Error {
     }
 
     pub fn missing_param(span: Span, name: &'static str) -> Self {
-        Self { kind: ErrorKind::MissingParam(name), span }
+        Self {
+            kind: ErrorKind::MissingParam(name),
+            span,
+        }
     }
 
     pub fn invalid_format(span: Span) -> Self {
-        Self { kind: ErrorKind::InvalidFormat, span }
+        Self {
+            kind: ErrorKind::InvalidFormat,
+            span,
+        }
     }
 
     /// Multiple annotations per field.
     pub fn multiple(span: Span) -> Self {
-        Self { kind: ErrorKind::Multiple, span }
+        Self {
+            kind: ErrorKind::Multiple,
+            span,
+        }
     }
 
     /// No support for anything other that structs with names fields
     pub fn non_struct(span: Span) -> Self {
-        Self { kind: ErrorKind::NonStruct, span }
+        Self {
+            kind: ErrorKind::NonStruct,
+            span,
+        }
     }
 
     /// Unexpected annotation mode.
     pub fn unexpected_mode(span: Span) -> Self {
-        Self { kind: ErrorKind::UnexpectedMode, span }
+        Self {
+            kind: ErrorKind::UnexpectedMode,
+            span,
+        }
     }
 
     pub fn unexpected_param(span: Span) -> Self {
-        Self { kind: ErrorKind::UnexpectedParam, span }
+        Self {
+            kind: ErrorKind::UnexpectedParam,
+            span,
+        }
     }
 
     pub fn bullet(span: Span) -> Self {
-        Self { kind: ErrorKind::Bullet, span }
+        Self {
+            kind: ErrorKind::Bullet,
+            span,
+        }
     }
 
     /// Annotation param defined already
     pub fn already_defined(span: Span) -> Self {
-        Self { kind: ErrorKind::AlreadyDefined, span }
+        Self {
+            kind: ErrorKind::AlreadyDefined,
+            span,
+        }
     }
 
     pub fn parsing_error(span: Span) -> Self {
-        Self { kind: ErrorKind::ParseError, span }
+        Self {
+            kind: ErrorKind::ParseError,
+            span,
+        }
     }
 }

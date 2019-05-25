@@ -14,8 +14,8 @@
 //!
 //! ## Example
 //!
-//! The input trait is implemented for numeric types (`f32` and `i32`) and their corresponding
-//! array types of up to 4 elements.
+//! The input trait is implemented for numeric types (`f32` and `i32`) and their
+//! corresponding array types of up to 4 elements.
 //!
 //! ```
 //! use imgui_ext::ImGuiExt;
@@ -42,8 +42,8 @@
 //! You can specify a local function from where to load any input flags:
 //!
 //! ```
-//! use imgui_ext::ImGuiExt;
 //! use imgui::ImGuiInputTextFlags;
+//! use imgui_ext::ImGuiExt;
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
@@ -57,9 +57,6 @@
 //! ```
 //!
 //! [result]: https://i.imgur.com/BPvMGAp.png
-use std::pin::Pin;
-use std::{mem, ptr};
-
 use imgui::sys;
 use imgui::{ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputText, InputTextMultiline, Ui};
 
@@ -79,12 +76,6 @@ pub trait Input<T> {
 impl<T, I: Input<T>> Input<T> for Box<I> {
     fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
         I::build(ui, elem, params)
-    }
-}
-
-impl<T, I: Input<T> + Unpin> Input<T> for Pin<Box<I>> {
-    fn build(ui: &Ui, elem: &mut Self, params: InputParams<T>) -> bool {
-        I::build(ui, elem.as_mut().get_mut(), params)
     }
 }
 

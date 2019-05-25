@@ -8,8 +8,10 @@
 //! ### Optional params
 //!
 //! * `label`
-//! * `flags` Function identifier that returns a [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
-//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"` ([`ColorPreview`][ColorPreview] variants).
+//! * `flags` Function identifier that returns a
+//!   [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
+//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"`
+//!   ([`ColorPreview`][ColorPreview] variants).
 //! * `size` Function identifier that returns the button size.
 //! * `catch`
 //!
@@ -20,10 +22,14 @@
 //! ### Optional params
 //!
 //! * `label`
-//! * `flags` Function identifier that returns a [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
-//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"` ([`ColorPreview`][ColorPreview] variants).
-//! * `mode` Allowed values: `"RGB"`, `"HSV"`, `"HEX"` ([`ColorEditMode`][ColorEditMode] variants).
-//! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat] variants).
+//! * `flags` Function identifier that returns a
+//!   [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
+//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"`
+//!   ([`ColorPreview`][ColorPreview] variants).
+//! * `mode` Allowed values: `"RGB"`, `"HSV"`, `"HEX"`
+//!   ([`ColorEditMode`][ColorEditMode] variants).
+//! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat]
+//!   variants).
 //! * `catch`
 //!
 //! ## Color Picker
@@ -33,10 +39,14 @@
 //! ### Optional params
 //!
 //! * `label`
-//! * `flags` Function identifier that returns a [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
-//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"` ([`ColorPreview`][ColorPreview] variants).
-//! * `mode` Allowed values: `"HueBar"`, `"HueWheel"` ([`ColorPickerMode`][ColorEditMode] variants).
-//! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat] variants).
+//! * `flags` Function identifier that returns a
+//!   [`ImGuiColorEditFlags`][ImGuiColorEditFlags].
+//! * `preview` Allowed values: `"Opaque"`, `"HalfAlpha"`, `"Alpha"`
+//!   ([`ColorPreview`][ColorPreview] variants).
+//! * `mode` Allowed values: `"HueBar"`, `"HueWheel"`
+//!   ([`ColorPickerMode`][ColorEditMode] variants).
+//! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat]
+//!   variants).
 //! * `catch`
 //!
 //! ## Example
@@ -50,7 +60,7 @@
 //!     #[imgui(
 //!         color(button(preview = "Alpha")),
 //!         color(edit(preview = "HalfAlpha")),
-//!         color(picker(mode = "HueWheel")),
+//!         color(picker(mode = "HueWheel"))
 //!     )]
 //!     color: [f32; 4],
 //! }
@@ -66,13 +76,11 @@
 //! [ColorFormat]: https://docs.rs/imgui/0.0/imgui/enum.ColorFormat.html
 //! [ColorEditMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorEditMode.html
 //! [ColorPickerMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorPickerMode.html
-use crate::ImGuiExt;
 use imgui::{
     ColorButton as ImColorButton, ColorEdit as ImColorEdit, ColorEditMode, ColorFormat,
     ColorPicker as ImColorPicker, ColorPickerMode, ColorPreview, EditableColor,
     ImGuiColorEditFlags, ImStr, ImVec2, ImVec4, Ui,
 };
-use std::pin::Pin;
 
 #[derive(Copy, Clone)]
 pub struct ColorButtonParams<'p> {

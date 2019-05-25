@@ -3,8 +3,10 @@ use imgui_ext::ImGuiExt;
 
 #[derive(ImGuiExt, Default)]
 pub struct Demo {
-    #[imgui(vars(style = "style",
-                 content(tree(label = "Input widgets", flags = "flags", node(nested)))))]
+    #[imgui(vars(
+        style = "style",
+        content(tree(label = "Input widgets", flags = "flags", node(nested)))
+    ))]
     input: Input,
     #[imgui(tree(label = "Drag widgets", flags = "flags", node(nested)))]
     drag: Drag,
@@ -66,30 +68,39 @@ pub struct Slider {
 
 #[derive(ImGuiExt)]
 pub struct Color {
-    #[imgui(text(lit = "NOTE: Window opacity is not available in all platforms"),
-            tree(label = "button", node(color(button))),
-            tree(label = "edit", node(color(edit))),
-            tree(label = "picker", node(color(picker))))]
+    #[imgui(
+        text(lit = "NOTE: Window opacity is not available in all platforms"),
+        tree(label = "button", node(color(button))),
+        tree(label = "edit", node(color(edit))),
+        tree(label = "picker", node(color(picker)))
+    )]
     background: [f32; 4],
 }
 
 impl Default for Color {
     fn default() -> Self {
-        Self { background: [0.2, 0.2, 0.2, 1.0] }
+        Self {
+            background: [0.2, 0.2, 0.2, 1.0],
+        }
     }
 }
 
 #[derive(ImGuiExt, Default)]
 pub struct Styles {
-    #[imgui(button(label = "Button"),
-            vars(color = "color", style = "style", content(button(label = "Button"))))]
+    #[imgui(
+        button(label = "Button"),
+        vars(color = "color", style = "style", content(button(label = "Button")))
+    )]
     _ph: (),
 }
 
 use imgui::{ImGuiCol, ImVec2, StyleVar};
 
 fn style() -> &'static [StyleVar] {
-    &[StyleVar::FrameRounding(4.0), StyleVar::WindowPadding(ImVec2 { x: 4.0, y: 4.0 })]
+    &[
+        StyleVar::FrameRounding(4.0),
+        StyleVar::WindowPadding(ImVec2 { x: 4.0, y: 4.0 }),
+    ]
 }
 
 fn color() -> &'static [(ImGuiCol, [f32; 4])] {
@@ -98,11 +109,15 @@ fn color() -> &'static [(ImGuiCol, [f32; 4])] {
 
 #[derive(ImGuiExt, Default)]
 pub struct VarsExample {
-    #[imgui(vars(style = "example_style",
-                 color = "example_color",
-                 content(input(label = "foo##input"),
-                         drag(label = "foo##drag"),
-                         slider(label = "foo##slider", min = "-1.0", max = "1.0"))))]
+    #[imgui(vars(
+        style = "example_style",
+        color = "example_color",
+        content(
+            input(label = "foo##input"),
+            drag(label = "foo##drag"),
+            slider(label = "foo##slider", min = "-1.0", max = "1.0")
+        )
+    ))]
     foo: f32,
 }
 

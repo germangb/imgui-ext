@@ -1,14 +1,12 @@
 #![recursion_limit = "128"]
+#![deny(warnings)]
 extern crate proc_macro;
 
 use std::collections::HashSet;
 
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{
-    parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Fields, Ident, Lit, Meta,
-    MetaList, MetaNameValue, NestedMeta, Type,
-};
+use quote::quote;
+use syn::{parse_macro_input, spanned::Spanned, Attribute, Data, DeriveInput, Fields, Ident};
 
 use error::Error;
 
@@ -37,8 +35,10 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 
     // crate a new type.
     // It should never generate a collision
-    let event_type =
-        Ident::new(&format!("____{}____ImGuiExtEvents", name.to_string()), input.span());
+    let event_type = Ident::new(
+        &format!("____{}____ImGuiExtEvents", name.to_string()),
+        input.span(),
+    );
 
     Ok(quote! {
         #[allow(non_camel_case_types)]
@@ -72,7 +72,6 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 ///     #[imgui(input(...))]
 ///     y: f32,
 /// }
-#[rustfmt::skip]
 fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream), Error> {
     let mut input_methods: TokenStream = TokenStream::new();
 
@@ -82,14 +81,19 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream)
     let field_body = fields
         .iter()
         .enumerate()
-        .flat_map(|(i, field)| {
+        .flat_map(|(_, field)| {
             // TODO support for unnamed attributes
-            let ident = field.ident.clone().expect("Unnamed fields not yet supported.");
+            let ident = field
+                .ident
+                .clone()
+                .expect("Unnamed fields not yet supported.");
             let ty = &field.ty;
 
             // collect all the imgui attributes
             // we need to check that there is only one.
-            let attrs: Vec<Attribute> = field.attrs.iter()
+            let attrs: Vec<Attribute> = field
+                .attrs
+                .iter()
                 .filter(|attr| {
                     let ident = Ident::new("imgui", attr.span());
                     attr.path.is_ident(ident)
@@ -104,38 +108,38 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream)
             match (first, second) {
                 // No annotations were found.
                 // Emmit no sourcecode.
-                (None,          None     ) => vec![Ok(TokenStream::new())],
+                (None, None) => vec![Ok(TokenStream::new())],
 
                 // There is more than one imgui annotation.
                 // Raise a descriptive error pointing to the extra annotation.
-                (Some(_),       Some(err)) => vec![Err(Error::multiple(err.span()))],
+                (Some(_), Some(err)) => vec![Err(Error::multiple(err.span()))],
 
                 // There is a single annotation, as it should.
                 // Parse the annotation and emmit the source code for this field
-                (Some(attr),    None     ) => {
+                (Some(attr), None) => {
                     let tags = attr
-                        .parse_meta()           // -> Meta
-                        .map_err(|e| {
-                            Error::new(ErrorKind::ParseError, attr.span())
-                        })
-                        .and_then(parser::parse_meta);  // -> Result<Vec<Tag>>
+                        .parse_meta() // -> Meta
+                        .map_err(|_| Error::new(ErrorKind::ParseError, attr.span()))
+                        .and_then(parser::parse_meta); // -> Result<Vec<Tag>>
 
                     match tags {
-                        Err(e) => vec![Err(Error::new(ErrorKind::ParseError, attr.span()))],
+                        Err(_) => vec![Err(Error::new(ErrorKind::ParseError, attr.span()))],
                         Ok(tags) => tags
                             .into_iter()
                             .map(|tag| {
-                                parser::emmit_tag_tokens(&ident,
-                                                         &ty,
-                                                         &attr,
-                                                         &tag,
-                                                         &mut input_fields,
-                                                         &mut input_methods,
-                                                         &mut input_fields_set)
+                                parser::emmit_tag_tokens(
+                                    &ident,
+                                    &ty,
+                                    &attr,
+                                    &tag,
+                                    &mut input_fields,
+                                    &mut input_methods,
+                                    &mut input_fields_set,
+                                )
                             })
-                            .collect()
+                            .collect(),
                     }
-                },
+                }
 
                 _ => unreachable!(),
             }

@@ -9,7 +9,6 @@
 //! * `catch`
 use imgui::sys;
 use imgui::{ImStr, Ui};
-use std::pin::Pin;
 
 #[derive(Copy, Clone)]
 pub struct DragParams<'ui, T> {
@@ -39,12 +38,6 @@ impl<T, D: Drag<T>> Drag<T> for Box<D> {
     #[inline]
     fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>) -> bool {
         D::build(ui, elem, params)
-    }
-}
-
-impl<T, D: Drag<T> + Unpin> Drag<T> for Pin<Box<D>> {
-    fn build(ui: &Ui, elem: &mut Self, params: DragParams<T>) -> bool {
-        D::build(ui, elem.as_mut().get_mut(), params)
     }
 }
 

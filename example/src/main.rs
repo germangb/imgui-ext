@@ -12,14 +12,14 @@ fn main() {
 
     support::run("Demo", (800, 600), |win, ui| {
         ui.window(im_str!("##1")).build(|| {
-                                     ui.imgui_ext(&mut vars_example);
-                                 });
+            ui.imgui_ext(&mut vars_example);
+        });
 
         ui.window(im_str!("##2")).build(|| {
-                                     let event = ui.imgui_ext(&mut demo);
-                                     if event.color().background() {
-                                         win.color = demo.background_color()
-                                     }
-                                 });
+            let event = ui.imgui_ext(&mut demo);
+            if event.color().background() {
+                win.color = demo.background_color()
+            }
+        });
     });
 }

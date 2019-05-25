@@ -29,9 +29,6 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/X2ue0dS.png
-use std::borrow::BorrowMut;
-use std::pin::Pin;
-
 use imgui::sys;
 use imgui::{ImStr, Ui};
 
@@ -62,13 +59,6 @@ impl<T, S: Slider<T>> Slider<T> for Box<S> {
     #[inline]
     fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>) -> bool {
         S::build(ui, elem, params)
-    }
-}
-
-impl<T, S: Slider<T> + Unpin> Slider<T> for Pin<Box<S>> {
-    #[inline]
-    fn build(ui: &Ui, elem: &mut Self, params: SliderParams<T>) -> bool {
-        S::build(ui, elem.as_mut().get_mut(), params)
     }
 }
 

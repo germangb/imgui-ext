@@ -7,8 +7,10 @@
 //! * `background` local function that returns the background color
 //! * `tint` local function returning tint color
 //! * `frame_padding` an `i32`.
-//! * `uv0` local function returning the first uv coordinate. The default value is `[0.0, 0.0]`.
-//! * `uv0` local function returning the second uv coordinate. The default value is `[1.0, 1.0]`.
+//! * `uv0` local function returning the first uv coordinate. The default value
+//!   is `[0.0, 0.0]`.
+//! * `uv0` local function returning the second uv coordinate. The default value
+//!   is `[1.0, 1.0]`.
 //!
 //! ## Example
 //!
@@ -30,7 +32,9 @@ pub trait ImageButton {
     fn build(ui: &Ui, elem: Self, params: ImageButtonParams);
 }
 
-impl<T> ImageButton for T where T: Copy + Into<ImTexture>
+impl<T> ImageButton for T
+where
+    T: Copy + Into<ImTexture>,
 {
     fn build(ui: &Ui, elem: Self, params: ImageButtonParams) {
         let mut image = ui.image_button(elem.into(), params.size);

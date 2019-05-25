@@ -23,7 +23,10 @@ pub struct Window {
 
 impl Window {
     fn default() -> Self {
-        Self { color: [0.2, 0.2, 0.2, 1.0], running: true }
+        Self {
+            color: [0.2, 0.2, 0.2, 1.0],
+            running: true,
+        }
     }
 
     pub fn close(&mut self) {

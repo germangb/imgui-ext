@@ -3,10 +3,10 @@
 //!
 //! [imgui]: https://crates.io/crates/imgui
 //!
-//! ## Basic usage
+//! # Basic usage
 //!
 //! ```
-//! #[derive(imgui_ext::ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Example {
 //!     #[imgui(slider(min = 0.0, max = 4.0))]
 //!     x: f32,
@@ -23,7 +23,7 @@
 //!
 //! [result]: https://i.imgur.com/Xrl1Nt0.png
 //!
-//! ## Input events
+//! # Input events
 //!
 //! Rendering a UI with `imgui` & `imgui-ext` returns a type with all the
 //! triggered input events (which are generally stored as booleans):
@@ -31,7 +31,7 @@
 //! ```
 //! use imgui_ext::prelude::*;
 //!
-//! #[derive(imgui_ext::ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox"))]
 //!     check: bool,
@@ -61,7 +61,7 @@
 //! ```no_run
 //! use imgui_ext::prelude::*;
 //!
-//! #[derive(imgui_ext::ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox", catch = "checkbox_event"))]
 //!     check: bool,
@@ -83,16 +83,18 @@
 //!
 //! [repo]: https://github.com/germangb/imgui-ext
 #![deny(warnings)]
+
 use imgui::Ui;
 
 pub use imgui_ext_derive::ImGuiExt;
+pub use imgui_ext_derive::Ui;
 
 include!("macros/slider.rs");
 include!("macros/input.rs");
 include!("macros/drag.rs");
 
 pub mod prelude {
-    pub use super::{ImGuiExt, UiExt};
+    pub use super::UiExt;
 }
 /// `vars(...)` docs.
 pub mod vars {
@@ -103,25 +105,24 @@ pub mod vars {
     //! This is a rather complex annotation. It's not meant to be used
     //! extensively though..
     //!
-    //! ## Params
+    //! # Params
     //!
     //! - `content(...)` widgets inside this annotation will have the style and
     //!   color params applied.
     //!
-    //! ## Optional params
+    //! # Optional params
     //!
     //! - `style = "..."` identifier of a local function that returns the style
     //!   parameters.
     //! - `color = "..."` identifier of a local function that returns the color
     //!   parameters.
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
     //! use imgui::{ImGuiCol, StyleVar};
-    //! use imgui_ext::ImGuiExt;
     //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Example {
     //!     #[imgui(vars(
     //!         style = "example_style",
@@ -144,7 +145,7 @@ pub mod vars {
     //! }
     //! ```
     //!
-    //! ### Result
+    //! ## Result
     //!
     //! ![](https://i.imgur.com/TMmjOUg.png)
 }
@@ -156,7 +157,7 @@ pub mod tree {
     //! This is a rather complex annotation. It's not meant to be used
     //! extensively though..
     //!
-    //! ## Optional params
+    //! # Optional params
     //!
     //! - `label = ".."` Node label
     //! - `flags = ".."` Local function returning [`ImGuiTreeNodeFlags`]
@@ -166,12 +167,12 @@ pub mod tree {
     //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.ImGuiCond.html
     //! [`ImGuiTreeNodeFlags`]: https://docs.rs/imgui/*/imgui/struct.ImGuiTreeNodeFlags.html
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
     //! use imgui::{ImGuiTreeNodeFlags, ImString};
     //!
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! pub struct Tree {
     //!     #[imgui(tree(
     //!         label = "Sliders",
@@ -190,7 +191,7 @@ pub mod tree {
     //!     ImGuiTreeNodeFlags::Framed
     //! }
     //!
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! pub struct Sliders {
     //!     #[imgui(text("Slider widgets:"), slider(min = 0.0, max = 3.0))]
     //!     s1: f32,
@@ -200,7 +201,7 @@ pub mod tree {
     //!     s3: [f64; 2],
     //! }
     //!
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! pub struct Inputs {
     //!     #[imgui(text("Input widgets:"), input)]
     //!     i1: f32,
@@ -211,7 +212,7 @@ pub mod tree {
     //! }
     //! ```
     //!
-    //! ## Result
+    //! # Result
     //!
     //! ![](https://i.imgur.com/Rn2RJJG.png)
 }
@@ -231,15 +232,15 @@ pub mod input;
 pub mod progress;
 /// `slider(...)` docs.
 pub mod slider;
-/// `text(...)` and `text_wrap(...)` docs.
+/// `text(...)` & `text_wrap(...)` docs.
 pub mod text {
     //!
-    //! ## Variants
+    //! # Variants
     //!
     //! - `text(...)`
     //! - `text_wrap(...)` Same as `text(...)`, but the text content wraps
     //!
-    //! ## Params
+    //! # Params
     //!
     //! * `lit` Literal text. If this value is set, this value is displayed
     //!   instead of the annotated type.
@@ -250,12 +251,10 @@ pub mod text {
     //!
     //! which is a shorthand form for `text(lit = "literal...")`.
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
-    //! use imgui_ext::ImGuiExt;
-    //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Example {
     //!     #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
     //!             separator(),
@@ -266,21 +265,14 @@ pub mod text {
     //! }
     //! ```
     //!
-    //! ### Result
+    //! # Result
     //!
     //! ![](https://i.imgur.com/0uvMFIm.png)
 }
-/// Support for some (basic) layout annotations.
+/// Layout support.
+///
+/// *This module is very limited and WIP*
 pub mod layout {
-    //!
-    //! This module is mostly a work in progress. Any suggestions or
-    //! contributions are very welcome.
-    //!
-    //! Please file [an issue] if you wish contribute.
-    //!
-    //! [an issue]: https://github.com/germangb/imgui-ext/issues
-    //!
-    //! ## Annotations:
     //!
     //! * `#[imgui(separator)]` inserts a separator
     //! * `#[imgui(new_line)]` inserts an empty line
@@ -290,15 +282,15 @@ pub mod display {
     //!
     //! `display(...)` is used to display a field.
     //!
-    //! ## Optional fields
+    //! # Optional fields
     //!
     //! * `label`
     //! * `display` formatted text.
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Labels {
     //!     #[imgui(display)]
     //!     foo: f32,
@@ -320,18 +312,18 @@ pub mod display {
 /// `nested(...)` docs (used to build nested UIs).
 pub mod nested {
     //!
-    //! Types that #[derive(ImGuiExt)] can be nested.
+    //! Types that #[derive(Ui)] can be nested.
     //!
-    //! ## Optional fields
+    //! # Optional fields
     //!
     //! * `catch`
     //!
     //! [issue]: #
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Form {
     //!     #[imgui(input)]
     //!     user: imgui::ImString,
@@ -346,7 +338,7 @@ pub mod nested {
     //!     imgui::ImGuiInputTextFlags::Password
     //! }
     //!
-    //! #[derive(imgui_ext::ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Example {
     //!     #[imgui(nested, separator)]
     //!     login_form: Form,
@@ -355,13 +347,13 @@ pub mod nested {
     //! }
     //! ```
     //!
-    //! ### Result
+    //! ## Result
     //!
     //! ![][result]
     //!
     //! [result]: https://i.imgur.com/l6omyf4.png
     //!
-    //! ## Nested input events
+    //! # Nested input events
     //!
     //! You can access input events from nested UIs:
     //!
@@ -386,24 +378,26 @@ pub mod button {
     //! within an annotation will determine where it is rendered in the
     //! final UI.
     //!
-    //! ## Fields
+    //! # Fields
     //!
     //! - `label`
     //!
-    //! ## Optional fields
+    //! # Optional fields
     //!
     //! - `size` name of a local function that returns the button size.
     //! - `catch`
     //!
-    //! ## Example
+    //! # Example
     //!
-    //! ```ignore
-    //! #[derive(ImGuiExt)]
-    //! struct Buttons {
+    //! ```
+    //! use imgui_ext::prelude::*;
+    //!
+    //! #[derive(imgui_ext::Ui)]
+    //! struct Button {
     //!     #[imgui(
     //!         button(size = "button_size", label = "Click me!", catch = "click"),
     //!         separator,
-    //!         display(label = "Clicks"),
+    //!         display(label = "Clicks")
     //!     )]
     //!     count: i32,
     //! }
@@ -412,9 +406,16 @@ pub mod button {
     //!     (100.0, 20.0)
     //! }
     //!
-    //! // initialize ui and Buttons...
+    //! # struct A;
+    //! # struct B;
+    //! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+    //! # impl B { fn click(&self) -> bool { true } }
+    //! # let ui = A;
+    //! let mut buttons = Button { count: 0 };
+    //!
     //! let events = ui.imgui_ext(&mut buttons);
-    //! if events.click {
+    //!
+    //! if events.click() {
     //!     buttons.count += 1;
     //! }
     //! ```
@@ -434,12 +435,10 @@ pub mod bullet {
     //!
     //! [issue]: #
     //!
-    //! ## Example
+    //! # Example
     //!
     //! ```
-    //! use imgui_ext::ImGuiExt;
-    //!
-    //! #[derive(ImGuiExt)]
+    //! #[derive(imgui_ext::Ui)]
     //! struct Bullet {
     //!     #[imgui(
     //!         bullet(text = "Be nice to others."),
@@ -451,7 +450,7 @@ pub mod bullet {
     //! }
     //! ```
     //!
-    //! ### Result
+    //! ## Result
     //!
     //! ![][result]
     //!
@@ -459,6 +458,7 @@ pub mod bullet {
     #[cfg(test)]
     mod tests {
         #![allow(dead_code)]
+
         use crate as imgui_ext;
         use crate::ImGuiExt;
 
@@ -506,22 +506,24 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 
 /// Alias for the `ImGuiExt::Events` associated type.
 ///
-/// This type is included in the prelude.
-///
-/// ```ignore
+/// ```
 /// use imgui_ext::prelude::*;
-/// use imgui_ext::{ImGuiExt, Events};
+/// use imgui_ext::Events;
 ///
-/// #[derive(ImGuiExt)]
+/// #[derive(imgui_ext::Ui)]
 /// struct Example { /*...*/ }
 ///
 /// fn handle_events(e: &Events<Example>) {
 ///     // ...
 /// }
+/// # struct A;
+/// # struct B;
+/// # impl A { fn imgui_ext(&self, _: &mut Example) -> <Example as imgui_ext::ImGuiExt>::Events
+/// # { unsafe { std::mem::transmute(()) } } }
+/// # let ui = A;
 ///
 /// let mut example = Example { /*...*/ };
 ///
-/// // init imgui (ui)...
 /// let events = ui.imgui_ext(&mut example);
 ///
 /// handle_events(&events);
@@ -530,19 +532,24 @@ pub type Events<T> = <T as ImGuiExt>::Events;
 
 /// Extension trait for imgui Ui.
 ///
-/// ```ignore
-/// use imgui::Ui;
-/// ! use imgui_ext::prelude::*;
+/// ```
+/// use imgui_ext::prelude::*;
 ///
-/// #[derive(ImGuiExt)]
+/// #[derive(imgui_ext::Ui)]
 /// struct Example {
 ///     // ...
 /// }
 ///
-/// // initialize imgui...
-/// let ui: &Ui = ...;
+/// # struct A;
+/// # struct B;
+/// # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+/// # impl B { fn click(&self) -> bool { true } }
+/// # fn init_imgui() -> A { A }
+///
+/// let ui = init_imgui();
+///
 /// // initialize Example...
-/// let mut example: Example = ...;
+/// let mut example = Example { /* ... */ };
 ///
 /// ui.imgui_ext(&mut example);
 /// ```
@@ -553,11 +560,11 @@ pub trait UiExt<'ui> {
 impl<'ui> UiExt<'ui> for Ui<'ui> {
     #[inline]
     fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events {
-        imgui_ext(self, ext)
+        render_imgui_ext(self, ext)
     }
 }
 
-/// Render imgui UI and collect all the events
+/// Render imgui UI.
 ///
 /// (If you [`use imgui_ext::prelude::*`][prelude], you might want to use the
 /// [`UiExt`][UiExt] trait to do the same thing).
@@ -566,22 +573,32 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 /// [prelude]: ./prelude/index.html
 ///
 /// ```ignore
-/// use imgui_ext::ImGuiExt;
+/// use imgui_ext::render_imgui_ext;
 ///
-/// #[derive(ImGuiExt)]
+/// #[derive(imgui_ext::Ui)]
 /// struct Example {
 ///     #[derive(checkbox(catch = "click"))]
 ///     check_box: bool,
 /// }
 ///
-/// // initialize imgui and example...
+/// // init imgui (ui)
 ///
-/// let events = imgui_ext(ui, &mut example);
-/// if events.click {
-///     println!("New value: {}", example.check_box);
+/// let mut example = Example { check_box: false };
+///
+/// let events = render_imgui_ext(&ui, &mut example);
+///
+/// if events.click() {
+///     println!("checkbox changed: {}", example.check_box);
 /// }
 /// ```
-#[inline]
+pub fn render_imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
+    U::imgui_ext(ui, ext)
+}
+
+/// Render imgui UI.
+///
+/// *Deprecated in favour of [`render_imgui_ext`](./fn.render_imgui_ext.html)*
+#[deprecated]
 pub fn imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
     U::imgui_ext(ui, ext)
 }

@@ -139,8 +139,40 @@ imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, ), 8, sys::ImGuiD
 imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, ), 8, sys::ImGuiDataType::S32 }
 
 // matrix types
+// TODO macro Y expansion
 
-imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32 ), 8, sys::ImGuiDataType::Float }
-imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64 ), 8, sys::ImGuiDataType::Double }
-imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32 ), 8, sys::ImGuiDataType::U32 }
-imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32 ), 8, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 8, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 7, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 6, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 5, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 4, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 3, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 2, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 1, sys::ImGuiDataType::Float }
+
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 8, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 7, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 6, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 5, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 4, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 3, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 2, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 1, sys::ImGuiDataType::Double }
+
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 8, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 7, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 6, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 5, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 4, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 3, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 2, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 1, sys::ImGuiDataType::U32 }
+
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 8, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 7, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 6, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 5, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 4, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 3, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 2, sys::ImGuiDataType::S32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 1, sys::ImGuiDataType::S32 }

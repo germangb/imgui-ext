@@ -145,9 +145,13 @@ macro_rules! imgui_input_scalar {
 }
 
 macro_rules! imgui_input_matrix {
-    ( ($head:ty), $size:expr, $kind:expr) => {};
-    ( ($head:ty, $($tail:ty),+), $size:expr, $kind:expr ) => {
-        impl Input<$head> for [[$head; $size]; $size] {
+    ( ($head:ty), $size:expr, $size_2:expr, $kind:expr) => {};
+    (
+        ($head:ty, $($tail:ty),+),
+        $size:expr, $size_2:expr,
+        $kind:expr
+    ) => {
+        impl Input<$head> for [[$head; $size]; $size_2] {
             fn build(ui: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
                 let mut trigger = false;
 
@@ -189,7 +193,11 @@ macro_rules! imgui_input_matrix {
             }
         }
 
-        imgui_input_matrix! { ($($tail),*), ($size-1), $kind }
+        imgui_input_matrix! {
+            ($($tail),*),
+            ($size-1), $size_2,
+            $kind
+        }
     }
 }
 

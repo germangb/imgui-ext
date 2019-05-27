@@ -202,4 +202,65 @@ macro_rules! imgui_input_matrix {
     }
 }
 
+macro_rules! imgui_drag_matrix {
+    ( (), $size:expr, $size_2:expr, $kind:expr) => {};
+    (
+        ($head:ty $(, $tail:ty)*),
+        $size:expr, $size_2:expr,
+        $kind:expr
+    ) => {
+        impl Drag<$head> for [[$head; $size]; $size_2] {
+            fn build(ui: &Ui, elem: &mut Self, params: DragParams<$head>) -> bool {
+                let mut trigger = false;
+
+                #[allow(unused_mut)]
+                let mut index = 0;
+                ui.push_id(elem[index].as_ptr());
+
+                unsafe {
+                    let label = params.label.as_ptr();
+                    let min = params.min.as_ref();
+                    let max = params.min.as_ref();
+                    let format = std::ptr::null();
+                    let speed = params.speed.unwrap_or(1.0);
+                    let power = params.power.unwrap_or(1.0);
+                    trigger |= sys::igDragScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                }
+
+                $(
+                    index += 1;
+                    ui.push_id(elem[index].as_ptr());
+                    unsafe {
+                        let _: $tail = std::mem::zeroed();
+
+                        let label = params.label.as_ptr();
+                        let min = params.min.as_ref();
+                        let max = params.min.as_ref();
+                        let format = std::ptr::null();
+                        let speed = params.speed.unwrap_or(1.0);
+                        let power = params.power.unwrap_or(1.0);
+                        trigger |= sys::igDragScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                    }
+                )*
+
+                $(
+                    unsafe {
+                        let _: $tail = std::mem::zeroed();
+                    }
+                    ui.pop_id();
+                )*
+                ui.pop_id();
+
+                trigger
+            }
+        }
+
+        imgui_drag_matrix! {
+            ($($tail),*),
+            ($size-1), $size_2,
+            $kind
+        }
+    }
+}
+
 

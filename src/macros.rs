@@ -145,9 +145,9 @@ macro_rules! imgui_input_scalar {
 }
 
 macro_rules! imgui_input_matrix {
-    ( ($head:ty), $size:expr, $size_2:expr, $kind:expr) => {};
+    ( (), $size:expr, $size_2:expr, $kind:expr) => {};
     (
-        ($head:ty, $($tail:ty),+),
+        ($head:ty $(, $tail:ty)*),
         $size:expr, $size_2:expr,
         $kind:expr
     ) => {
@@ -155,6 +155,7 @@ macro_rules! imgui_input_matrix {
             fn build(ui: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
                 let mut trigger = false;
 
+                #[allow(unused_mut)]
                 let mut index = 0;
                 ui.push_id(elem[index].as_ptr());
 
@@ -179,14 +180,14 @@ macro_rules! imgui_input_matrix {
                         let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
                         trigger |= sys::igInputScalarN(imgui::im_str!("##").as_ptr(), $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(step), std::mem::transmute(step_fast), format, flags);
                     }
-                )+
+                )*
 
                 $(
                     unsafe {
                         let _: $tail = std::mem::zeroed();
                     }
                     ui.pop_id();
-                )+
+                )*
                 ui.pop_id();
 
                 trigger

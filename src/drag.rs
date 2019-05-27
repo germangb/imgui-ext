@@ -11,9 +11,9 @@ use imgui::sys;
 use imgui::{ImStr, Ui};
 
 #[derive(Copy, Clone)]
-pub struct DragParams<'ui, T> {
-    pub label: &'ui ImStr,
-    pub format: Option<&'ui ImStr>,
+pub struct DragParams<'a, T> {
+    pub label: &'a ImStr,
+    pub format: Option<&'a ImStr>,
     pub min: Option<T>,
     pub max: Option<T>,
     pub speed: Option<f32>,
@@ -41,7 +41,7 @@ impl<T, D: Drag<T>> Drag<T> for Box<D> {
     }
 }
 
-imgui_drag_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, ), 16, sys::ImGuiDataType::Float }
-imgui_drag_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, ), 16, sys::ImGuiDataType::Double }
-imgui_drag_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, ), 16, sys::ImGuiDataType::U32 }
-imgui_drag_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, ), 16, sys::ImGuiDataType::S32 }
+imgui_drag_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, ), 8, sys::ImGuiDataType::Float }
+imgui_drag_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, ), 8, sys::ImGuiDataType::Double }
+imgui_drag_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, ), 8, sys::ImGuiDataType::U32 }
+imgui_drag_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, ), 8, sys::ImGuiDataType::S32 }

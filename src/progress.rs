@@ -28,8 +28,8 @@
 use imgui::{ImStr, ImVec2, ProgressBar, Ui};
 
 #[derive(Copy, Clone)]
-pub struct ProgressParams<'p> {
-    pub overlay: Option<&'p ImStr>,
+pub struct ProgressParams<'a> {
+    pub overlay: Option<&'a ImStr>,
     pub size: Option<ImVec2>,
 }
 

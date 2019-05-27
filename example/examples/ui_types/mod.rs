@@ -1,5 +1,5 @@
-use imgui::{ImGuiTreeNodeFlags, ImString};
-use imgui_ext::ImGuiExt;
+use example::imgui::{ImGuiTreeNodeFlags, ImString};
+use example::imgui_ext::ImGuiExt;
 
 #[derive(ImGuiExt, Default)]
 pub struct Demo {
@@ -132,9 +132,9 @@ fn example_color() -> &'static [(ImGuiCol, [f32; 4])] {
 #[derive(ImGuiExt, Default)]
 pub struct ExampleText {
     #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
-            separator(),
-            text("Input num:"),
-            slider(min = "-1.0", max = 1.0),
-            button(label = "Submit"))]
+    separator(),
+    text("Input num:"),
+    slider(min = "-1.0", max = 1.0),
+    button(label = "Submit"))]
     number: f32,
 }

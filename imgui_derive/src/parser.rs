@@ -147,6 +147,7 @@ tag! {
             step_fast: Option<Lit>,
             catch: Option<Lit>,
             size: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -1255,6 +1256,7 @@ pub fn emmit_tag_tokens(
             flags,
             catch,
             size,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1315,11 +1317,22 @@ pub fn emmit_tag_tokens(
             let catch_ident =
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
-            quote!({
-                use imgui_ext::input::Input;
-                let _ev = Input::build(ui, &mut ext.#ident, { #params });
-                events.#catch_ident |= _ev;
-            })
+            match map {
+                None => quote!({
+                    use imgui_ext::input::Input;
+                    let _ev = Input::build(ui, &mut ext.#ident, { #params });
+                    events.#catch_ident |= _ev;
+                }),
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote!({
+                        use imgui_ext::input::Input;
+                        let _ev = Input::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        events.#catch_ident |= _ev;
+                    })
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::Drag(Drag {
             label,

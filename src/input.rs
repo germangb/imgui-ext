@@ -9,13 +9,14 @@
 //! * `flags` Name of a local function that returns the input [flags].
 //! * `size` Text box size (Applies to text input)
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self` (see [example](#mapping)).
 //!
 //! [flags]: https://docs.rs/imgui/0.0/imgui/struct.ImGuiInputTextFlags.html
 //!
 //! ## Example
 //!
 //! The input trait is implemented for numeric types (`f32` and `i32`) and their
-//! corresponding array types of up to 4 elements.
+//! corresponding array types of up to 8 elements.
 //!
 //! ```
 //! use imgui_ext::ImGuiExt;
@@ -39,7 +40,7 @@
 //!
 //! ## Input flags
 //!
-//! You can specify a local function from where to load any input flags:
+//! You can load input flags from a local function:
 //!
 //! ```
 //! use imgui::ImGuiInputTextFlags;
@@ -57,12 +58,37 @@
 //! ```
 //!
 //! [result]: https://i.imgur.com/BPvMGAp.png
+//!
+//! # Mapping
+//!
+//! The attribute `map` points to a local function that performs a map operation
+//! on the attribute:
+//!
+//! ```
+//! // Note: Foo doesn't implement the ImGuiExt macro
+//! struct Foo {
+//!     inner: [f32; 4],
+//! }
+//!
+//! #[derive(imgui_ext::Ui)]
+//! struct Bar {
+//!     // Even though Foo is not compatible with the input()
+//!     // annotation, its inner attribute does, therefore we
+//!     // can map from one type to the other.
+//!     #[imgui(input(map = "foo_to_array"))]
+//!     foo: Foo,
+//! }
+//!
+//! fn foo_to_array(foo: &mut Foo) -> &mut [f32; 4] {
+//!     &mut foo.inner
+//! }
+//! ```
 use imgui::sys;
 use imgui::{ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputText, InputTextMultiline, Ui};
 
 #[derive(Copy, Clone)]
-pub struct InputParams<'ui, T> {
-    pub label: &'ui ImStr,
+pub struct InputParams<'a, T> {
+    pub label: &'a ImStr,
     pub step: Option<T>,
     pub step_fast: Option<T>,
     pub flags: Option<ImGuiInputTextFlags>,
@@ -107,7 +133,14 @@ impl Input<()> for ImString {
     }
 }
 
-imgui_input_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, f32, ), 16, sys::ImGuiDataType::Float }
-imgui_input_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, ), 16, sys::ImGuiDataType::Double }
-imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, ), 16, sys::ImGuiDataType::U32 }
-imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, i32, ), 16, sys::ImGuiDataType::S32 }
+imgui_input_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, ), 8, sys::ImGuiDataType::Float }
+imgui_input_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, ), 8, sys::ImGuiDataType::Double }
+imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, ), 8, sys::ImGuiDataType::U32 }
+imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, ), 8, sys::ImGuiDataType::S32 }
+
+// matrix types
+
+imgui_input_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32 ), 8, sys::ImGuiDataType::Float }
+imgui_input_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64 ), 8, sys::ImGuiDataType::Double }
+imgui_input_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32 ), 8, sys::ImGuiDataType::U32 }
+imgui_input_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32 ), 8, sys::ImGuiDataType::S32 }

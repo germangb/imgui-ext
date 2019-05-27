@@ -89,9 +89,7 @@ use imgui::Ui;
 pub use imgui_ext_derive::ImGuiExt;
 pub use imgui_ext_derive::Ui;
 
-include!("macros/slider.rs");
-include!("macros/input.rs");
-include!("macros/drag.rs");
+include!("macros.rs");
 
 pub mod prelude {
     pub use super::UiExt;

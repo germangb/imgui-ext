@@ -83,16 +83,16 @@ use imgui::{
 };
 
 #[derive(Copy, Clone)]
-pub struct ColorButtonParams<'p> {
-    pub label: &'p ImStr,
+pub struct ColorButtonParams<'a> {
+    pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
     pub preview: Option<ColorPreview>,
     pub size: Option<ImVec2>,
 }
 
 #[derive(Copy, Clone)]
-pub struct ColorEditParams<'p> {
-    pub label: &'p ImStr,
+pub struct ColorEditParams<'a> {
+    pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
     pub preview: Option<ColorPreview>,
     pub format: Option<ColorFormat>,
@@ -100,8 +100,8 @@ pub struct ColorEditParams<'p> {
 }
 
 #[derive(Copy, Clone)]
-pub struct ColorPickerParams<'p> {
-    pub label: &'p ImStr,
+pub struct ColorPickerParams<'a> {
+    pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
     pub preview: Option<ColorPreview>,
     pub format: Option<ColorFormat>,
@@ -136,7 +136,7 @@ impl<C: Into<ImVec4>> ColorButton for C {
     }
 }
 
-impl<'p, C: Into<EditableColor<'p>>> ColorEdit for C {
+impl<'a, C: Into<EditableColor<'a>>> ColorEdit for C {
     fn build(ui: &Ui, elem: Self, params: ColorEditParams) -> bool {
         let mut edit = ImColorEdit::new(ui, params.label, elem.into());
         if let Some(flags) = params.flags {
@@ -155,7 +155,7 @@ impl<'p, C: Into<EditableColor<'p>>> ColorEdit for C {
     }
 }
 
-impl<'p, C: Into<EditableColor<'p>>> ColorPicker for C {
+impl<'a, C: Into<EditableColor<'a>>> ColorPicker for C {
     fn build(ui: &Ui, elem: Self, params: ColorPickerParams) -> bool {
         let mut picker = ImColorPicker::new(ui, params.label, elem.into());
         if let Some(flags) = params.flags {

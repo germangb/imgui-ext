@@ -15,6 +15,9 @@ imgui-ext = { version = "0.1.9", path = "../" }
 imgui-sdl2 = { version = "0.5.0", optional = true }
 imgui-opengl-renderer = { version = "0.4.0", optional = true }
 
+[dev-dependencies]
+glm = { package = "nalgebra-glm", version = "0.4.0" }
+
 [features]
 default = ["sdl"]
 sdl = ["sdl2", "imgui-sdl2", "imgui-opengl-renderer", "gl"]

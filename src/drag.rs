@@ -7,6 +7,8 @@
 //! * `power`
 //! * `format` (printf format)
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self`.
+//!
 use imgui::sys;
 use imgui::{ImStr, Ui};
 

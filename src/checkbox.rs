@@ -2,6 +2,7 @@
 //!
 //! * `label`
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Example
 //!

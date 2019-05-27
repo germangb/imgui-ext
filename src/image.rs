@@ -10,6 +10,7 @@
 //!   is `[0.0, 0.0]`.
 //! * `uv0` local function returning the second uv coordinate. The default value
 //!   is `[1.0, 1.0]`.
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Limitations
 //!

@@ -129,6 +129,7 @@ tag! {
         optional {
             label: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -164,6 +165,7 @@ tag! {
             format: Option<Lit>,
             power: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -182,6 +184,7 @@ tag! {
             power: Option<Lit>,
             format: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -218,6 +221,7 @@ tag! {
         },
         optional {
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -274,6 +278,7 @@ tag! {
             preview: Option<Lit>,
             size: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -290,6 +295,7 @@ tag! {
             mode: Option<Lit>,
             format: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -306,6 +312,7 @@ tag! {
             mode: Option<Lit>,
             format: Option<Lit>,
             catch: Option<Lit>,
+            map: Option<Lit>,
         }
     }
 }
@@ -1036,6 +1043,7 @@ pub fn emmit_tag_tokens(
             mode,
             format,
             catch,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1101,11 +1109,24 @@ pub fn emmit_tag_tokens(
             let catch_ident =
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
-            quote! {{
-                use imgui_ext::color::ColorEdit;
-                let _ev = ColorEdit::build(ui, &mut ext.#ident, { #params ; params });
-                events.#catch_ident |= _ev;
-            }}
+            match map {
+                None => {
+                    quote! {{
+                        use imgui_ext::color::ColorEdit;
+                        let _ev = ColorEdit::build(ui, &mut ext.#ident, { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote! {{
+                        use imgui_ext::color::ColorEdit;
+                        let _ev = ColorEdit::build(ui, #map_ident(&mut ext.#ident), { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::ColorPicker(ColorPicker {
             label,
@@ -1114,6 +1135,7 @@ pub fn emmit_tag_tokens(
             mode,
             format,
             catch,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1179,11 +1201,24 @@ pub fn emmit_tag_tokens(
             let catch_ident =
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
-            quote! {{
-                use imgui_ext::color::ColorPicker;
-                let _ev = ColorPicker::build(ui, &mut ext.#ident, { #params ; params });
-                events.#catch_ident |= _ev;
-            }}
+            match map {
+                None => {
+                    quote! {{
+                        use imgui_ext::color::ColorPicker;
+                        let _ev = ColorPicker::build(ui, &mut ext.#ident, { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote! {{
+                        use imgui_ext::color::ColorPicker;
+                        let _ev = ColorPicker::build(ui, #map_ident(&mut ext.#ident), { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::ColorButton(ColorButton {
             label,
@@ -1191,6 +1226,7 @@ pub fn emmit_tag_tokens(
             preview,
             size,
             catch,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1243,11 +1279,24 @@ pub fn emmit_tag_tokens(
             let catch_ident =
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
-            quote! {{
-                use imgui_ext::color::ColorButton;
-                let _ev = ColorButton::build(ui, ext.#ident, { #params ; params });
-                events.#catch_ident |= _ev;
-            }}
+            match map {
+                None => {
+                    quote! {{
+                        use imgui_ext::color::ColorButton;
+                        let _ev = ColorButton::build(ui, ext.#ident, { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote! {{
+                        use imgui_ext::color::ColorButton;
+                        let _ev = ColorButton::build(ui, #map_ident(ext.#ident), { #params ; params });
+                        events.#catch_ident |= _ev;
+                    }}
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::Input(Input {
             label,
@@ -1342,6 +1391,7 @@ pub fn emmit_tag_tokens(
             power,
             format,
             catch,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1416,11 +1466,22 @@ pub fn emmit_tag_tokens(
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
             params.extend(quote!(params));
-            quote!({
-                use imgui_ext::drag::Drag;
-                let _ev = Drag::build(ui, &mut ext.#ident, { #params });
-                events.#catch_ident |= _ev;
-            })
+            match map {
+                None => quote!({
+                    use imgui_ext::drag::Drag;
+                    let _ev = Drag::build(ui, &mut ext.#ident, { #params });
+                    events.#catch_ident |= _ev;
+                }),
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote!({
+                        use imgui_ext::drag::Drag;
+                        let _ev = Drag::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        events.#catch_ident |= _ev;
+                    })
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::Button(Button { label, size, catch }) => {
             let label = match label {
@@ -1482,6 +1543,7 @@ pub fn emmit_tag_tokens(
             format,
             power,
             catch,
+            map,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1571,13 +1633,24 @@ pub fn emmit_tag_tokens(
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
             params.extend(quote!(params));
-            quote!({
-                use imgui_ext::slider::Slider;
-                let _ev = Slider::build(ui, &mut ext.#ident, { #params });
-                events.#catch_ident |= _ev;
-            })
+            match map {
+                None => quote!({
+                    use imgui_ext::slider::Slider;
+                    let _ev = Slider::build(ui, &mut ext.#ident, { #params });
+                    events.#catch_ident |= _ev;
+                }),
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote!({
+                        use imgui_ext::slider::Slider;
+                        let _ev = Slider::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        events.#catch_ident |= _ev;
+                    })
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
-        Tag::Checkbox(Checkbox { label, catch }) => {
+        Tag::Checkbox(Checkbox { label, catch, map }) => {
             let label = match label {
                 Some(Lit::Str(lab)) => lab.value(),
                 None => ident.to_string(),
@@ -1588,15 +1661,28 @@ pub fn emmit_tag_tokens(
             let catch_ident =
                 catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
 
-            quote!({
-                use imgui_ext::checkbox::Checkbox;
-                use imgui_ext::checkbox::CheckboxParams as Params;
-                use imgui::im_str;
-                let _ev = Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
-                events.#catch_ident |= _ev;
-            })
+            match map {
+                None => quote!({
+                    use imgui_ext::checkbox::Checkbox;
+                    use imgui_ext::checkbox::CheckboxParams as Params;
+                    use imgui::im_str;
+                    let _ev = Checkbox::build(ui, &mut ext.#ident, Params { label: im_str!(#label) });
+                    events.#catch_ident |= _ev;
+                }),
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote!({
+                        use imgui_ext::checkbox::Checkbox;
+                        use imgui_ext::checkbox::CheckboxParams as Params;
+                        use imgui::im_str;
+                        let _ev = Checkbox::build(ui, #map_ident(&mut ext.#ident), Params { label: im_str!(#label) });
+                        events.#catch_ident |= _ev;
+                    })
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
-        Tag::Nested(Nested { catch }) => {
+        Tag::Nested(Nested { catch, map }) => {
             let catch_ident = catch_ident_nested(
                 attr,
                 _ty,
@@ -1607,11 +1693,24 @@ pub fn emmit_tag_tokens(
                 methods,
             )?;
 
-            quote! {{
-                use imgui_ext::ImGuiExt;
-                let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
-                events.#catch_ident = _ev;
-            }}
+            match map {
+                None => {
+                    quote! {{
+                        use imgui_ext::ImGuiExt;
+                        let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+                        events.#catch_ident = _ev;
+                    }}
+                }
+                Some(Lit::Str(map)) => {
+                    let map_ident = Ident::new(&map.value(), map.span());
+                    quote! {{
+                        use imgui_ext::ImGuiExt;
+                        let _ev = ImGuiExt::imgui_ext(ui, #map_ident(&mut ext.#ident));
+                        events.#catch_ident = _ev;
+                    }}
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
         }
         Tag::Display(Display {
             label,

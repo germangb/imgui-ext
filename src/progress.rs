@@ -5,6 +5,7 @@
 //!
 //! * `overlay` override default overlay text.
 //! * `size` local function that returns the size.
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Example
 //!

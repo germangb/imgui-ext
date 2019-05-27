@@ -14,6 +14,7 @@
 //!   ([`ColorPreview`][ColorPreview] variants).
 //! * `size` Function identifier that returns the button size.
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Color Edit
 //!
@@ -31,6 +32,7 @@
 //! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat]
 //!   variants).
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Color Picker
 //!
@@ -48,6 +50,7 @@
 //! * `format` Allowed values: `"Float"`, `"U8"` ([`ColorFormat`][ColorFormat]
 //!   variants).
 //! * `catch`
+//! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Example
 //!

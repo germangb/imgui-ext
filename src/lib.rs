@@ -29,7 +29,7 @@
 //! triggered input events (which are generally stored as booleans):
 //!
 //! ```
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::UiExt;
 //!
 //! #[derive(imgui_ext::Ui)]
 //! struct Example {
@@ -480,7 +480,7 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 /// Extension trait for imgui Ui.
 ///
 /// ```
-/// use imgui_ext::prelude::*;
+/// use imgui_ext::UiExt;
 ///
 /// #[derive(imgui_ext::Ui)]
 /// struct Example {
@@ -493,6 +493,7 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 /// # impl B { fn click(&self) -> bool { true } }
 /// # fn init_imgui() -> A { A }
 ///
+/// // Initialize the imgui crate...
 /// let ui = init_imgui();
 ///
 /// // initialize Example...
@@ -500,44 +501,13 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 ///
 /// ui.imgui_ext(&mut example);
 /// ```
-pub trait UiExt<'ui> {
-    fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events;
+pub trait UiExt {
+    fn imgui_ext<U: ImGuiExt>(&self, ext: &mut U) -> U::Events;
 }
 
-impl<'ui> UiExt<'ui> for Ui<'ui> {
+impl UiExt for Ui<'_> {
     #[inline]
-    fn imgui_ext<U: ImGuiExt>(&'ui self, ext: &mut U) -> U::Events {
-        render_imgui_ext(self, ext)
+    fn imgui_ext<U: ImGuiExt>(&self, ext: &mut U) -> U::Events {
+        U::imgui_ext(self, ext)
     }
-}
-
-/// Render imgui UI.
-///
-/// (If you [`use imgui_ext::prelude::*`][prelude], you might want to use the
-/// [`UiExt`][UiExt] trait to do the same thing).
-///
-/// [UiExt]: ./trait.UiExt.html
-/// [prelude]: ./prelude/index.html
-///
-/// ```ignore
-/// use imgui_ext::render_imgui_ext;
-///
-/// #[derive(imgui_ext::Ui)]
-/// struct Example {
-///     #[derive(checkbox(catch = "click"))]
-///     check_box: bool,
-/// }
-///
-/// // init imgui (ui)
-///
-/// let mut example = Example { check_box: false };
-///
-/// let events = render_imgui_ext(&ui, &mut example);
-///
-/// if events.click() {
-///     println!("checkbox changed: {}", example.check_box);
-/// }
-/// ```
-pub fn render_imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
-    U::imgui_ext(ui, ext)
 }

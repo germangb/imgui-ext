@@ -1,7 +1,6 @@
 use imgui::{ImGuiTreeNodeFlags, ImString};
-use imgui_ext::ImGuiExt;
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct Demo {
     #[imgui(vars(
         style = "style",
@@ -28,7 +27,7 @@ fn flags() -> ImGuiTreeNodeFlags {
     ImGuiTreeNodeFlags::Framed
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct Input {
     #[imgui(input(label = "Float 1D"))]
     input_1_f32: f32,
@@ -44,7 +43,7 @@ pub struct Input {
     input_3_i32: [i32; 3],
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct Drag {
     #[imgui(drag(label = "Float 1D"))]
     drag_1_f32: f32,
@@ -60,13 +59,13 @@ pub struct Drag {
     drag_3_i32: [i32; 3],
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct Slider {
     #[imgui(slider(min = "-1.0", max = "1.0"))]
     slider_1: f32,
 }
 
-#[derive(ImGuiExt)]
+#[derive(imgui_ext::ImGuiExt)]
 pub struct Color {
     #[imgui(
         text(lit = "NOTE: Window opacity is not available in all platforms"),
@@ -85,7 +84,7 @@ impl Default for Color {
     }
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct Styles {
     #[imgui(
         button(label = "Button"),
@@ -107,7 +106,7 @@ fn color() -> &'static [(ImGuiCol, [f32; 4])] {
     &[(ImGuiCol::Button, [1.0, 0.0, 1.0, 1.0])]
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct VarsExample {
     #[imgui(vars(
         style = "example_style",
@@ -129,7 +128,7 @@ fn example_color() -> &'static [(ImGuiCol, [f32; 4])] {
     &[(ImGuiCol::Button, [1.0, 0.0, 1.0, 1.0])]
 }
 
-#[derive(ImGuiExt, Default)]
+#[derive(imgui_ext::ImGuiExt, Default)]
 pub struct ExampleText {
     #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
     separator(),

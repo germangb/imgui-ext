@@ -1869,9 +1869,9 @@ fn catch_ident_nested(
         Some(Lit::Str(lit)) => {
             let ident = Ident::new(&lit.value(), field.span());
 
-            fields.extend(quote! { pub #ident: imgui_ext::Events<#tp> , });
+            fields.extend(quote! { pub #ident: <#tp as imgui_ext::ImGuiExt>::Events , });
             methods.extend(
-                quote! { pub fn #ident(&self) -> &imgui_ext::Events<#tp> { &self.#ident } },
+                quote! { pub fn #ident(&self) -> &<#tp as imgui_ext::ImGuiExt>::Events { &self.#ident } },
             );
 
             Ok(ident)
@@ -1880,9 +1880,9 @@ fn catch_ident_nested(
         // Use field identifier
         None => {
             if field_set.insert(field.to_string()) {
-                fields.extend(quote! { pub #field: imgui_ext::Events<#tp> , });
+                fields.extend(quote! { pub #field: <#tp as imgui_ext::ImGuiExt>::Events , });
                 methods.extend(
-                    quote! { pub fn #field(&self) -> &imgui_ext::Events<#tp> { &self.#field } },
+                    quote! { pub fn #field(&self) -> &<#tp as imgui_ext::ImGuiExt>::Events { &self.#field } },
                 );
             }
 

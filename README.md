@@ -24,9 +24,6 @@ A crate to quickly build [imgui] UIs using annotations and a `derive` macro.
 ## Example
 
 ```rust
-use imgui_ext::UiExt;
-use imgui::{ImGui, Ui};
-
 #[derive(imgui_ext::Ui)]
 struct Example {
     #[imgui(slider(min = 0.0, max = 4.0))]
@@ -40,16 +37,6 @@ struct Example {
         display(label = "Is turbo enabled?"),
     )]
     turbo: bool,
-}
-
-let mut example = Example { /*...*/ };
-
-// initialize imgui
-let mut imgui: ImGui = init_imgui();
-let mut frame: Ui = imgui.begin_drawing_ui();
-
-if frame.imgui_ext(&mut example).turbo() {
-    println!("Turbo mode: value has changed.");
 }
 ```
 

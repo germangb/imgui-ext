@@ -32,10 +32,7 @@ struct Example {
     y: i32,
     #[imgui(drag(label = "Drag 2D"))]
     drag_2d: [f32; 2],
-    #[imgui(
-        checkbox(label = "Turbo mode"),
-        display(label = "Is turbo enabled?"),
-    )]
+    #[imgui(checkbox(label = "Turbo mode"))]
     turbo: bool,
 }
 ```

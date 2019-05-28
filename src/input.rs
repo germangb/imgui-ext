@@ -39,9 +39,8 @@
 //!
 //! ```
 //! use imgui::ImGuiInputTextFlags;
-//! use imgui_ext::ImGuiExt;
 //!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Example {
 //!     #[imgui(input(flags = "Example::my_flags"))]
 //!     n: f32,

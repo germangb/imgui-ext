@@ -86,7 +86,7 @@
 
 use imgui::Ui;
 
-pub use imgui_ext_derive::ImGuiExt;
+//pub use imgui_ext_derive::ImGuiExt;
 pub use imgui_ext_derive::Ui;
 
 include!("macros.rs");

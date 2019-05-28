@@ -20,9 +20,7 @@
 //! ## Example
 //!
 //! ```
-//! use imgui_ext::ImGuiExt;
-//!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Image {
 //!     #[imgui(image(size = "size", uv0 = "uv0", uv1 = "uv1"))]
 //!     texture: usize,

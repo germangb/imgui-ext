@@ -15,16 +15,6 @@ use crate::error::ErrorKind;
 mod error;
 mod parser;
 
-#[proc_macro_derive(ImGuiExt, attributes(imgui))]
-pub fn imgui_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match impl_derive(&input) {
-        Ok(output) => output.into(),
-        Err(error) => error.to_compile_error().into(),
-    }
-}
-
-/// An alias for `ImGuiExt`
 #[proc_macro_derive(Ui, attributes(imgui))]
 pub fn ui_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

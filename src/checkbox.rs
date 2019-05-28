@@ -7,9 +7,7 @@
 //! ## Example
 //!
 //! ```
-//! use imgui_ext::ImGuiExt;
-//!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Checkboxes {
 //!     // All parameters are optional.
 //!     #[imgui(checkbox)]

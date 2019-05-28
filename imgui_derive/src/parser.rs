@@ -1758,8 +1758,8 @@ pub fn emmit_tag_tokens(
             match map {
                 None => {
                     quote! {{
-                        use imgui_ext::ImGuiExt;
-                        let _ev = ImGuiExt::imgui_ext(ui, &mut ext.#ident);
+                        use imgui_ext::Gui;
+                        let _ev = Gui::imgui_gui(ui, &mut ext.#ident);
                         events.#catch_ident = _ev;
                     }}
                 }
@@ -1768,8 +1768,8 @@ pub fn emmit_tag_tokens(
                     let map_path: syn::Path =
                         syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
-                        use imgui_ext::ImGuiExt;
-                        let _ev = ImGuiExt::imgui_ext(ui, #map_path(&mut ext.#ident));
+                        use imgui_ext::Gui;
+                        let _ev = Gui::imgui_gui(ui, #map_path(&mut ext.#ident));
                         events.#catch_ident = _ev;
                     }}
                 }
@@ -1869,9 +1869,9 @@ fn catch_ident_nested(
         Some(Lit::Str(lit)) => {
             let ident = Ident::new(&lit.value(), field.span());
 
-            fields.extend(quote! { pub #ident: <#tp as imgui_ext::ImGuiExt>::Events , });
+            fields.extend(quote! { pub #ident: <#tp as imgui_ext::Gui>::Events , });
             methods.extend(
-                quote! { pub fn #ident(&self) -> &<#tp as imgui_ext::ImGuiExt>::Events { &self.#ident } },
+                quote! { pub fn #ident(&self) -> &<#tp as imgui_ext::Gui>::Events { &self.#ident } },
             );
 
             Ok(ident)
@@ -1880,9 +1880,9 @@ fn catch_ident_nested(
         // Use field identifier
         None => {
             if field_set.insert(field.to_string()) {
-                fields.extend(quote! { pub #field: <#tp as imgui_ext::ImGuiExt>::Events , });
+                fields.extend(quote! { pub #field: <#tp as imgui_ext::Gui>::Events , });
                 methods.extend(
-                    quote! { pub fn #field(&self) -> &<#tp as imgui_ext::ImGuiExt>::Events { &self.#field } },
+                    quote! { pub fn #field(&self) -> &<#tp as imgui_ext::Gui>::Events { &self.#field } },
                 );
             }
 

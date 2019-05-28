@@ -39,12 +39,12 @@
 //!
 //! # struct A;
 //! # struct B;
-//! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+//! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
 //! # impl B { fn check(&self) -> bool { true } }
 //! # let ui = A;
 //! let mut example = Example { check: false };
 //!
-//! let events = ui.imgui_ext(&mut example);
+//! let events = ui.render_gui(&mut example);
 //!
 //! if events.check() {
 //!     println!("checkbox state changed.");
@@ -59,7 +59,7 @@
 //! the annotation (all widgets support this attribute, not just checkbox):
 //!
 //! ```no_run
-//! use imgui_ext::prelude::*;
+//! use imgui_ext::UiExt;
 //!
 //! #[derive(imgui_ext::Gui)]
 //! struct Example {
@@ -69,12 +69,12 @@
 //!
 //! # struct A;
 //! # struct B;
-//! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+//! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
 //! # impl B { fn checkbox_event(&self) -> bool { true } }
 //! # let ui = A;
 //! let mut example = Example { check: false };
 //!
-//! let events = ui.imgui_ext(&mut example);
+//! let events = ui.render_gui(&mut example);
 //!
 //! if events.checkbox_event() {
 //!     println!("checkbox state changed.");
@@ -90,9 +90,6 @@ pub use imgui_ext_derive::Gui;
 
 include!("macros.rs");
 
-pub mod prelude {
-    pub use super::UiExt;
-}
 /// `vars(...)` docs.
 pub mod vars {
     //!
@@ -383,7 +380,7 @@ pub mod button {
     //! # Example
     //!
     //! ```
-    //! use imgui_ext::prelude::*;
+    //! use imgui_ext::UiExt;
     //!
     //! #[derive(imgui_ext::Gui)]
     //! struct Button {
@@ -401,12 +398,12 @@ pub mod button {
     //!
     //! # struct A;
     //! # struct B;
-    //! # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+    //! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
     //! # impl B { fn click(&self) -> bool { true } }
     //! # let ui = A;
     //! let mut buttons = Button { count: 0 };
     //!
-    //! let events = ui.imgui_ext(&mut buttons);
+    //! let events = ui.render_gui(&mut buttons);
     //!
     //! if events.click() {
     //!     buttons.count += 1;
@@ -450,29 +447,29 @@ pub mod bullet {
 }
 
 /// Trait implemented by the derive macro.
-pub trait ImGuiExt {
+pub trait Gui {
     type Events;
-    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events;
+    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
-impl<T: ImGuiExt> ImGuiExt for Option<T> {
+impl<T: Gui> Gui for Option<T> {
     type Events = T::Events;
 
     // TODO remove unsafe
-    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
+    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
         if let Some(ref mut ext) = ext {
-            T::imgui_ext(ui, ext)
+            T::imgui_gui(ui, ext)
         } else {
             unsafe { std::mem::zeroed() }
         }
     }
 }
 
-impl<T: ImGuiExt> ImGuiExt for Box<T> {
+impl<T: Gui> Gui for Box<T> {
     type Events = T::Events;
     #[inline]
-    fn imgui_ext(ui: &Ui, ext: &mut Self) -> Self::Events {
-        T::imgui_ext(ui, ext.as_mut())
+    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
+        T::imgui_gui(ui, ext.as_mut())
     }
 }
 
@@ -488,7 +485,7 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 ///
 /// # struct A;
 /// # struct B;
-/// # impl A { fn imgui_ext<T>(&self, _: &mut T) -> B { B } }
+/// # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
 /// # impl B { fn click(&self) -> bool { true } }
 /// # fn init_imgui() -> A { A }
 ///
@@ -498,15 +495,15 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 /// // initialize Example...
 /// let mut example = Example { /* ... */ };
 ///
-/// ui.imgui_ext(&mut example);
+/// ui.render_gui(&mut example);
 /// ```
 pub trait UiExt {
-    fn imgui_ext<U: ImGuiExt>(&self, ext: &mut U) -> U::Events;
+    fn render_gui<U: Gui>(&self, ext: &mut U) -> U::Events;
 }
 
 impl UiExt for Ui<'_> {
     #[inline]
-    fn imgui_ext<U: ImGuiExt>(&self, ext: &mut U) -> U::Events {
-        U::imgui_ext(self, ext)
+    fn render_gui<U: Gui>(&self, ext: &mut U) -> U::Events {
+        U::imgui_gui(self, ext)
     }
 }

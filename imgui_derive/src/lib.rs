@@ -48,9 +48,9 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
         impl #event_type {
             #catch_methods
         }
-        impl #impl_generics imgui_ext::ImGuiExt for #name #ty_generics #where_clause {
+        impl #impl_generics imgui_ext::Gui for #name #ty_generics #where_clause {
             type Events = #event_type;
-            fn imgui_ext(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
+            fn imgui_gui(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
                 // Because all fields are bool, it should be OK to zero the memory (right...?)
                 let mut events: Self::Events = unsafe { std::mem::zeroed() };
                 #body

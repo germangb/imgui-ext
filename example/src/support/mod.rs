@@ -1,6 +1,5 @@
 use imgui::Ui;
-use imgui_ext::prelude::*;
-use imgui_ext::ImGuiExt;
+use imgui_ext::{Gui, UiExt};
 
 #[cfg(feature = "ci")]
 mod dummy {
@@ -40,10 +39,10 @@ pub fn run_custom<F: FnMut(&mut Window, &Ui)>(title: &str, size: (u32, u32), app
     backend::run(title, size, app).unwrap();
 }
 
-pub fn run<T: ImGuiExt + std::fmt::Debug>(title: &str, size: (u32, u32), mut gui: T) {
+pub fn run<T: Gui + std::fmt::Debug>(title: &str, size: (u32, u32), mut gui: T) {
     run_custom(title, size, |_, ui| {
         ui.columns(2, imgui::im_str!("columns"), true);
-        ui.imgui_ext(&mut gui);
+        ui.render_gui(&mut gui);
         ui.next_column();
         ui.text_wrapped(imgui::im_str!("{:#?}", gui));
     })

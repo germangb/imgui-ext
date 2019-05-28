@@ -55,7 +55,7 @@
 //! ## Example
 //!
 //! ```
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     // you could also nest all the modes inside of the same `color(...)`
 //!     #[imgui(
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn color_test() {
-        #[derive(imgui_ext::Ui)]
+        #[derive(imgui_ext::Gui)]
         struct Example {
             #[imgui(color(edit), color(picker(flags = "flags")), color(button()))]
             a: [f32; 4],

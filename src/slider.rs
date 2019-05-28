@@ -14,7 +14,7 @@
 //! ## Example
 //!
 //! ```
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Sliders {
 //!     #[imgui(slider(min = 0.0, max = 1.0))]
 //!     foo: f32,

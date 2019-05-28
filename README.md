@@ -24,7 +24,7 @@ A crate to quickly build [imgui] UIs using annotations and a `derive` macro.
 ## Example
 
 ```rust
-#[derive(imgui_ext::Ui)]
+#[derive(imgui_ext::Gui)]
 struct Example {
     #[imgui(slider(min = 0.0, max = 4.0))]
     x: f32,

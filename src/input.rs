@@ -16,7 +16,7 @@
 //! corresponding array types of up to 8 elements.
 //!
 //! ```
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     #[imgui(input)]
 //!     input_0: f32,
@@ -40,7 +40,7 @@
 //! ```
 //! use imgui::ImGuiInputTextFlags;
 //!
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     #[imgui(input(flags = "Example::my_flags"))]
 //!     n: f32,
@@ -66,7 +66,7 @@
 //!     inner: [f32; 4],
 //! }
 //!
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Bar {
 //!     // Even though Foo is not compatible with the input()
 //!     // annotation, its inner attribute does, therefore we

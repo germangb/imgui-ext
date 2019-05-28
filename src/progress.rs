@@ -10,7 +10,7 @@
 //! ## Example
 //!
 //! ```
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Progress {
 //!     #[imgui(progress)]
 //!     progress: f32,

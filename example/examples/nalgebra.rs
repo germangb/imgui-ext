@@ -1,6 +1,6 @@
 use nalgebra_glm as glm;
 
-#[derive(imgui_ext::Ui, Debug)]
+#[derive(imgui_ext::Gui, Debug)]
 struct Example {
     // The "map" attribute adapts the nalgebra type (Mat4) into a type that is supported by the Ui
     // derive macro.

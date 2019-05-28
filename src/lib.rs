@@ -6,7 +6,7 @@
 //! # Basic usage
 //!
 //! ```
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     #[imgui(slider(min = 0.0, max = 4.0))]
 //!     x: f32,
@@ -31,7 +31,7 @@
 //! ```
 //! use imgui_ext::UiExt;
 //!
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox"))]
 //!     check: bool,
@@ -61,7 +61,7 @@
 //! ```no_run
 //! use imgui_ext::prelude::*;
 //!
-//! #[derive(imgui_ext::Ui)]
+//! #[derive(imgui_ext::Gui)]
 //! struct Example {
 //!     #[imgui(checkbox(label = "Checkbox", catch = "checkbox_event"))]
 //!     check: bool,
@@ -86,8 +86,7 @@
 
 use imgui::Ui;
 
-//pub use imgui_ext_derive::ImGuiExt;
-pub use imgui_ext_derive::Ui;
+pub use imgui_ext_derive::Gui;
 
 include!("macros.rs");
 
@@ -118,7 +117,7 @@ pub mod vars {
     //! ```
     //! use imgui::{ImGuiCol, StyleVar};
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Example {
     //!     #[imgui(vars(
     //!         style = "example_style",
@@ -168,7 +167,7 @@ pub mod tree {
     //! ```
     //! use imgui::{ImGuiTreeNodeFlags, ImString};
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! pub struct Tree {
     //!     #[imgui(tree(
     //!         label = "Sliders",
@@ -187,7 +186,7 @@ pub mod tree {
     //!     ImGuiTreeNodeFlags::Framed
     //! }
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! pub struct Sliders {
     //!     #[imgui(text("Slider widgets:"), slider(min = 0.0, max = 3.0))]
     //!     s1: f32,
@@ -197,7 +196,7 @@ pub mod tree {
     //!     s3: [f64; 2],
     //! }
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! pub struct Inputs {
     //!     #[imgui(text("Input widgets:"), input)]
     //!     i1: f32,
@@ -250,7 +249,7 @@ pub mod text {
     //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Example {
     //!     #[imgui(text_wrap("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc metus sem, facilisis hendrerit elementum et, egestas."),
     //!             separator(),
@@ -286,7 +285,7 @@ pub mod display {
     //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Labels {
     //!     #[imgui(display)]
     //!     foo: f32,
@@ -317,7 +316,7 @@ pub mod nested {
     //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Form {
     //!     #[imgui(input)]
     //!     user: imgui::ImString,
@@ -332,7 +331,7 @@ pub mod nested {
     //!     imgui::ImGuiInputTextFlags::Password
     //! }
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Example {
     //!     #[imgui(nested, separator)]
     //!     login_form: Form,
@@ -386,7 +385,7 @@ pub mod button {
     //! ```
     //! use imgui_ext::prelude::*;
     //!
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Button {
     //!     #[imgui(
     //!         button(size = "button_size", label = "Click me!", catch = "click"),
@@ -431,7 +430,7 @@ pub mod bullet {
     //! # Example
     //!
     //! ```
-    //! #[derive(imgui_ext::Ui)]
+    //! #[derive(imgui_ext::Gui)]
     //! struct Bullet {
     //!     #[imgui(
     //!         bullet(text = "Be nice to others."),
@@ -482,7 +481,7 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
 /// ```
 /// use imgui_ext::UiExt;
 ///
-/// #[derive(imgui_ext::Ui)]
+/// #[derive(imgui_ext::Gui)]
 /// struct Example {
 ///     // ...
 /// }

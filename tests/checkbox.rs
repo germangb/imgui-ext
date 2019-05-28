@@ -1,8 +1,6 @@
-use imgui_ext::Ui;
-
 #[test]
 fn checkbox() {
-    #[derive(Ui)]
+    #[derive(imgui_ext::Gui)]
     struct Test {
         #[imgui(checkbox)]
         a: bool,

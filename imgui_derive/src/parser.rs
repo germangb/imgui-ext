@@ -804,7 +804,8 @@ pub fn emmit_tag_tokens(
 
             match flags {
                 Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&flags.value()).expect("Error parsing function path.");
                     tree_tokens.extend(quote! {tree = tree.flags(#fn_ident());});
                 }
                 None => {}
@@ -869,7 +870,8 @@ pub fn emmit_tag_tokens(
             }
             match uv0 {
                 Some(Lit::Str(uv0)) => {
-                    let fn_ident = Ident::new(&uv0.value(), uv0.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&uv0.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -879,7 +881,8 @@ pub fn emmit_tag_tokens(
             }
             match uv1 {
                 Some(Lit::Str(uv1)) => {
-                    let fn_ident = Ident::new(&uv1.value(), uv1.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&uv1.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -889,7 +892,8 @@ pub fn emmit_tag_tokens(
             }
             match tint {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
                     );
@@ -899,7 +903,8 @@ pub fn emmit_tag_tokens(
             }
             match background {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.background = Some( imgui::ImVec4::from(#fn_ident()) ); }},
                     );
@@ -937,7 +942,8 @@ pub fn emmit_tag_tokens(
             };
             match uv0 {
                 Some(Lit::Str(uv0)) => {
-                    let fn_ident = Ident::new(&uv0.value(), uv0.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&uv0.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -947,7 +953,8 @@ pub fn emmit_tag_tokens(
             }
             match uv1 {
                 Some(Lit::Str(uv1)) => {
-                    let fn_ident = Ident::new(&uv1.value(), uv1.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&uv1.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -957,7 +964,8 @@ pub fn emmit_tag_tokens(
             }
             match tint {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
                     );
@@ -967,7 +975,8 @@ pub fn emmit_tag_tokens(
             }
             match border {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.border = Some( imgui::ImVec4::from(#fn_ident()) ); }},
                     );
@@ -1005,7 +1014,8 @@ pub fn emmit_tag_tokens(
 
             match size {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -1118,10 +1128,12 @@ pub fn emmit_tag_tokens(
                     }}
                 }
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
                         use imgui_ext::color::ColorEdit;
-                        let _ev = ColorEdit::build(ui, #map_ident(&mut ext.#ident), { #params ; params });
+                        let _ev = ColorEdit::build(ui, #map_path(&mut ext.#ident), { #params ; params });
                         events.#catch_ident |= _ev;
                     }}
                 }
@@ -1158,7 +1170,8 @@ pub fn emmit_tag_tokens(
 
             match flags {
                 Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&flags.value()).expect("Error parsing function path.");
                     params.extend(quote! { params.flags = Some( #fn_ident() ); });
                 }
                 None => {}
@@ -1210,10 +1223,12 @@ pub fn emmit_tag_tokens(
                     }}
                 }
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
                         use imgui_ext::color::ColorPicker;
-                        let _ev = ColorPicker::build(ui, #map_ident(&mut ext.#ident), { #params ; params });
+                        let _ev = ColorPicker::build(ui, #map_path(&mut ext.#ident), { #params ; params });
                         events.#catch_ident |= _ev;
                     }}
                 }
@@ -1248,7 +1263,8 @@ pub fn emmit_tag_tokens(
 
             match flags {
                 Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&flags.value()).expect("Error parsing function path.");
                     params.extend(quote! { params.flags = Some( #fn_ident() ); });
                 }
                 None => {}
@@ -1288,10 +1304,12 @@ pub fn emmit_tag_tokens(
                     }}
                 }
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
                         use imgui_ext::color::ColorButton;
-                        let _ev = ColorButton::build(ui, #map_ident(ext.#ident), { #params ; params });
+                        let _ev = ColorButton::build(ui, #map_path(ext.#ident), { #params ; params });
                         events.#catch_ident |= _ev;
                     }}
                 }
@@ -1328,7 +1346,8 @@ pub fn emmit_tag_tokens(
 
             match size {
                 Some(Lit::Str(size)) => {
-                    let fn_ident = Ident::new(&size.value(), size.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&size.value()).expect("Error parsing function path.");
                     params.extend(
                         quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
                     );
@@ -1340,6 +1359,15 @@ pub fn emmit_tag_tokens(
             match step {
                 Some(Lit::Float(step)) => params.extend(quote! { params.step = Some(#step); }),
                 Some(Lit::Int(step)) => params.extend(quote! { params.step = Some(#step); }),
+                Some(Lit::Str(step)) => {
+                    let step_i64 = step.value().parse().map(Literal::i64_unsuffixed);
+                    let step_f64 = step.value().parse().map(Literal::f64_unsuffixed);
+                    match (step_i64, step_f64) {
+                        (Err(_), Ok(step)) => params.extend(quote!(params.step = Some(#step);)),
+                        (Ok(step), _) => params.extend(quote!(params.step = Some(#step);)),
+                        _ => return Err(Error::parsing_error(step.span())),
+                    }
+                }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
             }
@@ -1347,13 +1375,25 @@ pub fn emmit_tag_tokens(
             match step_fast {
                 Some(Lit::Float(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
                 Some(Lit::Int(step)) => params.extend(quote! { params.step_fast = Some(#step); }),
+                Some(Lit::Str(step)) => {
+                    let step_i64 = step.value().parse().map(Literal::i64_unsuffixed);
+                    let step_f64 = step.value().parse().map(Literal::f64_unsuffixed);
+                    match (step_i64, step_f64) {
+                        (Err(_), Ok(step)) => {
+                            params.extend(quote!(params.step_fast = Some(#step);))
+                        }
+                        (Ok(step), _) => params.extend(quote!(params.step_fast = Some(#step);)),
+                        _ => return Err(Error::parsing_error(step.span())),
+                    }
+                }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
             }
 
             match flags {
                 Some(Lit::Str(flags)) => {
-                    let fn_ident = Ident::new(&flags.value(), flags.span());
+                    let fn_ident: syn::Path =
+                        syn::parse_str(&flags.value()).expect("Error parsing function path.");
                     params.extend(quote! { params.flags = Some( #fn_ident() ); });
                 }
                 None => {}
@@ -1373,10 +1413,13 @@ pub fn emmit_tag_tokens(
                     events.#catch_ident |= _ev;
                 }),
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
+
                     quote!({
                         use imgui_ext::input::Input;
-                        let _ev = Input::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        let _ev = Input::build(ui, #map_path (&mut ext.#ident), { #params });
                         events.#catch_ident |= _ev;
                     })
                 }
@@ -1446,11 +1489,19 @@ pub fn emmit_tag_tokens(
 
             match speed {
                 Some(Lit::Float(value)) => params.extend(quote! { params.speed = Some(#value); }),
+                Some(Lit::Str(value)) => match value.value().parse::<f32>() {
+                    Ok(value) => params.extend(quote! { params.speed = Some(#value); }),
+                    Err(_) => return Err(Error::parsing_error(value.span())),
+                },
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
             }
             match power {
                 Some(Lit::Float(value)) => params.extend(quote! { params.power = Some(#value); }),
+                Some(Lit::Str(value)) => match value.value().parse::<f32>() {
+                    Ok(value) => params.extend(quote! { params.power = Some(#value); }),
+                    Err(_) => return Err(Error::parsing_error(value.span())),
+                },
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
             }
@@ -1473,10 +1524,13 @@ pub fn emmit_tag_tokens(
                     events.#catch_ident |= _ev;
                 }),
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
+
                     quote!({
                         use imgui_ext::drag::Drag;
-                        let _ev = Drag::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        let _ev = Drag::build(ui, #map_path(&mut ext.#ident), { #params });
                         events.#catch_ident |= _ev;
                     })
                 }
@@ -1625,6 +1679,10 @@ pub fn emmit_tag_tokens(
             }
             match power {
                 Some(Lit::Float(value)) => params.extend(quote!(params.power = Some(#value);)),
+                Some(Lit::Str(value)) => match value.value().parse::<f32>() {
+                    Ok(value) => params.extend(quote! { params.power = Some(#value); }),
+                    Err(_) => return Err(Error::parsing_error(value.span())),
+                },
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
             }
@@ -1640,10 +1698,12 @@ pub fn emmit_tag_tokens(
                     events.#catch_ident |= _ev;
                 }),
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote!({
                         use imgui_ext::slider::Slider;
-                        let _ev = Slider::build(ui, #map_ident(&mut ext.#ident), { #params });
+                        let _ev = Slider::build(ui, #map_path(&mut ext.#ident), { #params });
                         events.#catch_ident |= _ev;
                     })
                 }
@@ -1670,12 +1730,14 @@ pub fn emmit_tag_tokens(
                     events.#catch_ident |= _ev;
                 }),
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote!({
                         use imgui_ext::checkbox::Checkbox;
                         use imgui_ext::checkbox::CheckboxParams as Params;
                         use imgui::im_str;
-                        let _ev = Checkbox::build(ui, #map_ident(&mut ext.#ident), Params { label: im_str!(#label) });
+                        let _ev = Checkbox::build(ui, #map_path(&mut ext.#ident), Params { label: im_str!(#label) });
                         events.#catch_ident |= _ev;
                     })
                 }
@@ -1702,10 +1764,12 @@ pub fn emmit_tag_tokens(
                     }}
                 }
                 Some(Lit::Str(map)) => {
-                    let map_ident = Ident::new(&map.value(), map.span());
+                    // TODO error handling
+                    let map_path: syn::Path =
+                        syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
                         use imgui_ext::ImGuiExt;
-                        let _ev = ImGuiExt::imgui_ext(ui, #map_ident(&mut ext.#ident));
+                        let _ev = ImGuiExt::imgui_ext(ui, #map_path(&mut ext.#ident));
                         events.#catch_ident = _ev;
                     }}
                 }

@@ -1,5 +1,5 @@
-use example::imgui::{ImGuiTreeNodeFlags, ImString};
-use example::imgui_ext::ImGuiExt;
+use imgui::{ImGuiTreeNodeFlags, ImString};
+use imgui_ext::ImGuiExt;
 
 #[derive(ImGuiExt, Default)]
 pub struct Demo {

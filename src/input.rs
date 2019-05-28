@@ -1,27 +1,22 @@
-//!
-//! [text]: ../text/index.html
-//!
-//! ## Optional fields
+//! # Optional fields
 //!
 //! * `label`
 //! * `step`
 //! * `step_fast`
-//! * `flags` Name of a local function that returns the input [flags].
+//! * `flags` path to a function that returns the input [flags] that apply.
 //! * `size` Text box size (Applies to text input)
 //! * `catch`
 //! * `map` Applies a mapping function to `&mut Self` (see [example](#mapping)).
 //!
 //! [flags]: https://docs.rs/imgui/0.0/imgui/struct.ImGuiInputTextFlags.html
 //!
-//! ## Example
+//! # Example
 //!
 //! The input trait is implemented for numeric types (`f32` and `i32`) and their
 //! corresponding array types of up to 8 elements.
 //!
 //! ```
-//! use imgui_ext::ImGuiExt;
-//!
-//! #[derive(ImGuiExt)]
+//! #[derive(imgui_ext::Ui)]
 //! struct Example {
 //!     #[imgui(input)]
 //!     input_0: f32,
@@ -34,13 +29,13 @@
 //! }
 //! ```
 //!
-//! ### Result
+//! ## Result
 //!
 //! ![result][result]
 //!
-//! ## Input flags
+//! # Input flags
 //!
-//! You can load input flags from a local function:
+//! You can load input flags from a function:
 //!
 //! ```
 //! use imgui::ImGuiInputTextFlags;
@@ -48,12 +43,14 @@
 //!
 //! #[derive(ImGuiExt)]
 //! struct Example {
-//!     #[imgui(input(flags = "my_flags"))]
+//!     #[imgui(input(flags = "Example::my_flags"))]
 //!     n: f32,
 //! }
 //!
-//! fn my_flags() -> ImGuiInputTextFlags {
-//!     ImGuiInputTextFlags::Password
+//! impl Example {
+//!     fn my_flags() -> ImGuiInputTextFlags {
+//!         ImGuiInputTextFlags::Password
+//!     }
 //! }
 //! ```
 //!
@@ -61,8 +58,8 @@
 //!
 //! # Mapping
 //!
-//! The attribute `map` points to a local function that performs a map operation
-//! on the attribute:
+//! The attribute `map` points to a function (referenced by its path) that
+//! performs a map operation on the attribute:
 //!
 //! ```
 //! // Note: Foo doesn't implement the ImGuiExt macro
@@ -86,7 +83,6 @@
 use imgui::sys;
 use imgui::{ImGuiInputTextFlags, ImStr, ImString, ImVec2, InputText, InputTextMultiline, Ui};
 
-#[derive(Copy, Clone)]
 pub struct InputParams<'a, T> {
     pub label: &'a ImStr,
     pub step: Option<T>,
@@ -133,10 +129,10 @@ impl Input<()> for ImString {
     }
 }
 
-imgui_input_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32, ), 8, sys::ImGuiDataType::Float }
-imgui_input_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64, ), 8, sys::ImGuiDataType::Double }
-imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32, ), 8, sys::ImGuiDataType::U32 }
-imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32, ), 8, sys::ImGuiDataType::S32 }
+imgui_input_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, sys::ImGuiDataType::Float }
+imgui_input_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, sys::ImGuiDataType::Double }
+imgui_input_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, sys::ImGuiDataType::U32 }
+imgui_input_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, sys::ImGuiDataType::S32 }
 
 // matrix types
 // TODO macro Y expansion

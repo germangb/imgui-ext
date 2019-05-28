@@ -1,16 +1,17 @@
 //! ## Params
 //!
-//! * `size` local function returning image size
+//! * `size` path to a function that returns the size of the image.
 //!
 //! ## Optional params
 //!
-//! * `background` local function that returns the background color
-//! * `tint` local function returning tint color
+//! * `background` path to a function that returns the background color to be
+//!   used.
+//! * `tint` path to a function that returns a color to tint the image with.
 //! * `frame_padding` an `i32`.
-//! * `uv0` local function returning the first uv coordinate. The default value
-//!   is `[0.0, 0.0]`.
-//! * `uv0` local function returning the second uv coordinate. The default value
-//!   is `[1.0, 1.0]`.
+//! * `uv0` path to a function that returns the first uv coordinate to be used.
+//!   The default value is `[0.0, 0.0]`.
+//! * `uv0` path to a function that returns the second uv coordinate. The
+//!   default value is `[1.0, 1.0]`.
 //!
 //! ## Example
 //!
@@ -18,7 +19,6 @@
 //!
 use imgui::{ImTexture, ImVec2, ImVec4, Ui};
 
-#[derive(Clone, Copy)]
 pub struct ImageButtonParams {
     pub size: ImVec2,
     pub background: Option<ImVec4>,

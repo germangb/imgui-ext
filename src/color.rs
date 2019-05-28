@@ -85,7 +85,6 @@ use imgui::{
     ImGuiColorEditFlags, ImStr, ImVec2, ImVec4, Ui,
 };
 
-#[derive(Copy, Clone)]
 pub struct ColorButtonParams<'a> {
     pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
@@ -93,7 +92,6 @@ pub struct ColorButtonParams<'a> {
     pub size: Option<ImVec2>,
 }
 
-#[derive(Copy, Clone)]
 pub struct ColorEditParams<'a> {
     pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
@@ -102,7 +100,6 @@ pub struct ColorEditParams<'a> {
     pub mode: Option<ColorEditMode>,
 }
 
-#[derive(Copy, Clone)]
 pub struct ColorPickerParams<'a> {
     pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,

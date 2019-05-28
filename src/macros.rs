@@ -43,13 +43,12 @@ macro_rules! imgui_drag_scalar {
             }
         }
 
-        // tail recurse
         imgui_drag_scalar! { ( $( $scalar , )* ), ($len - 1), $variant }
     };
 }
 
 macro_rules! imgui_slider_scalar {
-    ( ($scalar:ty ,), $len:expr, $variant: expr ) => {
+    ( ($scalar:ty), $len:expr, $variant: expr ) => {
         impl Slider<$scalar> for $scalar {
             fn build(_: &Ui, elem: &mut Self, params: SliderParams<$scalar>) -> bool {
                 use std::{mem, ptr};
@@ -66,8 +65,8 @@ macro_rules! imgui_slider_scalar {
         }
     };
 
-    ( ( $head:ty, $($scalar:ty ,)* ), $len:expr, $variant:expr ) => {
-        impl Slider<$head> for ( $head, $($scalar),* ) {
+    ( ( $head:ty $(, $scalar:ty)+ ), $len:expr, $variant:expr ) => {
+        impl Slider<$head> for ( $head, $($scalar),+ ) {
             fn build(_: &Ui, elem: &mut Self, params: SliderParams<$head>) -> bool {
                 use std::{mem, ptr};
                 let label = params.label.as_ptr();
@@ -91,13 +90,12 @@ macro_rules! imgui_slider_scalar {
             }
         }
 
-        // tail recurse
-        imgui_slider_scalar! { ( $($scalar ,)* ), ($len - 1), $variant }
+        imgui_slider_scalar! { ( $($scalar),+ ), ($len - 1), $variant }
     };
 }
 
 macro_rules! imgui_input_scalar {
-    ( ($scalar:ty ,), $len:expr, $variant: expr ) => {
+    ( ($scalar:ty ), $len:expr, $variant: expr ) => {
         impl Input<$scalar> for $scalar {
             fn build(_: &Ui, elem: &mut Self, params: InputParams<$scalar>) -> bool {
                 use std::{mem, ptr};
@@ -114,7 +112,7 @@ macro_rules! imgui_input_scalar {
         }
     };
 
-    ( ( $head:ty, $($scalar:ty ,)* ), $len:expr, $variant:expr ) => {
+    ( ( $head:ty $(, $scalar:ty)+ ), $len:expr, $variant:expr ) => {
         impl Input<$head> for ( $head, $($scalar),* ) {
             fn build(_: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
                 use std::{mem, ptr};
@@ -139,8 +137,7 @@ macro_rules! imgui_input_scalar {
             }
         }
 
-        // tail recurse
-        imgui_input_scalar! { ( $( $scalar , )* ), ($len - 1), $variant }
+        imgui_input_scalar! { ( $( $scalar ),+ ), ($len - 1), $variant }
     };
 }
 
@@ -151,6 +148,7 @@ macro_rules! imgui_input_matrix {
         $size:expr, $size_2:expr,
         $kind:expr
     ) => {
+        #[cfg(feature = "matrix")]
         impl Input<$head> for [[$head; $size]; $size_2] {
             fn build(ui: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
                 let mut trigger = false;
@@ -194,11 +192,8 @@ macro_rules! imgui_input_matrix {
             }
         }
 
-        imgui_input_matrix! {
-            ($($tail),*),
-            ($size-1), $size_2,
-            $kind
-        }
+        #[cfg(feature = "matrix")]
+        imgui_input_matrix! { ($($tail),*), ($size-1), $size_2, $kind }
     }
 }
 
@@ -209,6 +204,7 @@ macro_rules! imgui_drag_matrix {
         $size:expr, $size_2:expr,
         $kind:expr
     ) => {
+        #[cfg(feature = "matrix")]
         impl Drag<$head> for [[$head; $size]; $size_2] {
             fn build(ui: &Ui, elem: &mut Self, params: DragParams<$head>) -> bool {
                 let mut trigger = false;
@@ -255,11 +251,65 @@ macro_rules! imgui_drag_matrix {
             }
         }
 
-        imgui_drag_matrix! {
-            ($($tail),*),
-            ($size-1), $size_2,
-            $kind
+        #[cfg(feature = "matrix")]
+        imgui_drag_matrix! { ($($tail),*), ($size-1), $size_2, $kind }
+    }
+}
+
+macro_rules! imgui_slider_matrix {
+    ( (), $size:expr, $size_2:expr, $kind:expr) => {};
+    (
+        ($head:ty $(, $tail:ty)*),
+        $size:expr, $size_2:expr,
+        $kind:expr
+    ) => {
+        #[cfg(feature = "matrix")]
+        impl Slider<$head> for [[$head; $size]; $size_2] {
+            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<$head>) -> bool {
+                let mut trigger = false;
+
+                #[allow(unused_mut)]
+                let mut index = 0;
+                ui.push_id(elem[index].as_ptr());
+
+                unsafe {
+                    let label = params.label.as_ptr();
+                    let min = &params.min;
+                    let max = &params.max;
+                    let format = std::ptr::null();
+                    let power = params.power.unwrap_or(1.0);
+                    trigger |= sys::igSliderScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                }
+
+                $(
+                    index += 1;
+                    ui.push_id(elem[index].as_ptr());
+                    unsafe {
+                        let _: $tail = std::mem::zeroed();
+
+                        let label = params.label.as_ptr();
+                        let min = &params.min;
+                        let max = &params.max;
+                        let format = std::ptr::null();
+                        let power = params.power.unwrap_or(1.0);
+                        trigger |= sys::igSliderScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                    }
+                )*
+
+                $(
+                    unsafe {
+                        let _: $tail = std::mem::zeroed();
+                    }
+                    ui.pop_id();
+                )*
+                ui.pop_id();
+
+                trigger
+            }
         }
+
+        #[cfg(feature = "matrix")]
+        imgui_slider_matrix! { ($($tail),*), ($size-1), $size_2, $kind }
     }
 }
 

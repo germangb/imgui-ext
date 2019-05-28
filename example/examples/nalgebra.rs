@@ -1,34 +1,31 @@
-use example::imgui_ext::prelude::*;
-use example::{imgui, imgui_ext, support};
+use nalgebra_glm as glm;
 
 #[derive(imgui_ext::Ui, Debug)]
 struct Example {
-    #[imgui(text("nalgebra_glm::Vec4"), input(map = "as_vec4"), new_line)]
+    // The "map" attribute adapts the nalgebra type (Mat4) into a type that is supported by the Ui
+    // derive macro.
+    #[imgui(drag(map = "as_mat_array"), new_line)]
+    mat: glm::Mat4,
+    #[imgui(input(map = "as_vec_array"))]
     vec: glm::Vec4,
-    #[imgui(text("nalgebra_glm::Mat4"), input(map = "as_mat4"), new_line)]
-    mat4: glm::Mat4,
-    #[imgui(text("nalgebra_glm::Mat4"), drag(map = "as_mat3"))]
-    mat3: glm::Mat3,
+}
+
+// This conversion is safe, because both nalgebra type is layed out in memory
+// the same as a regular [[f32; 4]; 4] array.
+fn as_mat_array(u: &mut glm::Mat4) -> &mut [[f32; 4]; 4] {
+    unsafe { &mut *(u.as_mut_ptr() as *mut [[f32; 4]; 4]) }
+}
+
+// Likewise, glm::Vec4 can be safely casted to a [f32; 4] for the same reason.
+fn as_vec_array(u: &mut glm::Vec4) -> &mut [f32; 4] {
+    unsafe { &mut *(u.as_mut_ptr() as *mut [f32; 4]) }
 }
 
 fn main() {
     let mut example = Example {
-        mat4: glm::identity(),
-        mat3: glm::identity(),
-        vec: glm::Vec4::y() * 9.81,
+        mat: glm::identity(),
+        vec: glm::Vec4::y(),
     };
 
-    support::run(file!(), (640, 480), |_, ui| {
-        ui.columns(2, imgui::im_str!("nalgebra"), true);
-        ui.imgui_ext(&mut example);
-        ui.next_column();
-        ui.text_wrapped(imgui::im_str!("{:#?}", example));
-    });
+    example::support::run(file!(), (640, 480), example);
 }
-
-// these conversions are safe, because nalgebra types and standard arrays are
-// layed out the same in memory.
-
-#[rustfmt::skip] fn as_mat4(u: &mut glm::Mat4) -> &mut [[f32; 4]; 4] { unsafe { &mut *(u as *mut glm::Mat4 as *mut _) } }
-#[rustfmt::skip] fn as_mat3(u: &mut glm::Mat3) -> &mut [[f32; 3]; 3] { unsafe { &mut *(u as *mut glm::Mat3 as *mut _) } }
-#[rustfmt::skip] fn as_vec4(u: &mut glm::Vec4) -> &mut  [f32; 4]     { unsafe { &mut *(u as *mut glm::Vec4 as *mut _) } }

@@ -12,7 +12,6 @@
 use imgui::sys;
 use imgui::{ImStr, Ui};
 
-#[derive(Copy, Clone)]
 pub struct DragParams<'a, T> {
     pub label: &'a ImStr,
     pub format: Option<&'a ImStr>,

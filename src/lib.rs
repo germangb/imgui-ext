@@ -110,10 +110,8 @@ pub mod vars {
     //!
     //! # Optional params
     //!
-    //! - `style = "..."` identifier of a local function that returns the style
-    //!   parameters.
-    //! - `color = "..."` identifier of a local function that returns the color
-    //!   parameters.
+    //! - `style = "..."` path to a function that returns the style parameters.
+    //! - `color = "..."` path to a function that returns the color parameters.
     //!
     //! # Example
     //!
@@ -283,7 +281,7 @@ pub mod display {
     //! # Optional fields
     //!
     //! * `label`
-    //! * `display` formatted text.
+    //! * `display` formatted text (followed by the parameters).
     //!
     //! # Example
     //!
@@ -310,13 +308,11 @@ pub mod display {
 /// `nested(...)` docs (used to build nested UIs).
 pub mod nested {
     //!
-    //! Types that #[derive(Ui)] can be nested.
+    //! Types that `#[derive(Ui)]` can be nested.
     //!
     //! # Optional fields
     //!
     //! * `catch`
-    //!
-    //! [issue]: #
     //!
     //! # Example
     //!
@@ -382,7 +378,7 @@ pub mod button {
     //!
     //! # Optional fields
     //!
-    //! - `size` name of a local function that returns the button size.
+    //! - `size` path to a function that returns the button size.
     //! - `catch`
     //!
     //! # Example
@@ -423,7 +419,6 @@ pub mod button {
     //! [image]: https://i.imgur.com/PpOcZK8.png
 }
 /// `bullet(...)` docs.
-
 pub mod bullet {
     //!
     //! Used to build bulleted lists. It has two variants:
@@ -453,26 +448,6 @@ pub mod bullet {
     //! ![][result]
     //!
     //! [result]: https://i.imgur.com/CLPl993.png
-    #[cfg(test)]
-    mod tests {
-        #![allow(dead_code)]
-
-        use crate as imgui_ext;
-        use crate::ImGuiExt;
-
-        #[test]
-        fn bullet() {
-            #[derive(ImGuiExt)]
-            struct Foo {
-                #[imgui(bullet(checkbox))]
-                a: bool,
-                #[imgui(bullet(checkbox()))]
-                b: bool,
-                #[imgui(bullet())]
-                c: (),
-            }
-        }
-    }
 }
 
 /// Trait implemented by the derive macro.
@@ -501,32 +476,6 @@ impl<T: ImGuiExt> ImGuiExt for Box<T> {
         T::imgui_ext(ui, ext.as_mut())
     }
 }
-
-/// Alias for the `ImGuiExt::Events` associated type.
-///
-/// ```
-/// use imgui_ext::prelude::*;
-/// use imgui_ext::Events;
-///
-/// #[derive(imgui_ext::Ui)]
-/// struct Example { /*...*/ }
-///
-/// fn handle_events(e: &Events<Example>) {
-///     // ...
-/// }
-/// # struct A;
-/// # struct B;
-/// # impl A { fn imgui_ext(&self, _: &mut Example) -> <Example as imgui_ext::ImGuiExt>::Events
-/// # { unsafe { std::mem::transmute(()) } } }
-/// # let ui = A;
-///
-/// let mut example = Example { /*...*/ };
-///
-/// let events = ui.imgui_ext(&mut example);
-///
-/// handle_events(&events);
-/// ```
-pub type Events<T> = <T as ImGuiExt>::Events;
 
 /// Extension trait for imgui Ui.
 ///
@@ -590,13 +539,5 @@ impl<'ui> UiExt<'ui> for Ui<'ui> {
 /// }
 /// ```
 pub fn render_imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
-    U::imgui_ext(ui, ext)
-}
-
-/// Render imgui UI.
-///
-/// *Deprecated in favour of [`render_imgui_ext`](./fn.render_imgui_ext.html)*
-#[deprecated]
-pub fn imgui_ext<U: ImGuiExt>(ui: &Ui, ext: &mut U) -> U::Events {
     U::imgui_ext(ui, ext)
 }

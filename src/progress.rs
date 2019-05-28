@@ -4,7 +4,7 @@
 //! # Optional params
 //!
 //! * `overlay` override default overlay text.
-//! * `size` local function that returns the size.
+//! * `size` path to a function that returns the size.
 //! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Example
@@ -28,7 +28,6 @@
 //! [result]: https://i.imgur.com/SyaN1Nt.png
 use imgui::{ImStr, ImVec2, ProgressBar, Ui};
 
-#[derive(Copy, Clone)]
 pub struct ProgressParams<'a> {
     pub overlay: Option<&'a ImStr>,
     pub size: Option<ImVec2>,

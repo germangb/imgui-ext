@@ -1,15 +1,15 @@
 //! ## Params
 //!
-//! * `size` local function returning image size
+//! * `size` path to a function that returns the size.
 //!
 //! ## Optional params
 //!
-//! * `border` local function returning the border color
-//! * `tint` local function returning tint color
-//! * `uv0` local function returning the first uv coordinate. The default value
-//!   is `[0.0, 0.0]`.
-//! * `uv0` local function returning the second uv coordinate. The default value
-//!   is `[1.0, 1.0]`.
+//! * `border` path to a function that returns the border color.
+//! * `tint` path to a function tht returns a color to tint the image with.
+//! * `uv0` path to a function that returns the first uv coordinate. The default
+//!   value is `[0.0, 0.0]`.
+//! * `uv0` path to a function that returns the second uv coordinate. The
+//!   default value is `[1.0, 1.0]`.
 //! * `map` Applies a mapping function to `&mut Self`.
 //!
 //! ## Limitations
@@ -59,7 +59,6 @@
 //!
 use imgui::{ImTexture, ImVec2, ImVec4, Ui};
 
-#[derive(Clone, Copy)]
 pub struct ImageParams {
     pub size: ImVec2,
     pub border: Option<ImVec4>,

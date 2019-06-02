@@ -6,22 +6,7 @@
 [![Master docs](https://img.shields.io/badge/docs-master-blue.svg?style=flat-square)](https://germangb.github.io/imgui-ext/)
 
 
-A crate to quickly build [imgui] UIs using annotations and a `derive` macro.
-
-[imgui]: https://github.com/Gekkio/imgui-rs
-
-## Features
-
-* Encode UI directly on the types.
-* Static code generation.
-* Nested UIs (see the [`imgui(nested(...))`][nested] annotation).
-* Descriptive compiler errors.
-
-[nested]: https://germangb.github.io/imgui-ext/imgui_ext/nested/index.html
-
-[example]: ./imgui_derive/CODEGEN.md
-
-## Example
+A crate to quickly build [imgui](https://github.com/Gekkio/imgui-rs) UIs using annotations and a `derive` macro.
 
 ```rust
 #[derive(imgui_ext::Gui)]
@@ -37,24 +22,24 @@ struct Example {
 }
 ```
 
-#### Result:
-
 ![](assets/demo.png)
+
+
+## Examples
 
 ```bash
 # example UI
-cargo run -p example --example ui
+cargo run --example ui
 
 # integration with n-algebra types
-cargo run -p example --example nalgebra
+cargo run --example nalgebra
 ```
 
 [result]: assets/demo.png
 
 ## Limitations
 
-* `#[derive(ImGuiExt)]` is only supported for `struct`s with named fields, at the moment.
-* Limited layout support.
+* `#[derive(imgui_ext::Gui)]` is only supported for `struct`s with named fields.
 
 ## License
 

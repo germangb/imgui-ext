@@ -42,7 +42,7 @@ pub fn run_custom<F: FnMut(&mut Window, &Ui)>(title: &str, size: (u32, u32), app
 pub fn run<T: Gui + std::fmt::Debug>(title: &str, size: (u32, u32), mut gui: T) {
     run_custom(title, size, |_, ui| {
         ui.columns(2, imgui::im_str!("columns"), true);
-        ui.render_gui(&mut gui);
+        ui.draw_gui(&mut gui);
         ui.next_column();
         ui.text_wrapped(imgui::im_str!("{:#?}", gui));
     })

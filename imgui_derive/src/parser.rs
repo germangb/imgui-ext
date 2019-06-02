@@ -1759,7 +1759,7 @@ pub fn emmit_tag_tokens(
                 None => {
                     quote! {{
                         use imgui_ext::Gui;
-                        let _ev = Gui::imgui_gui(ui, &mut ext.#ident);
+                        let _ev = Gui::draw_gui(ui, &mut ext.#ident);
                         events.#catch_ident = _ev;
                     }}
                 }
@@ -1769,7 +1769,7 @@ pub fn emmit_tag_tokens(
                         syn::parse_str(&map.value()).expect("Error parsing parth to function.");
                     quote! {{
                         use imgui_ext::Gui;
-                        let _ev = Gui::imgui_gui(ui, #map_path(&mut ext.#ident));
+                        let _ev = Gui::draw_gui(ui, #map_path(&mut ext.#ident));
                         events.#catch_ident = _ev;
                     }}
                 }

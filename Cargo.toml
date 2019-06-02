@@ -15,11 +15,18 @@ exclude = ["ci/*", "page_deploy/*"]
 travis-ci = { repository = "germangb/imgui-ext", branch = "master" }
 
 [workspace]
-members = ["imgui_derive", "example"]
+members = ["imgui_derive"]
 
 [dependencies]
 imgui = "0.0.23"
 imgui-ext-derive = { version = "0.2.0", path = "imgui_derive" }
+
+[dev-dependencies]
+na = { package = "nalgebra", version = "0.18.0" }
+sdl2 = { version = "0.32.1", features = ["bundled"] }
+gl = "0.12.0"
+imgui-sdl2 = "0.5.0"
+imgui-opengl-renderer = "0.4.0"
 
 [features]
 default = ["matrix"]
@@ -27,6 +34,7 @@ default = ["matrix"]
 # Support for annotations on 2D arrays (matrices). Though enabled by default, this is
 # kept as a feature because imgui doesn't have native support for 2D arrays. Only 1D.
 matrix = []
+ci = []
 
 [patch.crates-io]
 imgui-sdl2 = { git = "https://github.com/germangb/rust-imgui-sdl2.git", branch = "imgui_23"}

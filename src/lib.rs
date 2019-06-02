@@ -39,12 +39,12 @@
 //!
 //! # struct A;
 //! # struct B;
-//! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
+//! # impl A { fn draw_gui<T>(&self, _: &mut T) -> B { B } }
 //! # impl B { fn check(&self) -> bool { true } }
 //! # let ui = A;
 //! let mut example = Example { check: false };
 //!
-//! let events = ui.render_gui(&mut example);
+//! let events = ui.draw_gui(&mut example);
 //!
 //! if events.check() {
 //!     println!("checkbox state changed.");
@@ -69,12 +69,12 @@
 //!
 //! # struct A;
 //! # struct B;
-//! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
+//! # impl A { fn draw_gui<T>(&self, _: &mut T) -> B { B } }
 //! # impl B { fn checkbox_event(&self) -> bool { true } }
 //! # let ui = A;
 //! let mut example = Example { check: false };
 //!
-//! let events = ui.render_gui(&mut example);
+//! let events = ui.draw_gui(&mut example);
 //!
 //! if events.checkbox_event() {
 //!     println!("checkbox state changed.");
@@ -261,10 +261,8 @@ pub mod text {
     //!
     //! ![](https://i.imgur.com/0uvMFIm.png)
 }
-/// Layout support.
-///
-/// *This module is very limited and WIP*
-pub mod layout {
+pub mod misc {
+    //! []()
     //!
     //! * `#[imgui(separator)]` inserts a separator
     //! * `#[imgui(new_line)]` inserts an empty line
@@ -398,12 +396,12 @@ pub mod button {
     //!
     //! # struct A;
     //! # struct B;
-    //! # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
+    //! # impl A { fn draw_gui<T>(&self, _: &mut T) -> B { B } }
     //! # impl B { fn click(&self) -> bool { true } }
     //! # let ui = A;
     //! let mut buttons = Button { count: 0 };
     //!
-    //! let events = ui.render_gui(&mut buttons);
+    //! let events = ui.draw_gui(&mut buttons);
     //!
     //! if events.click() {
     //!     buttons.count += 1;
@@ -449,16 +447,16 @@ pub mod bullet {
 /// Trait implemented by the derive macro.
 pub trait Gui {
     type Events;
-    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events;
+    fn draw_gui(ui: &Ui, ext: &mut Self) -> Self::Events;
 }
 
 impl<T: Gui> Gui for Option<T> {
     type Events = T::Events;
 
     // TODO remove unsafe
-    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
+    fn draw_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
         if let Some(ref mut ext) = ext {
-            T::imgui_gui(ui, ext)
+            T::draw_gui(ui, ext)
         } else {
             unsafe { std::mem::zeroed() }
         }
@@ -468,12 +466,12 @@ impl<T: Gui> Gui for Option<T> {
 impl<T: Gui> Gui for Box<T> {
     type Events = T::Events;
     #[inline]
-    fn imgui_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
-        T::imgui_gui(ui, ext.as_mut())
+    fn draw_gui(ui: &Ui, ext: &mut Self) -> Self::Events {
+        T::draw_gui(ui, ext.as_mut())
     }
 }
 
-/// Extension trait for imgui Ui.
+/// Extension trait for imgui's [`Ui`](https://docs.rs/imgui/*/imgui/struct.Ui.html).
 ///
 /// ```
 /// use imgui_ext::UiExt;
@@ -485,7 +483,7 @@ impl<T: Gui> Gui for Box<T> {
 ///
 /// # struct A;
 /// # struct B;
-/// # impl A { fn render_gui<T>(&self, _: &mut T) -> B { B } }
+/// # impl A { fn draw_gui<T>(&self, _: &mut T) -> B { B } }
 /// # impl B { fn click(&self) -> bool { true } }
 /// # fn init_imgui() -> A { A }
 ///
@@ -495,15 +493,15 @@ impl<T: Gui> Gui for Box<T> {
 /// // initialize Example...
 /// let mut example = Example { /* ... */ };
 ///
-/// ui.render_gui(&mut example);
+/// ui.draw_gui(&mut example);
 /// ```
 pub trait UiExt {
-    fn render_gui<U: Gui>(&self, ext: &mut U) -> U::Events;
+    fn draw_gui<U: Gui>(&self, ext: &mut U) -> U::Events;
 }
 
 impl UiExt for Ui<'_> {
     #[inline]
-    fn render_gui<U: Gui>(&self, ext: &mut U) -> U::Events {
-        U::imgui_gui(self, ext)
+    fn draw_gui<U: Gui>(&self, ext: &mut U) -> U::Events {
+        U::draw_gui(self, ext)
     }
 }

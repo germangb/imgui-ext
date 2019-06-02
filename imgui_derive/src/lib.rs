@@ -35,10 +35,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
 
     // crate a new type.
     // It should never generate a collision
-    let event_type = Ident::new(
-        &format!("____{}____ImGuiExtEvents", name.to_string()),
-        input.span(),
-    );
+    let event_type = Ident::new(&format!("__{}_Events", name.to_string()), input.span());
 
     Ok(quote! {
         #[allow(non_camel_case_types)]
@@ -50,7 +47,7 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
         }
         impl #impl_generics imgui_ext::Gui for #name #ty_generics #where_clause {
             type Events = #event_type;
-            fn imgui_gui(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
+            fn draw_gui(ui: &imgui::Ui, ext: &mut Self) -> Self::Events {
                 // Because all fields are bool, it should be OK to zero the memory (right...?)
                 let mut events: Self::Events = unsafe { std::mem::zeroed() };
                 #body

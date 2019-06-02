@@ -26,7 +26,7 @@ struct Example {
 ui.window(im_str!("README.md"))
     .size((300.0, 100.0), ImGuiCond::FirstUseEver)
     .build(|| {
-        ui.draw_ui(&mut example);
+        ui.draw_gui(&mut example);
     });
 ```
 

@@ -5,8 +5,6 @@ type Vec4 = na::Vector4<f32>;
 
 #[derive(imgui_ext::Gui, Debug)]
 struct Example {
-    // The "map" attribute adapts the nalgebra type (Mat4) into a type that is supported by the Ui
-    // derive macro.
     #[imgui(drag(map = "as_mat_array"), new_line)]
     mat: Mat4,
     #[imgui(input(map = "as_vec_array"))]

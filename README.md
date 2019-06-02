@@ -11,6 +11,8 @@ A crate to quickly build [imgui](https://github.com/Gekkio/imgui-rs) UIs using a
 > ¹ The name `imgui-ext` follows the convention of adding an `-Ext` suffix to something that enhances an existing type. In this case, the imgui crate.
 
 ```rust
+use imgui_ext::UiExt;
+
 #[derive(imgui_ext::Gui)]
 struct Example {
     #[imgui(slider(min = 0.0, max = 4.0))]

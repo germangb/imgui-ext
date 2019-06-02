@@ -13,15 +13,16 @@ struct Example {
     vec: Vec4,
 }
 
-// This conversion is safe, because both nalgebra type is layed out in memory
-// the same as a regular [[f32; 4]; 4] array.
+// This is safe because both Mat4 and [[f32; 4]; 4] have the same memory layout.
 fn as_mat_array(u: &mut Mat4) -> &mut [[f32; 4]; 4] {
-    unsafe { &mut *(u.as_mut_ptr() as *mut [[f32; 4]; 4]) }
+    unsafe { &mut *(u.as_mut_ptr() as *mut _) }
 }
 
-// Likewise, glm::Vec4 can be safely casted to a [f32; 4] for the same reason.
+// safe version using TryInto/TryFrom
 fn as_vec_array(u: &mut Vec4) -> &mut [f32; 4] {
-    unsafe { &mut *(u.as_mut_ptr() as *mut [f32; 4]) }
+    use std::convert::TryInto;
+
+    u.as_mut_slice().try_into().unwrap()
 }
 
 fn main() {

@@ -4,8 +4,8 @@ rust:
   - beta
   - nightly
 script:
-  - cargo build --all-features --verbose --features ci
-  - cargo test --all-features --verbose --features ci
+  - cargo build --all-features --verbose
+  - cargo test --all-features --verbose
 matrix:
   allow_failures:
     - rust: nightly

@@ -9,7 +9,9 @@ token = "$CRATESIO"
 EOF
 fi
 
-pushd imgui_derive && \
-    cargo publish && \
-    popd && \
-    cargo publish
+pushd imgui_derive && cargo publish && popd
+
+# wait for crates-io index to update...
+sleep 4
+
+cargo publish

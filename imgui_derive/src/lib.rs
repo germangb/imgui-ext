@@ -120,7 +120,7 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream)
                         .and_then(parser::parse_meta); // -> Result<Vec<Tag>>
 
                     match tags {
-                        Err(_) => vec![Err(Error::new(ErrorKind::ParseError, attr.span()))],
+                        Err(error) => vec![Err(error)],
                         Ok(tags) => tags
                             .into_iter()
                             .map(|tag| {

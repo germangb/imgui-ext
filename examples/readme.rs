@@ -15,5 +15,8 @@ struct Example {
 fn main() {
     let example = Example::default();
 
-    support::run(file!(), (640, 480), example)
+    support::demo()
+        .window_title(file!())
+        .inner_window_title("README.md")
+        .run(example);
 }

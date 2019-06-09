@@ -24,10 +24,10 @@ fn as_vec_array(u: &mut Vec4) -> &mut [f32; 4] {
 }
 
 fn main() {
-    let mut example = Example {
+    let example = Example {
         mat: na::Matrix4::identity(),
         vec: na::Vector4::y(),
     };
 
-    support::run(file!(), (640, 480), example);
+    crate::run_debug!(example);
 }

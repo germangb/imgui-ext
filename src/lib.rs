@@ -26,7 +26,8 @@
 //! # Input events
 //!
 //! Rendering a UI with `imgui` & `imgui-ext` returns a type with all the
-//! triggered input events (which are generally stored as booleans):
+//! triggered input events which can be accessed either by field name or by
+//! method:
 //!
 //! ```
 //! use imgui_ext::UiExt;
@@ -52,8 +53,7 @@
 //! ```
 //!
 //! The checkbox event is mapped to the method `check` on the returned type. The
-//! name of the field & method on the returned type matches the name of the
-//! field from the UI type.
+//! name of the method matches the name of the field on the Example type.
 //!
 //! You can override this default naming by defining the "catch" attribute on
 //! the annotation (all widgets support this attribute, not just checkbox):
@@ -106,8 +106,8 @@ pub mod vars {
     //!
     //! # Optional params
     //!
-    //! - `style = "..."` path to a function that returns the style parameters.
-    //! - `color = "..."` path to a function that returns the color parameters.
+    //! - `style = "..."` path to a function returning style parameters.
+    //! - `color = "..."` path to a function returning color parameters.
     //!
     //! # Example
     //!
@@ -151,9 +151,10 @@ pub mod tree {
     //!
     //! # Optional params
     //!
-    //! - `label = ".."` Node label
-    //! - `flags = ".."` Local function returning [`ImGuiTreeNodeFlags`]
-    //! - `node(..)` Nested content (any of the supported annotations).
+    //! - `label = ".."` mode label.
+    //! - `flags = ".."` path to a function returning [`ImGuiTreeNodeFlags`],
+    //!   which is used to customize how a tree node looks.
+    //! - `node(..)` list of widget annotations.
     //! - `cond` One of the [`ImGuiCond`] variants.
     //!
     //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.ImGuiCond.html
@@ -229,19 +230,18 @@ pub mod text {
     //!
     //! # Variants
     //!
-    //! - `text(...)`
-    //! - `text_wrap(...)` Same as `text(...)`, but the text content wraps
+    //! - `text(...)` non-wrapping text.
+    //! - `text_wrap(...)` wrapping text.
     //!
     //! # Params
     //!
-    //! * `lit` Literal text. If this value is set, this value is displayed
-    //!   instead of the annotated type.
+    //! * `lit` a string literal.
     //!
     //! You can also write this annotation as:
     //!
     //! * `#[imgui(text("literal..."))]`
     //!
-    //! which is a shorthand form for `text(lit = "literal...")`.
+    //! which is a shorthand for `text(lit = "literal...")`.
     //!
     //! # Example
     //!
@@ -270,12 +270,12 @@ pub mod misc {
 /// `display(...)` docs.
 pub mod display {
     //!
-    //! `display(...)` is used to display a field.
+    //! `display(...)` is used to display and format a field.
     //!
     //! # Optional fields
     //!
-    //! * `label`
-    //! * `display` formatted text (followed by the parameters).
+    //! * `label` override widget label.
+    //! * `display` formatted text.
     //!
     //! # Example
     //!
@@ -289,7 +289,7 @@ pub mod display {
     //!     #[imgui(display(label = "Tuple", display = "({}, {}, {})", 0, 1, 2))]
     //!     bar: (f32, bool, usize),
     //!
-    //!     // when display() is the only annotation, it can be abbreviated:
+    //!     // When display is the only annotation on a type, you may write it in this shorter form:
     //!     #[imgui(label = "String param")]
     //!     baz: String,
     //! }
@@ -362,13 +362,11 @@ pub mod nested {
 /// `button(...)` docs.
 pub mod button {
     //!
-    //! `button(...)` is not associated to any particular type, but its position
-    //! within an annotation will determine where it is rendered in the
-    //! final UI.
+    //! `button(...)` places a button on the UI.
     //!
     //! # Fields
     //!
-    //! - `label`
+    //! - `label` button name.
     //!
     //! # Optional fields
     //!
@@ -418,9 +416,7 @@ pub mod bullet {
     //! Used to build bulleted lists. It has two variants:
     //!
     //! * `bullet(text = "...")` Bullet text.
-    //! * `bullet(...)` Nested.
-    //!
-    //! [issue]: #
+    //! * `bullet(...)` bullet widget.
     //!
     //! # Example
     //!

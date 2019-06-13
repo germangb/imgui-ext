@@ -1,19 +1,24 @@
 //! # Optional fields
 //!
-//! * `label`
+//! * `label` override widget label.
 //! * `step`
 //! * `step_fast`
-//! * `flags` path to a function that returns the input [flags] that apply.
-//! * `size` Text box size (Applies to text input)
+//! * `flags` path to a function that returns the input [flags].
+//! * `size` size of the text box (multiline text input).
 //! * `catch`
 //! * `map` Applies a mapping function to `&mut Self` (see [example](#mapping)).
 //!
 //! [flags]: https://docs.rs/imgui/0.0/imgui/struct.ImGuiInputTextFlags.html
 //!
+//! # Limitations
+//!
+//! Text input is only supported for [`imgui::ImString`](https://docs.rs/imgui/*/imgui/struct.ImString.html) types.
+//!
 //! # Example
 //!
-//! The input trait is implemented for numeric types (`f32` and `i32`) and their
-//! corresponding array types of up to 8 elements.
+//! The input trait is implemented for numeric types (`f32`, `f64`, `i32` and
+//! `u32`) and their corresponding array and tuple types of up to 9 elements, as
+//! well as [`imgui::ImGuiExt`](https://docs.rs/imgui/*/imgui/struct.ImString.html) for text input.
 //!
 //! ```
 //! #[derive(imgui_ext::Gui)]
@@ -42,14 +47,12 @@
 //!
 //! #[derive(imgui_ext::Gui)]
 //! struct Example {
-//!     #[imgui(input(flags = "Example::my_flags"))]
+//!     #[imgui(input(flags = "my_flags"))]
 //!     n: f32,
 //! }
 //!
-//! impl Example {
-//!     fn my_flags() -> ImGuiInputTextFlags {
-//!         ImGuiInputTextFlags::Password
-//!     }
+//! fn my_flags() -> ImGuiInputTextFlags {
+//!     ImGuiInputTextFlags::Password
 //! }
 //! ```
 //!
@@ -57,20 +60,18 @@
 //!
 //! # Mapping
 //!
-//! The attribute `map` points to a function (referenced by its path) that
-//! performs a map operation on the attribute:
+//! The attribite `map` references a function to map from a `&mut Self` of the
+//! field, into a type that is is compatible with a given annotation.
 //!
 //! ```
-//! // Note: Foo doesn't implement the ImGuiExt macro
+//! // Note that Foo doesn't derive 'imgui_ext::Gui'
 //! struct Foo {
 //!     inner: [f32; 4],
 //! }
 //!
 //! #[derive(imgui_ext::Gui)]
 //! struct Bar {
-//!     // Even though Foo is not compatible with the input()
-//!     // annotation, its inner attribute does, therefore we
-//!     // can map from one type to the other.
+//!     // The Foo type is not compatible with the input() annotation, but its inner attribute is.
 //!     #[imgui(input(map = "foo_to_array"))]
 //!     foo: Foo,
 //! }

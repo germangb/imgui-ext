@@ -1,15 +1,16 @@
 //! ## fields
 //!
-//! * `min`
-//! * `max`
+//! * `min` maximum value.
+//! * `max` minimum value.
 //!
 //! ## Optional fields
 //!
 //! * `label`
-//! * `format`
+//! * `format` format string (in `printf` format)
 //! * `power`
-//! * `catch`
-//! * `map` Applies a mapping function to `&mut Self`.
+//! * `catch` override widget label.
+//! * `map` applies a mapping function to `&mut Self` (works the same as in the
+//!   [input example](../input/index.html#mapping))
 //!
 //! ## Example
 //!

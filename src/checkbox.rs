@@ -1,8 +1,9 @@
 //! ## Optional fields
 //!
-//! * `label`
+//! * `label` override widget label.
 //! * `catch`
-//! * `map` Applies a mapping function to `&mut Self`.
+//! * `map` Applies a mapping function to `&mut Self` (works the same as in the
+//!   [input example](../input/index.html#mapping))
 //!
 //! ## Example
 //!

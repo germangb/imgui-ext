@@ -1,13 +1,14 @@
 //!
 //! ## Optional params
 //!
-//! * `min`
-//! * `max`
+//! * `min` maximum value
+//! * `max` minmum value
 //! * `speed`
 //! * `power`
-//! * `format` (printf format)
-//! * `catch`
-//! * `map` Applies a mapping function to `&mut Self`.
+//! * `format` (format string in `printf` format)
+//! * `catch` override widget label.
+//! * `map` Applies a mapping function to `&mut Self` (works the same as in the
+//!   [input example](../input/index.html#mapping))
 //!
 use imgui::sys;
 use imgui::{ImStr, Ui};

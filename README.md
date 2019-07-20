@@ -5,8 +5,7 @@
 [![docs.rs docs](https://docs.rs/imgui-ext/badge.svg?style=flat-square)](https://docs.rs/imgui-ext)
 [![Master docs](https://img.shields.io/badge/docs-master-blue.svg?style=flat-square)](https://germangb.github.io/imgui-ext/)
 
-
-A crate to quickly build [imgui](https://github.com/Gekkio/imgui-rs) UIs using annotations and a `derive` macro.
+A derive-macro for [imgui](https://crates.io/crates/imgui).
 
 ```rust
 #[derive(imgui_ext::Gui)]

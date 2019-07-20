@@ -1,7 +1,4 @@
-//! Derive macro that allows you to quickly build immediate mode UIs (based on
-//! the [imgui] crate).
-//!
-//! [imgui]: https://crates.io/crates/imgui
+//! A derive-macro for [imgui](https://crates.io/crates/imgui).
 //!
 //! # Basic usage
 //!

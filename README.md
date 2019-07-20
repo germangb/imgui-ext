@@ -1,4 +1,4 @@
-# imgui-ext¹
+# imgui-ext
 
 [![Build Status](https://img.shields.io/travis/germangb/imgui-ext/master.svg?style=flat-square)](https://travis-ci.org/germangb/imgui-ext)
 [![Cargo package](https://img.shields.io/crates/v/imgui-ext.svg?style=flat-square)](https://crates.io/crates/imgui-ext)
@@ -7,8 +7,6 @@
 
 
 A crate to quickly build [imgui](https://github.com/Gekkio/imgui-rs) UIs using annotations and a `derive` macro.
-
-> ¹ The name `imgui-ext` follows the convention of adding an `-Ext` suffix to something that enhances an existing type. In this case, the imgui crate.
 
 ```rust
 #[derive(imgui_ext::Gui)]

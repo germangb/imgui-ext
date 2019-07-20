@@ -820,7 +820,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(cond)) => {
                     let ident = Ident::new(&cond.value(), flags.span());
                     tree_tokens
-                        .extend(quote! {tree = tree.opened(true, imgui::ImGuiCond::#ident);});
+                        .extend(quote! {tree = tree.opened(true, imgui::Condition::#ident);});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),

@@ -155,9 +155,9 @@ pub mod tree {
     //! - `flags = ".."` path to a function returning [`ImGuiTreeNodeFlags`],
     //!   which is used to customize how a tree node looks.
     //! - `node(..)` list of widget annotations.
-    //! - `cond` One of the [`ImGuiCond`] variants.
+    //! - `cond` One of the [`Condition`] variants.
     //!
-    //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.ImGuiCond.html
+    //! [`ImGuiCond`]: https://docs.rs/imgui/*/imgui/struct.Condition.html
     //! [`ImGuiTreeNodeFlags`]: https://docs.rs/imgui/*/imgui/struct.ImGuiTreeNodeFlags.html
     //!
     //! # Example

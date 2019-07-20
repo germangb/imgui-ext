@@ -80,14 +80,14 @@
 use imgui::{
     ColorButton as ImColorButton, ColorEdit as ImColorEdit, ColorEditMode, ColorFormat,
     ColorPicker as ImColorPicker, ColorPickerMode, ColorPreview, EditableColor,
-    ImGuiColorEditFlags, ImStr, ImVec2, ImVec4, Ui,
+    ImGuiColorEditFlags, ImStr, Ui,
 };
 
 pub struct ColorButtonParams<'a> {
     pub label: &'a ImStr,
     pub flags: Option<ImGuiColorEditFlags>,
     pub preview: Option<ColorPreview>,
-    pub size: Option<ImVec2>,
+    pub size: Option<[f32; 2]>,
 }
 
 pub struct ColorEditParams<'a> {
@@ -118,7 +118,7 @@ pub trait ColorPicker {
     fn build(ui: &Ui, elem: Self, params: ColorPickerParams) -> bool;
 }
 
-impl<C: Into<ImVec4>> ColorButton for C {
+impl<C: Into<[f32; 4]>> ColorButton for C {
     fn build(ui: &Ui, elem: Self, params: ColorButtonParams) -> bool {
         let mut button = ImColorButton::new(ui, params.label, elem.into());
         if let Some(flags) = params.flags {
@@ -190,8 +190,8 @@ mod tests {
             b: [f32; 4],
         }
 
-        fn size() -> (f32, f32) {
-            (42.0, 42.0)
+        fn size() -> [f32; 2] {
+            [42.0, 42.0]
         }
 
         fn flags() -> Flags {

@@ -9,7 +9,7 @@ macro_rules! imgui_drag_scalar {
                 let format = ptr::null();
                 let speed = params.speed.unwrap_or(1.0);
                 let power = params.power.unwrap_or(1.0);
-                let data_type = $variant;
+                let data_type = $variant as i32;
                 unsafe {
                     sys::igDragScalar(label, data_type, elem as *const Self as _, speed, mem::transmute(min), mem::transmute(max), format, power)
                 }
@@ -27,7 +27,7 @@ macro_rules! imgui_drag_scalar {
                 let format = ptr::null();
                 let speed = params.speed.unwrap_or(1.0);
                 let power = params.power.unwrap_or(1.0);
-                let data_type = $variant;
+                let data_type = $variant as _;
                 unsafe {
                     sys::igDragScalarN(label, data_type, elem as *const Self as _, $len, speed, mem::transmute(min), mem::transmute(max), format, power)
                 }
@@ -57,7 +57,7 @@ macro_rules! imgui_slider_scalar {
                 let max = &params.max;
                 let format = ptr::null();
                 let power = params.power.unwrap_or(1.0);
-                let data_type = $variant;
+                let data_type = $variant as _;
                 unsafe {
                     sys::igSliderScalar(label, data_type, elem as *const Self as _, mem::transmute(min), mem::transmute(max), format, power)
                 }
@@ -74,7 +74,7 @@ macro_rules! imgui_slider_scalar {
                 let max = &params.max;
                 let format = ptr::null();
                 let power = params.power.unwrap_or(1.0);
-                let data_type = $variant;
+                let data_type = $variant as i32;
                 unsafe {
                     sys::igSliderScalarN(label, data_type, elem as *const Self as _, $len, mem::transmute(min), mem::transmute(max), format, power)
                 }
@@ -104,9 +104,9 @@ macro_rules! imgui_input_scalar {
                 let step_fast = params.step_fast.as_ref();
                 let format = ptr::null();
                 let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
-                let data_type = $variant;
+                let data_type = $variant as i32;
                 unsafe {
-                    sys::igInputScalar(label, data_type, elem as *const Self as _, mem::transmute(step), mem::transmute(step_fast), format, flags)
+                    sys::igInputScalar(label, data_type, elem as *const Self as _, mem::transmute(step), mem::transmute(step_fast), format, flags.bits())
                 }
             }
         }
@@ -121,9 +121,9 @@ macro_rules! imgui_input_scalar {
                 let step_fast = params.step_fast.as_ref();
                 let format = ptr::null();
                 let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
-                let data_type = $variant;
+                let data_type = $variant as i32;
                 unsafe {
-                    sys::igInputScalarN(label, data_type, elem as *const Self as _, $len, mem::transmute(step), mem::transmute(step_fast), format, flags)
+                    sys::igInputScalarN(label, data_type, elem as *const Self as _, $len, mem::transmute(step), mem::transmute(step_fast), format, flags.bits())
                 }
             }
         }
@@ -162,7 +162,7 @@ macro_rules! imgui_input_matrix {
                     let step_fast = params.step_fast.as_ref();
                     let format = std::ptr::null();
                     let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
-                    trigger |= sys::igInputScalarN(params.label.as_ptr(), $kind, elem[0].as_mut_ptr() as _, $size, std::mem::transmute(step), std::mem::transmute(step_fast), format, flags);
+                    trigger |= sys::igInputScalarN(params.label.as_ptr(), $kind as i32, elem[0].as_mut_ptr() as _, $size, std::mem::transmute(step), std::mem::transmute(step_fast), format, flags.bits());
                 }
 
 
@@ -176,7 +176,7 @@ macro_rules! imgui_input_matrix {
                         let step_fast = params.step_fast.as_ref();
                         let format = std::ptr::null();
                         let flags = params.flags.unwrap_or(imgui::ImGuiInputTextFlags::empty());
-                        trigger |= sys::igInputScalarN(imgui::im_str!("##").as_ptr(), $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(step), std::mem::transmute(step_fast), format, flags);
+                        trigger |= sys::igInputScalarN(imgui::im_str!("##").as_ptr(), $kind as i32, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(step), std::mem::transmute(step_fast), format, flags.bits());
                     }
                 )*
 
@@ -220,7 +220,7 @@ macro_rules! imgui_drag_matrix {
                     let format = std::ptr::null();
                     let speed = params.speed.unwrap_or(1.0);
                     let power = params.power.unwrap_or(1.0);
-                    trigger |= sys::igDragScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                    trigger |= sys::igDragScalarN(label, $kind as i32, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
                 }
 
                 $(
@@ -235,7 +235,7 @@ macro_rules! imgui_drag_matrix {
                         let format = std::ptr::null();
                         let speed = params.speed.unwrap_or(1.0);
                         let power = params.power.unwrap_or(1.0);
-                        trigger |= sys::igDragScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                        trigger |= sys::igDragScalarN(label, $kind as i32, elem[index].as_mut_ptr() as _, $size, speed, std::mem::transmute(min), std::mem::transmute(max), format, power);
                     }
                 )*
 
@@ -278,7 +278,7 @@ macro_rules! imgui_slider_matrix {
                     let max = &params.max;
                     let format = std::ptr::null();
                     let power = params.power.unwrap_or(1.0);
-                    trigger |= sys::igSliderScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                    trigger |= sys::igSliderScalarN(label, $kind as i32, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
                 }
 
                 $(
@@ -292,7 +292,7 @@ macro_rules! imgui_slider_matrix {
                         let max = &params.max;
                         let format = std::ptr::null();
                         let power = params.power.unwrap_or(1.0);
-                        trigger |= sys::igSliderScalarN(label, $kind, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
+                        trigger |= sys::igSliderScalarN(label, $kind as i32, elem[index].as_mut_ptr() as _, $size, std::mem::transmute(min), std::mem::transmute(max), format, power);
                     }
                 )*
 

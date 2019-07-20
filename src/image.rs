@@ -55,14 +55,14 @@
 //!
 //! [result]: https://i.imgur.com/RoJdyGR.png
 //!
-use imgui::{ImTexture, ImVec2, ImVec4, Ui};
+use imgui::{TextureId, Ui};
 
 pub struct ImageParams {
-    pub size: ImVec2,
-    pub border: Option<ImVec4>,
-    pub tint: Option<ImVec4>,
-    pub uv0: Option<ImVec2>,
-    pub uv1: Option<ImVec2>,
+    pub size: [f32; 2],
+    pub border: Option<[f32; 4]>,
+    pub tint: Option<[f32; 4]>,
+    pub uv0: Option<[f32; 2]>,
+    pub uv1: Option<[f32; 2]>,
 }
 
 pub trait Image {
@@ -71,7 +71,7 @@ pub trait Image {
 
 impl<T> Image for T
 where
-    T: Copy + Into<ImTexture>,
+    T: Copy + Into<TextureId>,
 {
     fn build(ui: &Ui, elem: Self, params: ImageParams) {
         let mut image = ui.image(elem.into(), params.size);

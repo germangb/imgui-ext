@@ -49,5 +49,5 @@ struct Example {
 }
 
 fn main() {
-    crate::run_debug!(Example::default());
+    support::demo().run_debug::<Example, _>(|_, _| {});
 }

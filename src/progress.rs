@@ -24,11 +24,11 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/SyaN1Nt.png
-use imgui::{ImStr, ImVec2, ProgressBar, Ui};
+use imgui::{ImStr, ProgressBar, Ui};
 
 pub struct ProgressParams<'a> {
     pub overlay: Option<&'a ImStr>,
-    pub size: Option<ImVec2>,
+    pub size: Option<[f32; 2]>,
 }
 
 pub trait Progress {

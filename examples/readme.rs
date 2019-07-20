@@ -13,10 +13,18 @@ struct Example {
 }
 
 fn main() {
-    let example = Example::default();
-
-    support::demo()
-        .window_title(file!())
-        .inner_window_title("README.md")
-        .run(example);
+    support::demo().run::<Example, _>(|gui, input| {
+        if input.x() {
+            println!("x: {}", gui.x)
+        }
+        if input.y() {
+            println!("y: {}", gui.y)
+        }
+        if input.drag_2d() {
+            println!("drag_2d: {:?}", gui.drag_2d)
+        }
+        if input.turbo() {
+            println!("turbo: {}", gui.turbo)
+        }
+    });
 }

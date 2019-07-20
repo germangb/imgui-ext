@@ -11,8 +11,6 @@ A crate to quickly build [imgui](https://github.com/Gekkio/imgui-rs) UIs using a
 > ¹ The name `imgui-ext` follows the convention of adding an `-Ext` suffix to something that enhances an existing type. In this case, the imgui crate.
 
 ```rust
-use imgui_ext::UiExt;
-
 #[derive(imgui_ext::Gui)]
 struct Example {
     #[imgui(slider(min = 0.0, max = 4.0))]
@@ -25,11 +23,18 @@ struct Example {
     turbo: bool,
 }
 
-ui.window(im_str!("README.md"))
-    .size((300.0, 100.0), ImGuiCond::FirstUseEver)
-    .build(|| {
-        ui.draw_gui(&mut example);
-    });
+let mut example = Example { /* skipped */ };
+
+ui.window(im_str!("Debug")).build(|| {
+    use imgui_ext::UiExt;
+    
+    if ui.draw_gui(&mut example).turbo() {
+        println!(
+            "Turbo mode value changed: {}",
+            example.turbo,
+        );
+    }
+});
 ```
 
 ![](assets/demo.png)

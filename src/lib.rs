@@ -112,7 +112,7 @@ pub mod vars {
     //! # Example
     //!
     //! ```
-    //! use imgui::{ImGuiCol, StyleVar};
+    //! use imgui::{StyleColor, StyleVar};
     //!
     //! #[derive(imgui_ext::Gui)]
     //! struct Example {
@@ -132,8 +132,8 @@ pub mod vars {
     //!     &[StyleVar::FrameRounding(4.0)]
     //! }
     //!
-    //! fn example_color() -> &'static [(ImGuiCol, [f32; 4])] {
-    //!     &[(ImGuiCol::Button, [1.0, 0.0, 1.0, 1.0])]
+    //! fn example_color() -> &'static [(StyleColor, [f32; 4])] {
+    //!     &[(StyleColor::Button, [1.0, 0.0, 1.0, 1.0])]
     //! }
     //! ```
     //!
@@ -388,8 +388,8 @@ pub mod button {
     //!     count: i32,
     //! }
     //!
-    //! const fn button_size() -> (f32, f32) {
-    //!     (100.0, 20.0)
+    //! const fn button_size() -> [f32; 2] {
+    //!     [100.0, 20.0]
     //! }
     //!
     //! # struct A;

@@ -1,22 +1,8 @@
-use imgui::Ui;
+use imgui::{im_str, Ui};
 use imgui_ext::{Gui, UiExt};
 use std::fmt::Debug;
 
 mod sdl;
-
-#[macro_export]
-macro_rules! run {
-    ($demo:expr) => {
-        support::demo().window_title(file!()).run($demo);
-    };
-}
-
-#[macro_export]
-macro_rules! run_debug {
-    ($demo:expr) => {
-        support::demo().window_title(file!()).run_debug($demo);
-    };
-}
 
 pub struct Demo {
     win_size: (u32, u32),
@@ -40,36 +26,50 @@ impl Demo {
         self
     }
 
-    pub fn run<T: imgui_ext::Gui>(self, mut demo: T) {
+    pub fn run<T, F>(self, mut input: F)
+    where
+        T: imgui_ext::Gui + Default,
+        F: FnMut(&T, T::Events),
+    {
         let title = self
             .win_title
             .as_ref()
             .map(String::as_str)
             .unwrap_or("Window");
 
+        let mut gui = T::default();
+
         sdl::run(title, self.win_size, |_, ui| {
             if let Some(title) = &self.inner_win_title {
-                ui.window(imgui::im_str!("{}", title)).build(|| {
-                    ui.draw_gui(&mut demo);
+                ui.window(&im_str!("{}", title)).build(|| {
+                    let events = ui.draw_gui(&mut gui);
+                    input(&gui, events);
                 });
             } else {
-                ui.draw_gui(&mut demo);
+                let events = ui.draw_gui(&mut gui);
+                input(&gui, events);
             }
         })
         .unwrap();
     }
 
-    pub fn run_debug<T: imgui_ext::Gui + Debug>(self, mut demo: T) {
+    pub fn run_debug<T, F>(self, mut input: F)
+    where
+        T: imgui_ext::Gui + Default + Debug,
+        F: FnMut(&T, T::Events),
+    {
         let title = self
             .win_title
             .as_ref()
             .map(String::as_str)
             .unwrap_or("Window");
+        let mut gui = T::default();
         run_custom(title, self.win_size, |_, ui| {
-            ui.columns(2, imgui::im_str!("columns"), true);
-            ui.draw_gui(&mut demo);
+            ui.columns(2, im_str!("columns"), true);
+            let events = ui.draw_gui(&mut gui);
+            input(&gui, events);
             ui.next_column();
-            ui.text_wrapped(imgui::im_str!("{:#?}", demo));
+            ui.text_wrapped(&im_str!("{:#?}", gui));
         })
     }
 }

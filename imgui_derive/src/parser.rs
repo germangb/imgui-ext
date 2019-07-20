@@ -751,7 +751,10 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(color)) => {
                     let ident = Ident::new(&color.value(), color.span());
                     quote! {
-                        ui.with_color_vars(&#ident(), || { #tokens });
+                        {
+                            let _color = ui.push_style_colors(#ident().into_iter() );
+                            #tokens
+                        }
                     }
                 }
                 None => tokens,
@@ -761,15 +764,16 @@ pub fn emmit_tag_tokens(
             let tokens = match style {
                 Some(Lit::Str(style)) => {
                     let ident = Ident::new(&style.value(), style.span());
-                    quote! {
-                        ui.with_style_vars(&#ident(), || { #tokens });
-                    }
+                    quote! {{
+                        let _style = ui.push_style_vars(#ident().into_iter() );
+                        #tokens
+                    }}
                 }
                 None => tokens,
                 _ => return Err(Error::invalid_format(attr.span())),
             };
 
-            quote!( #tokens )
+            quote!( { #tokens } )
         }
         Tag::Tree(Tree {
             label,
@@ -843,9 +847,9 @@ pub fn emmit_tag_tokens(
 
             let mut params = quote! {
                 use imgui_ext::image_button::ImageButtonParams as Params;
-                use imgui::{ImVec2, im_str};
+                use imgui::im_str;
                 let mut params = Params {
-                    size: ImVec2::from(#size()),
+                    size: #size().into(),
                     background: None,
                     frame_padding: None,
                     tint: None,
@@ -872,9 +876,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(uv0)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&uv0.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.uv0 = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -883,9 +885,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(uv1)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&uv1.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.uv1 = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -894,9 +894,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.tint = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -905,9 +903,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.background = Some( imgui::ImVec4::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.background = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -931,9 +927,9 @@ pub fn emmit_tag_tokens(
 
             let mut params = quote! {
                 use imgui_ext::image::ImageParams as Params;
-                use imgui::{ImVec2, im_str};
+                use imgui::im_str;
                 let mut params = Params {
-                    size: ImVec2::from(#size()),
+                    size: #size().into(),
                     border: None,
                     tint: None,
                     uv0: None,
@@ -944,9 +940,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(uv0)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&uv0.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.uv0 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.uv0 = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -955,9 +949,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(uv1)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&uv1.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.uv1 = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.uv1 = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -966,9 +958,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.tint = Some( imgui::ImVec4::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.tint = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -977,9 +967,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.border = Some( imgui::ImVec4::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.border = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -1016,9 +1004,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.size = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -1274,7 +1260,7 @@ pub fn emmit_tag_tokens(
             match size {
                 Some(Lit::Str(size)) => {
                     let ident = Ident::new(&size.value(), size.span());
-                    params.extend(quote! { params.size = Some( imgui::ImVec2::from(#ident()) ); });
+                    params.extend(quote! { params.size = Some( #ident().into() ); });
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -1348,9 +1334,7 @@ pub fn emmit_tag_tokens(
                 Some(Lit::Str(size)) => {
                     let fn_ident: syn::Path =
                         syn::parse_str(&size.value()).expect("Error parsing function path.");
-                    params.extend(
-                        quote! {{ params.size = Some( imgui::ImVec2::from(#fn_ident()) ); }},
-                    );
+                    params.extend(quote! {{ params.size = Some( #fn_ident().into() ); }});
                 }
                 None => {}
                 _ => return Err(Error::invalid_format(attr.span())),
@@ -1559,13 +1543,11 @@ pub fn emmit_tag_tokens(
                     _ => return Err(Error::invalid_format(attr.span())),
                 };
                 quote! {{
-                    use imgui::ImVec2;
-                    let _ev = ui.button( imgui::im_str!( #label ), { ImVec2::from(#size_fn()) } );
+                    let _ev = ui.button( imgui::im_str!( #label ), { #size_fn().into() } );
                     #catch
                 }}
             } else {
                 quote! {{
-                    use imgui::ImVec2;
                     let _ev = ui.small_button( imgui::im_str!( #label ) );
                     #catch
                 }}
@@ -1811,7 +1793,7 @@ pub fn emmit_tag_tokens(
 
             quote!({
                 use imgui::im_str;
-                ui.label_text(im_str!(#label), im_str!(#display));
+                ui.label_text(im_str!(#label), &im_str!(#display));
             })
         }
     };

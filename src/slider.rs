@@ -61,46 +61,46 @@ impl<T, S: Slider<T>> Slider<T> for Box<S> {
     }
 }
 
-imgui_slider_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, sys::ImGuiDataType::Float }
-imgui_slider_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, sys::ImGuiDataType::Double }
-imgui_slider_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, sys::ImGuiDataType::U32 }
-imgui_slider_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, sys::ImGuiDataType::S32 }
+imgui_slider_scalar! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, sys::ImGuiDataType_Float }
+imgui_slider_scalar! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, sys::ImGuiDataType_Double }
+imgui_slider_scalar! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, sys::ImGuiDataType_U32 }
+imgui_slider_scalar! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, sys::ImGuiDataType_S32 }
 
 // matrix types
 // TODO macro Y expansion
 
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 8, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 7, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 6, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 5, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 4, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 3, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 2, sys::ImGuiDataType::Float }
-imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 1, sys::ImGuiDataType::Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 8, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 7, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 6, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 5, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 4, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 3, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 2, sys::ImGuiDataType_Float }
+imgui_slider_matrix! { (f32, f32, f32, f32, f32, f32, f32, f32), 8, 1, sys::ImGuiDataType_Float }
 
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 8, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 7, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 6, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 5, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 4, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 3, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 2, sys::ImGuiDataType::Double }
-imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 1, sys::ImGuiDataType::Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 8, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 7, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 6, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 5, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 4, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 3, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 2, sys::ImGuiDataType_Double }
+imgui_slider_matrix! { (f64, f64, f64, f64, f64, f64, f64, f64), 8, 1, sys::ImGuiDataType_Double }
 
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 8, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 7, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 6, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 5, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 4, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 3, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 2, sys::ImGuiDataType::U32 }
-imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 1, sys::ImGuiDataType::U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 8, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 7, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 6, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 5, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 4, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 3, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 2, sys::ImGuiDataType_U32 }
+imgui_slider_matrix! { (u32, u32, u32, u32, u32, u32, u32, u32), 8, 1, sys::ImGuiDataType_U32 }
 
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 8, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 7, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 6, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 5, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 4, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 3, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 2, sys::ImGuiDataType::S32 }
-imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 1, sys::ImGuiDataType::S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 8, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 7, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 6, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 5, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 4, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 3, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 2, sys::ImGuiDataType_S32 }
+imgui_slider_matrix! { (i32, i32, i32, i32, i32, i32, i32, i32), 8, 1, sys::ImGuiDataType_S32 }

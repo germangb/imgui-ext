@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use imgui::{ImGui, Ui};
+use imgui::{Context, Ui};
 
 use super::Window;
 
@@ -22,7 +22,7 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(
     let glctx = window.gl_create_context()?;
     window.gl_make_current(&glctx)?;
 
-    let mut imgui = ImGui::init();
+    let mut imgui = Context::create();
     let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui);
 
     let renderer =

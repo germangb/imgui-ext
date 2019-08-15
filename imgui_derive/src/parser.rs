@@ -4,7 +4,7 @@ use std::string::ToString;
 use proc_macro2::{Literal, TokenStream};
 use quote::{quote, ToTokens};
 use syn::spanned::Spanned;
-use syn::{Attribute, Ident, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Type};
+use syn::{Attribute, Ident, Lit, Meta, MetaList, MetaNameValue, NestedMeta, Path, Type};
 
 use super::error::Error;
 
@@ -27,21 +27,24 @@ macro_rules! tag {
                 $( let mut $opt_field = None; )*
                 for param in list.nested.iter() {
                     match param {
-                        NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => match ident.to_string().as_str() {
-                            //"label" => widget.label = Some(lit.clone()),
-                            $( stringify!($opt_field) => {
-                                if $opt_field.is_some() {
-                                    return Err(Error::already_defined(ident.span()))
-                                }
-                                $opt_field = Some(lit.clone());
-                            },)*
-                            $( stringify!($field) => {
-                                if $field.is_some() {
-                                    return Err(Error::already_defined(ident.span()))
-                                }
-                                $field = Some(lit.clone());
-                            },)*
-                            _ => return Err(Error::unexpected_param(ident.span())),
+                        NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) => {
+                            let ident = path_to_ident(&path);
+                            match ident.to_string().as_str() {
+                                //"label" => widget.label = Some(lit.clone()),
+                                $( stringify!($opt_field) => {
+                                    if $opt_field.is_some() {
+                                        return Err(Error::already_defined(ident.span()))
+                                    }
+                                    $opt_field = Some(lit.clone());
+                                },)*
+                                $( stringify!($field) => {
+                                    if $field.is_some() {
+                                        return Err(Error::already_defined(ident.span()))
+                                    }
+                                    $field = Some(lit.clone());
+                                },)*
+                                _ => return Err(Error::unexpected_param(ident.span())),
+                            }
                         }
                         // TODO use proper span
                         _ => return Err(Error::invalid_format(list.span())),
@@ -56,6 +59,12 @@ macro_rules! tag {
         }
 
     }
+}
+
+fn path_to_ident(path: &Path) -> &Ident {
+    let segments = &path.segments;
+    assert_eq!(1, segments.len());
+    &segments.first().unwrap().ident
 }
 
 pub enum DisplayParam {
@@ -88,25 +97,26 @@ impl Display {
 
         for attr in params.nested.iter() {
             match (state, attr) {
-                (State::Display, NestedMeta::Literal(lit)) => {
+                (State::Display, NestedMeta::Lit(lit)) => {
                     display.params.push(DisplayParam::Literal(lit.clone()));
                 }
 
-                (State::Display, NestedMeta::Meta(Meta::Word(ident))) => {
+                (State::Display, NestedMeta::Meta(Meta::Path(path))) => {
+                    let ident = path_to_ident(&path);
                     display.params.push(DisplayParam::Ident(ident.clone()));
                 }
 
                 (
                     State::Init,
-                    NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })),
-                ) if ident.to_string() == "label" => {
+                    NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })),
+                ) if path_to_ident(&path).to_string() == "label" => {
                     display.label = Some(lit.clone());
                 }
 
                 (
                     State::Init,
-                    NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })),
-                ) if ident.to_string() == "display" => {
+                    NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })),
+                ) if path_to_ident(&path).to_string() == "display" => {
                     display.display = Some(lit.clone());
                     state = State::Display;
                 }
@@ -338,7 +348,7 @@ impl Text {
 
         match (first, second) {
             // text("...")
-            (Some(NestedMeta::Literal(Lit::Str(s))), None) => Ok(Self {
+            (Some(NestedMeta::Lit(Lit::Str(s))), None) => Ok(Self {
                 lit: Lit::Str(s.clone()),
             }),
             _ => Self::from_meta_list(list),
@@ -369,7 +379,8 @@ impl Vars {
 
         for meta in list.nested.iter() {
             match meta {
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) => {
+                    let ident = path_to_ident(&path);
                     match &ident.to_string()[..] {
                         "color" => {
                             if color.is_some() {
@@ -391,7 +402,9 @@ impl Vars {
                     }
                 }
 
-                NestedMeta::Meta(Meta::List(list)) if list.ident.to_string() == "content" => {
+                NestedMeta::Meta(Meta::List(list))
+                    if path_to_ident(&list.path).to_string() == "content" =>
+                {
                     if content.is_some() {
                         return Err(Error::already_defined(list.span()));
                     } else {
@@ -434,7 +447,8 @@ impl Tree {
         for meta in list.nested.iter() {
             match meta {
                 // label = "..."
-                NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, lit, .. })) => {
+                NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, lit, .. })) => {
+                    let ident = path_to_ident(&path);
                     match &ident.to_string()[..] {
                         "label" => {
                             if label.is_some() {
@@ -466,7 +480,9 @@ impl Tree {
 
                 // node(...)
                 // we need to validate that the nested list contains a single item.
-                NestedMeta::Meta(Meta::List(list)) if list.ident.to_string() == "node" => {
+                NestedMeta::Meta(Meta::List(list))
+                    if path_to_ident(&list.path).to_string() == "node" =>
+                {
                     if node.is_some() {
                         return Err(Error::already_defined(list.span()));
                     } else {
@@ -529,7 +545,7 @@ pub fn parse_meta(meta: Meta) -> Result<Vec<Tag>, Error> {
         // #[imgui = ...] Nope
         Meta::NameValue(named) => Err(Error::invalid_format(named.span())),
         // #[imgui], treated as an empty label
-        Meta::Word(_) => Ok(vec![Tag::Display(Display::default())]),
+        Meta::Path(_) => Ok(vec![Tag::Display(Display::default())]),
         // #[imgui(meta_list)] (general)
         Meta::List(meta_list) => parse_meta_list(&meta_list),
     }
@@ -555,10 +571,11 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
 
     for nested in meta_list.nested.iter() {
         match (state, nested) {
-            (_, NestedMeta::Literal(_)) => return Err(Error::invalid_format(meta_list.span())),
+            (_, NestedMeta::Lit(_)) => return Err(Error::invalid_format(meta_list.span())),
             // Parse as a label(...)
-            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { ident, .. })))
-                if ident.to_string() == "label" || ident.to_string() == "display" =>
+            (State::Init, NestedMeta::Meta(Meta::NameValue(MetaNameValue { path, .. })))
+                if path_to_ident(&path).to_string() == "label"
+                    || path_to_ident(&path).to_string() == "display" =>
             {
                 tags.push(Tag::Display(Display::from_meta_list(&meta_list)?));
                 // any errors will have been reported by the previous call to `parse_label`.
@@ -567,7 +584,8 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
             }
 
             // widgets that can take no parameters
-            (s, NestedMeta::Meta(Meta::Word(ident))) if s == State::Init || s == State::Tags => {
+            (s, NestedMeta::Meta(Meta::Path(path))) if s == State::Init || s == State::Tags => {
+                let ident = path_to_ident(&path);
                 match ident.to_string().as_str() {
                     "separator" => tags.push(Tag::Separator),
                     "new_line" => tags.push(Tag::NewLine),
@@ -605,7 +623,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
             (s, NestedMeta::Meta(Meta::List(meta_list)))
                 if s == State::Init || s == State::Tags =>
             {
-                let tag = match meta_list.ident.to_string().as_str() {
+                let tag = match path_to_ident(&meta_list.path).to_string().as_str() {
                     "separator" => Tag::Separator,
                     "new_line" => Tag::NewLine,
 
@@ -631,7 +649,8 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                                 //   - `color(edit)`
                                 //   - `color(picker)`
                                 //   - `color(button)`
-                                NestedMeta::Meta(Meta::Word(ident)) => {
+                                NestedMeta::Meta(Meta::Path(path)) => {
+                                    let ident = path_to_ident(&path);
                                     match ident.to_string().as_str() {
                                         "edit" => tags.push(Tag::ColorEdit(Default::default())),
                                         "picker" => tags.push(Tag::ColorPicker(Default::default())),
@@ -647,7 +666,8 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                                 //   - `color(picker(...))`
                                 //   - `color(button(...))`
                                 NestedMeta::Meta(Meta::List(color_meta_list)) => {
-                                    match color_meta_list.ident.to_string().as_str() {
+                                    let ident = path_to_ident(&color_meta_list.path);
+                                    match ident.to_string().as_str() {
                                         "edit" => tags.push(Tag::ColorEdit(
                                             ColorEdit::from_meta_list(color_meta_list)?,
                                         )),
@@ -661,7 +681,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
                                         // Compiler error
                                         _ => {
                                             return Err(Error::unexpected_mode(
-                                                color_meta_list.ident.span(),
+                                                color_meta_list.path.span(),
                                             ))
                                         }
                                     }

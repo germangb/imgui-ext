@@ -93,7 +93,7 @@ fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream)
                 .iter()
                 .filter(|attr| {
                     let ident = Ident::new("imgui", attr.span());
-                    attr.path.is_ident(ident)
+                    attr.path.is_ident(&ident)
                 })
                 .cloned()
                 .collect();

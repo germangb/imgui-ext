@@ -15,5 +15,5 @@ proc-macro = true
 [dependencies]
 syn = {version = "1.0.1", features = ["derive"]}
 quote = "1.0.0"
-proc-macro2 = "0.4.20"
+proc-macro2 = "1.0.0"
 failure = "0.1.5"

@@ -24,7 +24,7 @@
 //! ![][result]
 //!
 //! [result]: https://i.imgur.com/SyaN1Nt.png
-use imgui::{ImStr, ProgressBar, Ui};
+use imgui::{ImStr, Ui};
 
 pub struct ProgressParams<'a> {
     pub overlay: Option<&'a ImStr>,
@@ -37,14 +37,14 @@ pub trait Progress {
 
 impl Progress for f32 {
     fn build(ui: &Ui, elem: &Self, params: ProgressParams) {
-        let mut pro = ProgressBar::new(ui, *elem);
+        let mut pro = imgui::ProgressBar::new(*elem);
         if let Some(overlay) = params.overlay {
             pro = pro.overlay_text(overlay);
         }
         if let Some(size) = params.size {
             pro = pro.size(size);
         }
-        pro.build();
+        pro.build(ui);
     }
 }
 

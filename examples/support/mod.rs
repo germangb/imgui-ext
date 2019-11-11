@@ -41,7 +41,7 @@ impl Demo {
 
         sdl::run(title, self.win_size, |_, ui| {
             if let Some(title) = &self.inner_win_title {
-                ui.window(&im_str!("{}", title)).build(|| {
+                ui.window(&im_str!("{}", title)).build(ui, || {
                     let events = ui.draw_gui(&mut gui);
                     input(&gui, events);
                 });

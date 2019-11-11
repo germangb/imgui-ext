@@ -23,7 +23,7 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(
     window.gl_make_current(&glctx)?;
 
     let mut imgui = Context::create();
-    let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui);
+    let mut imgui_sdl2 = imgui_sdl2::ImguiSdl2::new(&mut imgui, &window);
 
     let renderer =
         imgui_opengl_renderer::Renderer::new(&mut imgui, |s| video.gl_get_proc_address(s) as _);
@@ -59,8 +59,10 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(
             gl::Clear(gl::COLOR_BUFFER_BIT);
         }
 
-        let ui = imgui_sdl2.frame(&window, &mut imgui, &event_pump.mouse_state());
+        imgui_sdl2.prepare_frame(imgui.io_mut(), &window, &event_pump.mouse_state());
+        let ui = imgui.frame();
         user(&mut window_params, &ui);
+        imgui_sdl2.prepare_render(&ui, &window);
         renderer.render(ui);
         window.gl_swap_window();
     }

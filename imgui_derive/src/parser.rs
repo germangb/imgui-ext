@@ -288,6 +288,7 @@ tag! {
             preview: Option<Lit>,
             size: Option<Lit>,
             catch: Option<Lit>,
+            input_mode: Option<Lit>,
             map: Option<Lit>,
         }
     }
@@ -303,6 +304,7 @@ tag! {
             flags: Option<Lit>,
             preview: Option<Lit>,
             mode: Option<Lit>,
+            input_mode: Option<Lit>,
             format: Option<Lit>,
             catch: Option<Lit>,
             map: Option<Lit>,
@@ -319,7 +321,8 @@ tag! {
             label: Option<Lit>,
             flags: Option<Lit>,
             preview: Option<Lit>,
-            mode: Option<Lit>,
+            display_mode: Option<Lit>,
+            input_mode: Option<Lit>,
             format: Option<Lit>,
             catch: Option<Lit>,
             map: Option<Lit>,
@@ -1056,7 +1059,8 @@ pub fn emmit_tag_tokens(
             label,
             flags,
             preview,
-            mode,
+            display_mode,
+            input_mode,
             format,
             catch,
             map,
@@ -1100,11 +1104,22 @@ pub fn emmit_tag_tokens(
                 _ => return Err(Error::invalid_format(attr.span())),
             }
 
-            match mode {
+            match input_mode {
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
                     params.extend(quote! {{
-                        params.mode = Some( imgui::ColorEditMode::#var );
+                        params.input_mode = Some( imgui::ColorEditInputMode::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+
+            match display_mode {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.display_mode = Some( imgui::ColorEditDisplayMode::#var );
                     }});
                 }
                 None => {}
@@ -1151,6 +1166,7 @@ pub fn emmit_tag_tokens(
             flags,
             preview,
             mode,
+            input_mode,
             format,
             catch,
             map,
@@ -1206,6 +1222,17 @@ pub fn emmit_tag_tokens(
                 _ => return Err(Error::invalid_format(attr.span())),
             }
 
+            match input_mode {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.input_mode = Some( imgui::ColorEditInputMode::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+
             match format {
                 Some(Lit::Str(c)) => {
                     let var = Ident::new(&c.value(), ident.span());
@@ -1248,6 +1275,7 @@ pub fn emmit_tag_tokens(
             size,
             catch,
             map,
+            input_mode,
         }) => {
             let label = match label {
                 Some(Lit::Str(stri)) => stri.value(),
@@ -1266,6 +1294,17 @@ pub fn emmit_tag_tokens(
                     preview: None,
                 };
             };
+
+            match input_mode {
+                Some(Lit::Str(c)) => {
+                    let var = Ident::new(&c.value(), ident.span());
+                    params.extend(quote! {{
+                        params.input_mode = Some( imgui::ColorEditInputMode::#var );
+                    }});
+                }
+                None => {}
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
 
             match flags {
                 Some(Lit::Str(flags)) => {

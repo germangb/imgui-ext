@@ -150,12 +150,12 @@ macro_rules! imgui_input_matrix {
     ) => {
         #[cfg(feature = "matrix")]
         impl Input<$head> for [[$head; $size]; $size_2] {
-            fn build(ui: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
+            fn build(_ui: &Ui, elem: &mut Self, params: InputParams<$head>) -> bool {
                 let mut trigger = false;
 
-                #[allow(unused_mut)]
+                #[allow(unused_mut, unused_variables)]
                 let mut index = 0;
-                ui.push_id(elem[index].as_ptr());
+                //ui.push_id(elem[index].as_ptr());
 
                 unsafe {
                     let step = params.step.as_ref();
@@ -168,7 +168,7 @@ macro_rules! imgui_input_matrix {
 
                 $(
                     index += 1;
-                    ui.push_id(elem[index].as_ptr());
+                    //ui.push_id(elem[index].as_ptr());
                     unsafe {
                         let _: $tail = std::mem::zeroed();
 
@@ -184,9 +184,9 @@ macro_rules! imgui_input_matrix {
                     unsafe {
                         let _: $tail = std::mem::zeroed();
                     }
-                    ui.pop_id();
+                    //ui.pop_id();
                 )*
-                ui.pop_id();
+                //ui.pop_id();
 
                 trigger
             }
@@ -206,12 +206,12 @@ macro_rules! imgui_drag_matrix {
     ) => {
         #[cfg(feature = "matrix")]
         impl Drag<$head> for [[$head; $size]; $size_2] {
-            fn build(ui: &Ui, elem: &mut Self, params: DragParams<$head>) -> bool {
+            fn build(_ui: &Ui, elem: &mut Self, params: DragParams<$head>) -> bool {
                 let mut trigger = false;
 
-                #[allow(unused_mut)]
+                #[allow(unused_mut, unused_variables)]
                 let mut index = 0;
-                ui.push_id(elem[index].as_ptr());
+                //ui.push_id(elem[index].as_ptr());
 
                 unsafe {
                     let label = params.label.as_ptr();
@@ -225,7 +225,7 @@ macro_rules! imgui_drag_matrix {
 
                 $(
                     index += 1;
-                    ui.push_id(elem[index].as_ptr());
+                    //ui.push_id(elem[index].as_ptr());
                     unsafe {
                         let _: $tail = std::mem::zeroed();
 
@@ -243,9 +243,9 @@ macro_rules! imgui_drag_matrix {
                     unsafe {
                         let _: $tail = std::mem::zeroed();
                     }
-                    ui.pop_id();
+                    //ui.pop_id();
                 )*
-                ui.pop_id();
+                //ui.pop_id();
 
                 trigger
             }
@@ -265,12 +265,12 @@ macro_rules! imgui_slider_matrix {
     ) => {
         #[cfg(feature = "matrix")]
         impl Slider<$head> for [[$head; $size]; $size_2] {
-            fn build(ui: &Ui, elem: &mut Self, params: SliderParams<$head>) -> bool {
+            fn build(_ui: &Ui, elem: &mut Self, params: SliderParams<$head>) -> bool {
                 let mut trigger = false;
 
                 #[allow(unused_mut)]
                 let mut index = 0;
-                ui.push_id(elem[index].as_ptr());
+                //ui.push_id(elem[index].as_ptr());
 
                 unsafe {
                     let label = params.label.as_ptr();
@@ -283,7 +283,7 @@ macro_rules! imgui_slider_matrix {
 
                 $(
                     index += 1;
-                    ui.push_id(elem[index].as_ptr());
+                    //ui.push_id(elem[index].as_ptr());
                     unsafe {
                         let _: $tail = std::mem::zeroed();
 
@@ -300,9 +300,9 @@ macro_rules! imgui_slider_matrix {
                     unsafe {
                         let _: $tail = std::mem::zeroed();
                     }
-                    ui.pop_id();
+                    //ui.pop_id();
                 )*
-                ui.pop_id();
+                //ui.pop_id();
 
                 trigger
             }

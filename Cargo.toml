@@ -18,15 +18,15 @@ travis-ci = { repository = "germangb/imgui-ext", branch = "master" }
 members = ["imgui_derive"]
 
 [dependencies]
-imgui = "0.1"
+imgui = "0.2"
 imgui-ext-derive = { version = "0.3", path = "imgui_derive" }
 
 [dev-dependencies]
 na = { package = "nalgebra", version = "0.18.0" }
 sdl2 = { version = "0.32.1", features = ["bundled"] }
 gl = "0.13.0"
-imgui-sdl2 = "0.5.0"
-imgui-opengl-renderer = "0.4.0"
+imgui-sdl2 = "0.7"
+imgui-opengl-renderer = "0.6"
 
 [features]
 default = ["matrix"]
@@ -37,6 +37,6 @@ matrix = []
 # TODO optional support for mint types
 mint = []
 
-[patch.crates-io]
-imgui-sdl2 = { git = "https://github.com/germangb/rust-imgui-sdl2.git", branch = "imgui-0.1"}
-imgui-opengl-renderer = { git = "https://github.com/germangb/rust-imgui-opengl-renderer.git", branch = "imgui-0.1"}
+#[patch.crates-io]
+#imgui-sdl2 = { git = "https://github.com/germangb/rust-imgui-sdl2.git", branch = "imgui-0.1"}
+#imgui-opengl-renderer = { git = "https://github.com/germangb/rust-imgui-opengl-renderer.git", branch = "imgui-0.1"}

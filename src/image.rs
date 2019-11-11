@@ -74,7 +74,7 @@ where
     T: Copy + Into<TextureId>,
 {
     fn build(ui: &Ui, elem: Self, params: ImageParams) {
-        let mut image = ui.image(elem.into(), params.size);
+        let mut image = imgui::Image::new(elem.into(), params.size);
         if let Some(tint) = params.tint {
             image = image.tint_col(tint);
         }
@@ -87,6 +87,6 @@ where
         if let Some(uv1) = params.uv1 {
             image = image.uv1(uv1);
         }
-        image.build();
+        image.build(ui);
     }
 }

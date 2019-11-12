@@ -49,11 +49,11 @@
 //! }
 //! ```
 //!
-//! The checkbox event is mapped to the method `check` on the returned type. The
-//! name of the method matches the name of the field on the Example type.
+//! In the above example, the checkbox event is mapped to the method `check()` in the returned type. The
+//! name of the method in this case matches the name of the field on the Example type.
 //!
-//! You can override this default naming by defining the "catch" attribute on
-//! the annotation (all widgets support this attribute, not just checkbox):
+//! You can customize the method name by defining the "catch" attribute on
+//! the annotation:
 //!
 //! ```no_run
 //! use imgui_ext::UiExt;

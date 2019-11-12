@@ -61,7 +61,7 @@
 //!     #[imgui(
 //!         color(button(preview = "Alpha")),
 //!         color(edit(preview = "HalfAlpha")),
-//!         color(picker(mode = "HueWheel"))
+//!         color(picker(input_mode = "HueWheel"))
 //!     )]
 //!     color: [f32; 4],
 //! }
@@ -195,7 +195,7 @@ mod tests {
         struct Example {
             #[imgui(color(edit), color(picker(flags = "flags")), color(button()))]
             a: [f32; 4],
-            #[imgui(color(edit(mode = "HSV"), picker, button(size = "size"),))]
+            #[imgui(color(edit(input_mode = "HSV"), picker, button(size = "size"),))]
             b: [f32; 4],
         }
 

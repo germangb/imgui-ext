@@ -65,6 +65,8 @@ pub fn run<F: FnMut(&mut Window, &Ui)>(
         imgui_sdl2.prepare_render(&ui, &window);
         renderer.render(ui);
         window.gl_swap_window();
+
+        std::thread::sleep(std::time::Duration::new(0, 1_000_000_000 / 60));
     }
     Ok(())
 }

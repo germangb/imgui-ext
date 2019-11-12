@@ -1,6 +1,6 @@
 [package]
 name = "imgui-ext"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["german gomez <germangb42@gmail.com>"]
 edition = "2018"
 description = "A crate to build debug UIs on structs using a derive macro (based on the imgui crate)"
@@ -19,7 +19,7 @@ members = ["imgui_derive"]
 
 [dependencies]
 imgui = "0.2"
-imgui-ext-derive = { version = "0.3", path = "imgui_derive" }
+imgui-ext-derive = { version = "0.4", path = "imgui_derive" }
 
 [dev-dependencies]
 na = { package = "nalgebra", version = "0.18.0" }

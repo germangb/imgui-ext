@@ -1079,7 +1079,8 @@ pub fn emmit_tag_tokens(
                     label: im_str!( #label ),
                     flags: None,
                     preview: None,
-                    mode: None,
+                    input_mode: None,
+                    display_mode: None,
                     format: None,
                 };
             };
@@ -1185,8 +1186,9 @@ pub fn emmit_tag_tokens(
                     label: im_str!( #label ),
                     flags: None,
                     preview: None,
-                    mode: None,
+                    input_mode: None,
                     format: None,
+                    mode: None,
                 };
             };
 
@@ -1292,6 +1294,7 @@ pub fn emmit_tag_tokens(
                     flags: None,
                     size: None,
                     preview: None,
+                    input_mode: None,
                 };
             };
 

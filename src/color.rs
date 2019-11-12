@@ -61,7 +61,7 @@
 //!     #[imgui(
 //!         color(button(preview = "Alpha")),
 //!         color(edit(preview = "HalfAlpha")),
-//!         color(picker(input_mode = "HueWheel"))
+//!         color(picker(mode = "HueWheel"))
 //!     )]
 //!     color: [f32; 4],
 //! }
@@ -78,9 +78,9 @@
 //! [ColorEditMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorEditMode.html
 //! [ColorPickerMode]: https://docs.rs/imgui/0.0/imgui/enum.ColorPickerMode.html
 use imgui::{
-    ColorButton as ImColorButton, ColorEdit as ImColorEdit, ColorEditInputMode, ColorEditDisplayMode, ColorFormat,
-    ColorPicker as ImColorPicker, ColorPickerMode, ColorPreview, EditableColor,
-    ColorEditFlags, ImStr, Ui,
+    ColorButton as ImColorButton, ColorEdit as ImColorEdit, ColorEditDisplayMode, ColorEditFlags,
+    ColorEditInputMode, ColorFormat, ColorPicker as ImColorPicker, ColorPickerMode, ColorPreview,
+    EditableColor, ImStr, Ui,
 };
 
 pub struct ColorButtonParams<'a> {

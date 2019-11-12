@@ -57,18 +57,18 @@ fn impl_derive(input: &DeriveInput) -> Result<TokenStream, Error> {
     })
 }
 
-/// Adds support to allow multiple imgui tags in a single field:
-/// ```
-/// struct Demo {
-///     #[imgui(drag(...))]
-///     x: f32,
-///
-///     // multiple annotations
-///     #[imgui(separator)]
-///     #[imgui(slider(...))]
-///     #[imgui(input(...))]
-///     y: f32,
-/// }
+// Adds support to allow multiple imgui tags in a single field:
+// ```
+// struct Demo {
+//     #[imgui(drag(...))]
+//     x: f32,
+//
+//     // multiple annotations
+//     #[imgui(separator)]
+//     #[imgui(slider(...))]
+//     #[imgui(input(...))]
+//     y: f32,
+// }
 fn struct_body(fields: Fields) -> Result<(TokenStream, TokenStream, TokenStream), Error> {
     let mut input_methods: TokenStream = TokenStream::new();
 

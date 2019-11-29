@@ -206,6 +206,8 @@ pub mod tree {
     //!
     //! ![](https://i.imgur.com/Rn2RJJG.png)
 }
+/// `combobox(...)` docs.
+pub mod combobox;
 /// `checkbox(...)` docs.
 pub mod checkbox;
 /// `color(...)` docs.

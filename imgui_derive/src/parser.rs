@@ -130,6 +130,19 @@ impl Display {
 }
 
 tag! {
+    /// `#[imgui(combobox(label = "...", items = "some_fn"))]`
+    pub struct Combobox {
+        fields {
+            items: Lit,
+        },
+        optional {
+            label: Option<Lit>,
+            catch: Option<Lit>,
+        }
+    }
+}
+
+tag! {
     /// `#[imgui(checkbox(label = "..."))]`
     #[derive(Default)]
     pub struct Checkbox {
@@ -511,6 +524,7 @@ impl Tree {
 pub enum Tag {
     None,
     Display(Display),
+    Combobox(Combobox),
     Checkbox(Checkbox),
     Input(Input),
     Slider(Slider),
@@ -595,6 +609,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
 
                     "nested" => tags.push(Tag::Nested(Default::default())),
                     "display" => tags.push(Tag::Display(Default::default())),
+                    "combobox" => tags.push(Tag::Combobox(Combobox::from_meta_list(&meta_list)?)),
                     "checkbox" => tags.push(Tag::Checkbox(Default::default())),
                     "input" => tags.push(Tag::Input(Default::default())),
                     "drag" => tags.push(Tag::Drag(Default::default())),
@@ -632,6 +647,7 @@ fn parse_meta_list(meta_list: &MetaList) -> Result<Vec<Tag>, Error> {
 
                     "display" => Tag::Display(Display::from_meta_list(&meta_list)?),
                     "nested" => Tag::Nested(Nested::from_meta_list(meta_list)?),
+                    "combobox" => Tag::Combobox(Combobox::from_meta_list(meta_list)?),
                     "checkbox" => Tag::Checkbox(Checkbox::from_meta_list(meta_list)?),
                     "input" => Tag::Input(Input::from_meta_list(meta_list)?),
                     "drag" => Tag::Drag(Drag::from_meta_list(meta_list)?),
@@ -1749,6 +1765,34 @@ pub fn emmit_tag_tokens(
                         use imgui_ext::slider::Slider;
                         let _ev = Slider::build(ui, #map_path(&mut ext.#ident), { #params });
                         events.#catch_ident |= _ev;
+                    })
+                }
+                _ => return Err(Error::invalid_format(attr.span())),
+            }
+        }
+        Tag::Combobox(Combobox { items, label, catch }) => {
+            let label = match label {
+                Some(Lit::Str(lab)) => lab.value(),
+                None => ident.to_string(),
+                _ => return Err(Error::invalid_format(attr.span())),
+            };
+            let label = Literal::string(&label);
+
+            let catch_ident =
+                catch_ident(attr, ident, catch.as_ref(), input_fields, fields, methods)?;
+
+            match items {
+                Lit::Str(items) => {
+                    let items_path: syn::Path =
+                        syn::parse_str(&items.value()).expect("Error parsing path to function.");
+                    quote!({
+                        use imgui_ext::combobox::Combobox;
+                        use imgui_ext::combobox::ComboboxParams as Params;
+                        use imgui::im_str;
+                        (#items_path)(|items| {
+                            let _ev = Combobox::build(ui, &mut ext.#ident, Params { items , label: im_str!(#label) });
+                            events.#catch_ident |= _ev;
+                        })
                     })
                 }
                 _ => return Err(Error::invalid_format(attr.span())),

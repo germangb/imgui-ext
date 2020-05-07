@@ -1,4 +1,4 @@
-⚠️ *imgui-ext needs a full rewrite. Since it was my first attempt at making a procedural macro, it has grown messy and difficult to maintain due to lack of planning. Use with caution.*
+⚠️ *imgui-ext needs a full rewrite. Since it was my first attempt at making a procedural macro, it has grown messy and difficult to maintain due to lack of planning. Until the rewrite happens, use with caution.*
 
 You can also check out [imgui-inspect-derive](https://crates.io/crates/imgui-inspect-derive), which looks neat!
 

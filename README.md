@@ -1,3 +1,7 @@
+⚠️ *imgui-ext needs a full rewrite. Since it was my first attempt at making a procedural macro, it has grown messy and difficult to maintain due to lack of planning. Use with caution.*
+
+You can also check out [imgui-inspect-derive](https://crates.io/crates/imgui-inspect-derive), which looks neat!
+
 # imgui-ext
 
 [![Build Status](https://img.shields.io/travis/germangb/imgui-ext/master.svg?style=flat-square)](https://travis-ci.org/germangb/imgui-ext)

@@ -20,7 +20,7 @@ impl Default for Example {
     }
 }
 
-// This is safe since both Mat4 and [[f32; 4]; 4] have the same memory layout.
+// This is safe since both Mat4 and [[f32; 4]; 4] are both Copy
 fn as_mat_array(u: &mut Mat4) -> &mut [[f32; 4]; 4] {
     unsafe { &mut *(u.as_mut_ptr() as *mut _) }
 }

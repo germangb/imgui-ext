@@ -23,7 +23,7 @@ imgui-ext-derive = { version = "0.4", path = "imgui_derive" }
 
 [dev-dependencies]
 na = { package = "nalgebra", version = "0.18.0" }
-sdl2 = { version = "0.32.1", features = ["bundled"] }
+sdl2 = { version = "0.33.0", features = ["bundled"] }
 gl = "0.14.0"
 imgui-sdl2 = "0.7"
 imgui-opengl-renderer = "0.6"

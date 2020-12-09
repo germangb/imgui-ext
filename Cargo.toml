@@ -26,7 +26,7 @@ na = { package = "nalgebra", version = "0.18.0" }
 sdl2 = { version = "0.32.1", features = ["bundled"] }
 gl = "0.14.0"
 imgui-sdl2 = "0.7"
-imgui-opengl-renderer = "0.6"
+imgui-opengl-renderer = "0.10"
 
 [features]
 default = ["matrix"]

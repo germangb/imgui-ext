@@ -1,0 +1,5 @@
+(function() {var implementors = {};
+implementors["failure"] = [{"text":"impl AsRef&lt;dyn Fail + 'static&gt; for Error","synthetic":false,"types":[]}];
+implementors["imgui"] = [{"text":"impl AsRef&lt;ImStr&gt; for ImString","synthetic":false,"types":[]},{"text":"impl AsRef&lt;str&gt; for ImString","synthetic":false,"types":[]},{"text":"impl AsRef&lt;CStr&gt; for ImStr","synthetic":false,"types":[]},{"text":"impl AsRef&lt;ImStr&gt; for ImStr","synthetic":false,"types":[]},{"text":"impl AsRef&lt;str&gt; for ImStr","synthetic":false,"types":[]}];
+implementors["smallvec"] = [{"text":"impl&lt;A:&nbsp;Array&gt; AsRef&lt;[&lt;A as Array&gt;::Item]&gt; for SmallVec&lt;A&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

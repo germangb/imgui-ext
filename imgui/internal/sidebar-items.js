@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["DataType","A primary data type"]],"struct":[["ImVector","A generic version of the raw imgui-sys ImVector struct types"]],"trait":[["DataTypeKind","Primitive type marker."],["RawCast","Casting from/to a raw type that has the same layout and alignment as the target type"],["RawWrapper","Marks a type as a transparent wrapper over a raw type"]]});

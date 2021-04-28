@@ -1,0 +1,15 @@
+version: 2
+updates:
+- package-ecosystem: cargo
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: imgui-opengl-renderer
+    versions:
+    - 0.10.0
+  - dependency-name: imgui
+    versions:
+    - 0.6.0
